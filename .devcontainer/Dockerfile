@@ -1,10 +1,8 @@
-# Base image: Ubuntu 20.04 with ROS2 Foxy installed
-FROM ros:foxy
+# Base image: Ubuntu 20.04 with ROS2 Galactic installed
+FROM ros:galactic
 
 # Install dependencies from apt
 RUN apt-get update && apt-get install -y \
-  # To run git commands in the container
-  git \
   # To let us sync with GitHub over SSH
   ssh-client \
   # Clean out the apt lists after `apt-get update`
