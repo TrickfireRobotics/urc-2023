@@ -3,6 +3,8 @@ FROM ros:galactic
 
 # Install dependencies from apt
 RUN apt-get update && apt-get install -y \
+  # To use git in the container
+  git \
   # To let us sync with GitHub over SSH
   ssh-client \
   # Clean out the apt lists after `apt-get update`
