@@ -21,6 +21,8 @@ Restart your computer to finish installing WSL2.
 ## Docker Desktop
 Install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop). If you already have it, update it, and make sure it uses the WSL2 backend (Docker Desktop > Settings > Use the WSL 2 based engine). If Docker Desktop fails to start, try deleting `%appdata%/Docker`.
 
+You can't work with containers if Docker isn't running on Windows. There will be a whale icon in the Windows system tray if Docker is running. You can enable/disable Docker auto-starting when you log in (Docker Desktop > Settings > General > **Start Docker Desktop when you log in**).
+
 ## Git for Windows
 *If you know what you're doing, you can ignore these Git setup steps.*
 
@@ -54,7 +56,14 @@ In VS Code, open the Command Palette (`Ctrl+Shift+P`), search for **Remote-WSL: 
 
 After VS Code loads into WSL2, a notification will tell you that it noticed a Dev Container configuration file. Click the **Reopen in Container** option. If you miss the notification, you can search **Remote-Containers: Reopen in Container** in the Command Palette.
 
+You're ready to develop now! 🥳
+
 This procedure sent the VS Code Server (the part which reads/writes files and runs commands) from Windows to WSL2, then from WSL2 to a Docker container. Your VS Code Client (the user interface) remains on Windows but talks to the Server which currently runs in the container.
 
-## Start developing!
-Now that you're running VS Code inside a container, the entire team will have the same workflow, even if they're not on Windows. Open the integrated terminal (`` Ctrl+` `` or `Ctrl+J`) to see the Linux shell inside the container. Happy developing!
+### Reopening VS Code
+If you close VS Code and reopen it later, it will try to reopen `nasa-rmc` in a container.
+Make sure Docker is running (check for the whale icon in the system tray) or it will give you an error.
+
+To disconnect from the container (to work on other projects), run **Remote: Close Remote Connection** from the Command Palette or click the green Remote button in the bottom-left and select **Close Remote Connection**.
+
+You can always re-enter WSL2 then reopen in a container with this green button (**Open Folder in WSL** > `nasa-rmc` > **Reopen in Container**).
