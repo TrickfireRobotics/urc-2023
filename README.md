@@ -4,4 +4,4 @@ An overhaul of [Trickfire Robotics'](https://www.linkedin.com/company/trickfire-
 ## Getting Started
 We develop using [Docker](https://en.wikipedia.org/wiki/Docker_(software)) and [Visual Studio Code](https://code.visualstudio.com/). Docker containers keep the development environment well-defined and repeatable: no more mysterious missing dependencies. VS Code is a customizable text editor that has extensions for Docker and all of our programming languages.
 
-Install everything on [Windows](docs/install_on_windows.md) | [Linux](docs/install_on_linux.md) | [Mac](docs/install_on_mac.md)
+Get started on [Windows](docs/install_on_windows.md) | [Linux](docs/install_on_linux.md) | [Mac](docs/install_on_mac.md)
