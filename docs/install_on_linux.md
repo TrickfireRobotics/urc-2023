@@ -1,10 +1,10 @@
 # Installing on Linux
-If you already have any of the following software installed, you can skip those respective sections. We cannot guarantee that your currently installed version is compatible with our development scheme, so update your software if something doesn't work.
+If you already have any of the following software installed, you can skip those respective sections. We cannot guarantee that your currently installed versions are compatible with our development scheme, so update your software if something doesn't work.
 
-This guide is for Ubuntu 20.04, but this software is available across most Linux distributions.
+This guide is for Ubuntu 20.04, but this software is available across most Linux distributions (but with different package managers and install steps).
 
 ## Docker Engine
-Run the following in a terminal to install Docker Engine from Docker's `apt` repository:
+Run the following in a terminal to install Docker Engine from Docker's APT repository:
 ```
 sudo apt update
 sudo apt install -y ca-certificates curl gnupg lsb-release
