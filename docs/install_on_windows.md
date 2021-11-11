@@ -49,7 +49,7 @@ That tells Git in WSL2 to call back into the Windows filesystem (your Windows `C
 ### I don't have Git for Windows
 We don't need Git for Windows - we can install Git Credential Manager Core by itself. From the [releases page of GCM Core](https://github.com/microsoft/Git-Credential-Manager-Core/releases), install the latest version of the `gcmcoreuser-win-x86` .exe file (don't pick `gcmcore-win-x86`).
 
-TODO: the `wslpath` trick is broken because `Git Credential Manager Core` has unescaped spaces in it.
+TODO: git config is broken because we need to use the `SETX WSLENV=%WSLENV%:GIT_EXEC_PATH/wp` trick on the Windows side.
 
 Open a WSL2 terminal and run:
 ```
