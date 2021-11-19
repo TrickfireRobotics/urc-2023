@@ -49,13 +49,15 @@ That tells Git in WSL2 to call back into the Windows filesystem (your Windows `C
 ### I don't have Git for Windows
 We don't need Git for Windows - we can install Git Credential Manager Core by itself. From the [releases page of GCM Core](https://github.com/microsoft/Git-Credential-Manager-Core/releases), install the latest version of the `gcmcoreuser-win-x86` .exe file (don't pick `gcmcore-win-x86`).
 
-TODO: git config is broken because we need to use the `SETX WSLENV=%WSLENV%:GIT_EXEC_PATH/wp` trick on the Windows side.
-
-Open a WSL2 terminal and run:
+After installing it, open a WSL2 terminal and run:
 ```
 git config --global credential.helper "$(wslpath "$(cmd.exe /c echo %LocalAppData%\\Programs\\Git Credential Manager Core\\git-credential-manager-core.exe 2>/dev/null)" | sed -e 's/\r//g' -e 's/ /\\ /g')"
+echo >> ~/.bashrc
+echo 'export GIT_EXEC_PATH="$(git --exec-path)"' >> ~/.bashrc
+echo 'export WSLENV=$WSLENV:GIT_EXEC_PATH/wp' >> ~/.bashrc
+source ~/.bashrc
 ```
-That tells Git in WSL2 to call back into the Windows filesystem (your Windows `C:\` drive filesystem is presented as `/mnt/c` in WSL2) to use GCM Core as a credential manager. Don't look at that command for too long or your brain will hurt.
+That tells Git in WSL2 to use GCM Core in your Windows filesystem as a credential manager. A few extra configurations in `.bashrc` are necessary to help GCM Core call back into Git in WSL2.
 
 ### Final Git steps
 In a WSL2 terminal, download this repository into your WSL2 home directory:
@@ -88,7 +90,7 @@ If VS Code asks you if you trust the workspace authors, select **Yes, I trust th
 
 After VS Code loads into WSL2, a notification will tell you that it noticed a Dev Container configuration file. Click the **Reopen in Container** option. If you miss the notification, you can search **Remote-Containers: Reopen in Container** in the Command Palette.
 
-You're ready to develop now! 🥳
+**You're ready to develop now!** 🥳
 
 This procedure sent the VS Code Server (the part which reads/writes files and runs commands) from Windows to WSL2, then from WSL2 to a Docker container. Your VS Code Client (the user interface) remains on Windows but talks to the Server which currently runs in the container.
 
