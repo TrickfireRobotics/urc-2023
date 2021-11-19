@@ -6,7 +6,7 @@ Buckle up.
 
 ## Windows Subsystem for Linux
 Update Windows 10 so your build number is at least 19041 (Settings > About > **OS Build**). Windows 11 users don't need to update anything. Open Command Prompt or Powershell as an administrator (right-click > **Run as administrator**) and run:
-```
+```Powershell
 wsl --install
 ```
 **Restart your computer.** After you restart and log back in, a terminal to Ubuntu will open. It will ask you to set a username and password - do it. This sets your login information for that Ubuntu distribution of WSL2. It's separate from your Windows login, but you can make it the same username/password if you want.
@@ -15,7 +15,7 @@ By the way, WSL2 is a Linux system, but Ubuntu is a Linux "distribution". Distri
 
 ### What if I already have WSL1 or 2?
 If you already have WSL 1 or 2, run this in Command Prompt/Powershell (as an administrator) to make sure you're on Ubuntu using WSL2:
-```
+```Powershell
    wsl --update
    wsl --install --distribution Ubuntu
    wsl --set-version Ubuntu 2
@@ -26,7 +26,7 @@ If you already have WSL 1 or 2, run this in Command Prompt/Powershell (as an adm
 [Create a GitHub account](https://github.com/) if you don't have one already. GitHub is not Git - it's merely an online host for Git repositories.
 
 Git is version control software - it comes with Ubuntu by default. Open the WSL2 terminal (search for "Ubuntu" in the start menu) and run the following:
-```
+```bash
 git config --global user.name "YOUR NAME HERE"
 git config --global user.email "YOUR EMAIL HERE"
 ```
@@ -35,13 +35,13 @@ git config --global user.email "YOUR EMAIL HERE"
 Git on Ubuntu (in WSL2) is different from Git for Windows. You may remember doing the `git config` steps above in Windows, but don't skip those in WSL2 (the Git configurations are not shared between WSL2 and Windows).
 
 We don't actually need most of Git for Windows. We only need to pass your GitHub credentials from Git Credential Manager Core to Git in WSL2. GCM Core requires Git for Windows version 2.33 or above (check with `git --version`). To update Git for Windows, open Git Bash and run:
-```
+```bash
 git update-git-for-windows
 ```
 Select the option for **Git Credential Manager Core** while installing.
 
 Finally, open a WSL2 terminal (not Git Bash on Windows!) and run:
-```
+```bash
 git config --global credential.helper "/mnt/c/Program\ Files/Git/mingw64/libexec/git-core/git-credential-manager-core.exe"
 ```
 That tells Git in WSL2 to call back into the Windows filesystem (your Windows `C:\` drive filesystem is presented as `/mnt/c` in WSL2) to use GCM Core as a credential manager.
@@ -50,7 +50,7 @@ That tells Git in WSL2 to call back into the Windows filesystem (your Windows `C
 We don't need Git for Windows - we can install Git Credential Manager Core by itself. From the [releases page of GCM Core](https://github.com/microsoft/Git-Credential-Manager-Core/releases), install the latest version of the `gcmcoreuser-win-x86` .exe file (don't pick `gcmcore-win-x86`).
 
 After installing it, open a WSL2 terminal and run:
-```
+```bash
 git config --global credential.helper "$(wslpath "$(cmd.exe /c echo %LocalAppData%\\Programs\\Git Credential Manager Core\\git-credential-manager-core.exe 2>/dev/null)" | sed -e 's/\r//g' -e 's/ /\\ /g')"
 echo >> ~/.bashrc
 echo 'export GIT_EXEC_PATH="$(git --exec-path)"' >> ~/.bashrc
@@ -61,7 +61,7 @@ That tells Git in WSL2 to use GCM Core in your Windows filesystem as a credentia
 
 ### Final Git steps
 In a WSL2 terminal, download this repository into your WSL2 home directory:
-```
+```bash
 cd ~
 git clone --recurse-submodules https://github.com/TrickfireRobotics/nasa-rmc.git
 ```

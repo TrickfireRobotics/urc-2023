@@ -5,7 +5,7 @@ This guide is for Ubuntu 20.04, but this software is available across most Linux
 
 ## Docker Engine
 Run the following in a terminal to install Docker Engine from Docker's APT repository:
-```
+```bash
 sudo apt update
 sudo apt install -y ca-certificates curl gnupg lsb-release
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
@@ -18,7 +18,7 @@ sudo apt update
 sudo apt install -y docker-ce docker-ce-cli containerd.io
 ```
 Docker runs as root by default and requires `sudo` for commands. We need to create a new user group named `docker` and add ourselves to it. This lets VS Code run without root permissions, too.
-```
+```bash
 sudo groupadd docker
 sudo usermod -aG docker $USER
 ```
