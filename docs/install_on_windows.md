@@ -28,8 +28,9 @@ If you already have WSL 1 or 2, run this in Command Prompt/Powershell (as an adm
 Git is version control software - it comes with Ubuntu by default. Open the WSL2 terminal (search for "Ubuntu" in the start menu) and run the following:
 ```bash
 git config --global user.name "YOUR NAME HERE"
-git config --global user.email "YOUR EMAIL HERE"
+git config --global user.email "YOUR GITHUB EMAIL HERE"
 ```
+Make sure the `user.email` is set to your GitHub email.
 
 ### I already have Git for Windows
 Git on Ubuntu (in WSL2) is different from Git for Windows. You may remember doing the `git config` steps above in Windows, but don't skip those in WSL2 (the Git configurations are not shared between WSL2 and Windows).
