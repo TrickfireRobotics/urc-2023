@@ -1,0 +1,20 @@
+{
+    "context": "../",
+    "dockerFile": "Dockerfile",
+    "containerUser": "trickfire",
+    "remoteUser": "trickfire",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/home/trickfire/${localWorkspaceFolderBasename},type=bind",
+    "workspaceFolder": "/home/trickfire/${localWorkspaceFolderBasename}",
+    "runArgs": [
+        "--cap-add=SYS_PTRACE",
+        "--security-opt", "seccomp=unconfined"
+    ],
+    "extensions": [
+        "ms-azuretools.vscode-docker",
+		"ms-python.python",
+		"ms-vscode.cmake-tools",
+		"ms-vscode.cpptools",
+		"twxs.cmake",
+        "yzhang.markdown-all-in-one"
+	]
+}
