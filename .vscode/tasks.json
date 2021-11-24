@@ -1,0 +1,29 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			// colcon is a build tool that handles multi-package workspaces with nested dependencies.
+			"type": "colcon",
+			"args": [
+				"build",
+				// Where possible, create symlinks instead of copying files.
+				"--symlink-install",
+				"--base-paths",
+				"/home/trickfire/NasaRmc2022",
+				"--cmake-args",
+				// Debug builds are less optimized but build faster than Release or RelWithDebInfo builds.
+				// Debug and RelWithDebInfo builds add symbol info to the executables/libraries so
+				// debuggers can show you function names, line numbers, etc.
+				"-DCMAKE_BUILD_TYPE=Debug"
+			],
+			"problemMatcher": [
+				"$catkin-gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"label": "colcon: build"
+		}
+	]
+}
