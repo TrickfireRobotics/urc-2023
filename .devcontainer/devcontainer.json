@@ -11,12 +11,12 @@
     ],
     "extensions": [
 		"ms-azuretools.vscode-docker",
-		"ms-iot.vscode-ros",
 		"ms-python.python",
 		"ms-python.vscode-pylance",
 		"ms-vscode.cmake-tools",
 		"ms-vscode.cpptools",
 		"twxs.cmake",
-		"yzhang.markdown-all-in-one"
+		"yzhang.markdown-all-in-one",
+        "ms-iot.vscode-ros"
 	]
 }
