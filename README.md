@@ -7,5 +7,7 @@ We develop using [Docker](https://en.wikipedia.org/wiki/Docker_(software)) and [
 Get started on [Windows](docs/install_on_windows.md) | [Linux](docs/install_on_linux.md) | [Mac](docs/install_on_mac.md)
 
 ## Quick Reference (VS Code)
-Build all packages: `Ctrl+Shift+B`
-Test all packages: `Ctrl+P` - type `task test` - `Enter`
+| Action             | Command                                   |
+| ------------------ | ----------------------------------------- |
+| Build all packages | `Ctrl+Shift+B`                            |
+| Test all packages  | `Ctrl+P`, type `task test`, press `Enter` |
