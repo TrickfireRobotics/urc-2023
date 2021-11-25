@@ -8,4 +8,4 @@ Get started on [Windows](docs/install_on_windows.md) | [Linux](docs/install_on_l
 
 ## Quick Reference (VS Code)
 Build all packages: `Ctrl+Shift+B`
-Test all packages: `Alt+Shift+T`
+Test all packages: `Ctrl+P` - type `task test` - `Enter`
