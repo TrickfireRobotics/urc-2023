@@ -7,8 +7,6 @@
   <maintainer email="phillipov@outlook.com">trickfire</maintainer>
   <license>TODO: License declaration</license>
 
-  <build_depend>hello_world</build_depend>
-
   <exec_depend>hello_world</exec_depend>
   <exec_depend>ros2launch</exec_depend>
 
