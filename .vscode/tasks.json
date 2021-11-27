@@ -35,6 +35,12 @@
 				"isDefault": true
 			},
 			"label": "test"
-		}
+		},
+		{
+			"type": "shell",
+            "command": "rm -rf ${workspaceFolder}/build ${workspaceFolder}/install ${workspaceFolder}/log",
+			"problemMatcher": [],
+			"label": "purge"
+        },
 	]
 }
