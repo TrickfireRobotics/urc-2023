@@ -3,18 +3,9 @@
 	"tasks": [
 		{
 			"label": "build",
-			"type": "colcon",
-			"args": [
-				"build",
-				"--symlink-install",
-				"--base-paths",
-				"/home/trickfire/NasaRmc2022",
-				"--cmake-args",
-				"-DCMAKE_BUILD_TYPE=Debug"
-			],
-			"problemMatcher": [
-				"$catkin-gcc"
-			],
+			"type": "shell",
+			"command": "${workspaceFolder}/build.sh",
+			"problemMatcher": [],
 			"group": {
 				"kind": "build",
 				"isDefault": true
@@ -22,34 +13,13 @@
 		},
 		{
 			"label": "test",
-			"dependsOn": ["pre-test"],
-			"type": "colcon",
-			"args": [
-				"test-result",
-				"--test-result-base",
-				"/home/trickfire/NasaRmc2022",
-				"--verbose"
-			],
-			"problemMatcher": [
-				"$catkin-gcc"
-			],
+			"type": "shell",
+			"command": "${workspaceFolder}/test.sh",
+			"problemMatcher": [],
 			"group": {
 				"kind": "test",
 				"isDefault": true
 			}
-		},
-		{
-			"label": "pre-test",
-			"type": "colcon",
-			"args": [
-				"test",
-				"--base-paths",
-				"/home/trickfire/NasaRmc2022"
-			],
-			"problemMatcher": [
-				"$catkin-gcc"
-			],
-			"group": "test"
 		},
 		{
 			"label": "purge",

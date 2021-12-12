@@ -16,7 +16,6 @@
 		"ms-vscode.cmake-tools",
 		"ms-vscode.cpptools",
 		"twxs.cmake",
-		"yzhang.markdown-all-in-one",
-        "ms-iot.vscode-ros"
+		"yzhang.markdown-all-in-one"
 	]
 }
