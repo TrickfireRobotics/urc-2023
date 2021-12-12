@@ -2,6 +2,7 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "build",
 			"type": "colcon",
 			"args": [
 				"build",
@@ -17,10 +18,28 @@
 			"group": {
 				"kind": "build",
 				"isDefault": true
-			},
-			"label": "build"
+			}
 		},
 		{
+			"label": "test",
+			"dependsOn": ["pre-test"],
+			"type": "colcon",
+			"args": [
+				"test-result",
+				"--test-result-base",
+				"/home/trickfire/NasaRmc2022",
+				"--verbose"
+			],
+			"problemMatcher": [
+				"$catkin-gcc"
+			],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			}
+		},
+		{
+			"label": "pre-test",
 			"type": "colcon",
 			"args": [
 				"test",
@@ -30,17 +49,13 @@
 			"problemMatcher": [
 				"$catkin-gcc"
 			],
-			"group": {
-				"kind": "test",
-				"isDefault": true
-			},
-			"label": "test"
+			"group": "test"
 		},
 		{
+			"label": "purge",
 			"type": "shell",
             "command": "rm -rf ${workspaceFolder}/build ${workspaceFolder}/install ${workspaceFolder}/log",
-			"problemMatcher": [],
-			"label": "purge"
+			"problemMatcher": []
         },
 	]
 }
