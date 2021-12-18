@@ -4,27 +4,27 @@
 		{
 			"label": "build",
 			"type": "shell",
-			"command": "${workspaceFolder}/build.sh",
-			"problemMatcher": [],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			}
+			"command": "./build.sh",
+			"problemMatcher": ["$gcc"],
+			"group": { "kind": "build", "isDefault": true }
+		},
+		{
+			"label": "launch",
+			"type": "shell",
+			"command": "./launch.sh",
+			"problemMatcher": []
 		},
 		{
 			"label": "test",
 			"type": "shell",
-			"command": "${workspaceFolder}/test.sh",
+			"command": "./test.sh",
 			"problemMatcher": [],
-			"group": {
-				"kind": "test",
-				"isDefault": true
-			}
+			"group": { "kind": "test", "isDefault": true }
 		},
 		{
 			"label": "purge",
 			"type": "shell",
-            "command": "rm -rf ${workspaceFolder}/build ${workspaceFolder}/install ${workspaceFolder}/log",
+            "command": "rm -rf build install log",
 			"problemMatcher": []
         },
 	]
