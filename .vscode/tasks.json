@@ -9,23 +9,11 @@
 			"group": { "kind": "build", "isDefault": true }
 		},
 		{
-			"label": "launch",
-			"type": "shell",
-			"command": "./launch.sh",
-			"problemMatcher": []
-		},
-		{
 			"label": "test",
 			"type": "shell",
 			"command": "./test.sh",
 			"problemMatcher": [],
 			"group": { "kind": "test", "isDefault": true }
-		},
-		{
-			"label": "purge",
-			"type": "shell",
-            "command": "rm -rf build install log",
-			"problemMatcher": []
-        },
+		}
 	]
 }
