@@ -3,10 +3,10 @@
 namespace hello_world
 {
 
-hello_node::hello_node(const rclcpp::NodeOptions& options)
+hello_node::hello_node(const rclcpp::NodeOptions & options)
 : Node("hello_node", options)
 {
-    RCLCPP_INFO(this->get_logger(), "Hello World!");
+  RCLCPP_INFO(this->get_logger(), "Hello World!");
 }
 
 } // namespace hello_world
