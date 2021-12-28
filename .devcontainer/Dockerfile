@@ -5,10 +5,15 @@ FROM ros:galactic
 RUN apt-get update && apt-get install -y \
   # To use git in the container
   git \
+  # pip is a package manager for Python
+  python3-pip \
   # To let us sync with GitHub over SSH
   ssh-client \
   # Clean out the apt lists after `apt-get update`
   && rm -rf /var/lib/apt/lists/*
+
+# Update pydocstyle to remove a deprecation warning when testing for PEP257
+RUN pip install --upgrade pydocstyle
 
 # Add a user so we can remote into this container with a non-root user
 RUN useradd trickfire \

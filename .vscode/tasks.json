@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build",
+			"type": "shell",
+			"command": "./build.sh",
+			"problemMatcher": ["$gcc"],
+			"group": { "kind": "build", "isDefault": true }
+		},
+		{
+			"label": "test",
+			"type": "shell",
+			"command": "./test.sh",
+			"problemMatcher": [],
+			"group": { "kind": "test", "isDefault": true }
+		}
+	]
+}

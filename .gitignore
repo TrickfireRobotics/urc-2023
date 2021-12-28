@@ -2,3 +2,6 @@
 /build/
 /install/
 /log/
+
+# Python scripts compiled as bytecode.
+__pycache__/
