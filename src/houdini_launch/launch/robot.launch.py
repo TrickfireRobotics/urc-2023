@@ -24,6 +24,7 @@ robot_container = ComposableNodeContainer(
     emulate_tty=True
 )
 
+
 def generate_launch_description():
     return launch.LaunchDescription([
         robot_container

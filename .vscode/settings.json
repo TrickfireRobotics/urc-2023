@@ -5,5 +5,7 @@
     "python.analysis.extraPaths": [
         "/opt/ros/galactic/lib/python3.8/site-packages"
     ],
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true
 }
