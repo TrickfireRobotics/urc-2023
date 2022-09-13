@@ -1,7 +1,7 @@
 from setuptools import setup
 from glob import glob
 
-package_name = 'houdini_launch'
+package_name = 'viator_launch'
 
 setup(
     name=package_name,
