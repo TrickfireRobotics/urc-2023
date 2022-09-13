@@ -49,7 +49,7 @@ You must also add that SSH key to GitHub. If you didn't already follow the [guid
 Clone this repository into your home directory (or wherever you prefer).
 ```bash
 cd ~
-git clone --recurse-submodules https://github.com/TrickfireRobotics/NasaRmc2022.git
+git clone --recurse-submodules https://github.com/TrickfireRobotics/urc-2023.git
 ```
 
 ## Visual Studio Code
@@ -62,21 +62,21 @@ If you already have VS Code, update it (**Help** > **Check for Updates...**).
 
 Once installed, we need a few VS Code extensions. Open the Extensions sidebar (`Ctrl+Shift+X`) and install **Remote - Containers** by Microsoft. VS Code may auto-detect software and offer to install extensions for you.
 
-### Open `NasaRmc2022` in VS Code
+### Open `urc-2023` in VS Code
 You're almost there.
 
-Open VS Code, select **File > Open Folder...**, and open the `NasaRmc2022` repository you cloned earlier. If VS Code asks you if you trust the workspace authors, select **Yes, I trust the authors**.
+Open VS Code, select **File > Open Folder...**, and open the `urc-2023` repository you cloned earlier. If VS Code asks you if you trust the workspace authors, select **Yes, I trust the authors**.
 
-After the `NasaRmc2022` folder opens, a notification will tell you that it noticed a Dev Container configuration file. Click the **Reopen in Container** option. If you miss the notification, you can search **Remote-Containers: Reopen in Container** in the Command Palette (`Ctrl+Shift+P` then type the command).
+After the `urc-2023` folder opens, a notification will tell you that it noticed a Dev Container configuration file. Click the **Reopen in Container** option. If you miss the notification, you can search **Remote-Containers: Reopen in Container** in the Command Palette (`Ctrl+Shift+P` then type the command).
 
 **You're ready to develop now!** 🥳
 
 This procedure is running the VS Code Server (the part which reads/writes files and runs commands) in the Docker development container. Your VS Code Client (the user interface) remains on Linux but talks to the Server in the container.
 
 ### Reopening VS Code
-If you close VS Code and reopen it later, it will try to reopen `NasaRmc2022` in a container.
+If you close VS Code and reopen it later, it will try to reopen `urc-2023` in a container.
 
 ### Disconnecting from the container
 To leave the container (to work on other projects), run **Remote: Close Remote Connection** from the Command Palette or click the green Remote button in the bottom-left and select **Close Remote Connection**.
 
-You can always re-enter the container with that green button (**Open Folder in container** > `NasaRmc2022`).
+You can always re-enter the container with that green button (**Open Folder in container** > `urc-2023`).
