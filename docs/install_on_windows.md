@@ -64,7 +64,7 @@ That tells Git in WSL2 to use GCM Core in your Windows filesystem as a credentia
 In a WSL2 terminal, download this repository into your WSL2 home directory:
 ```bash
 cd ~
-git clone --recurse-submodules https://github.com/TrickfireRobotics/NasaRmc2022.git
+git clone --recurse-submodules https://github.com/TrickfireRobotics/urc-2023.git
 ```
 The tilde `~` is shorthand for your `$HOME` directory (`/home/yourusername`) in Linux shells. That first command `cd ~` moves into your home directory. This is in a different filesystem than your Windows files.
 
@@ -80,12 +80,12 @@ Install [VS Code](https://code.visualstudio.com/). If you already have it, updat
 
 We need a few VS Code extensions. Open the Extensions sidebar (`Ctrl+Shift+X`) and install **Remote - WSL** and **Remote - Containers** by Microsoft. VS Code may auto-detect software and offer to install extensions for you.
 
-## Open `NasaRmc2022` in VS Code
+## Open `urc-2023` in VS Code
 You're almost there.
 
-In VS Code, open the Command Palette (`Ctrl+Shift+P`), search for **Remote-WSL: Open Folder in WSL...** and run that command. A folder browser will pop up - find and select `NasaRmc2022`. This folder browser is showing your WSL2 filesystem, not your Windows filesystem.
+In VS Code, open the Command Palette (`Ctrl+Shift+P`), search for **Remote-WSL: Open Folder in WSL...** and run that command. A folder browser will pop up - find and select `urc-2023`. This folder browser is showing your WSL2 filesystem, not your Windows filesystem.
 
-The folder browser might not put you into a familiar WSL2 directory. The correct absolute path should look like `Network > wsl$ > Ubuntu > home > your-linux-username > NasaRmc2022`.
+The folder browser might not put you into a familiar WSL2 directory. The correct absolute path should look like `Network > wsl$ > Ubuntu > home > your-linux-username > urc-2023`.
 
 If VS Code asks you if you trust the workspace authors, select **Yes, I trust the authors**.
 
@@ -96,10 +96,10 @@ After VS Code loads into WSL2, a notification will tell you that it noticed a De
 This procedure sent the VS Code Server (the part which reads/writes files and runs commands) from Windows to WSL2, then from WSL2 to a Docker container. Your VS Code Client (the user interface) remains on Windows but talks to the Server which currently runs in the container.
 
 ### Reopening VS Code
-If you close VS Code and reopen it later, it will try to reopen `NasaRmc2022` in a container.
+If you close VS Code and reopen it later, it will try to reopen `urc-2023` in a container.
 Make sure Docker is running (check for the whale icon 🐳 in the system tray) or it will give you an error.
 
 ### Disconnecting from the container
 To leave the container (to work on other projects), run **Remote: Close Remote Connection** from the Command Palette or click the green Remote button in the bottom-left and select **Close Remote Connection**.
 
-You can always re-enter WSL2 then reopen in a container with this green button (**Open Folder in WSL** > `NasaRmc2022` > **Reopen in Container**).
+You can always re-enter WSL2 then reopen in a container with this green button (**Open Folder in WSL** > `urc-2023` > **Reopen in Container**).
