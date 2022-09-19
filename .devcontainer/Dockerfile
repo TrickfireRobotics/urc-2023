@@ -1,5 +1,5 @@
 # Base image: Ubuntu 20.04 with ROS2 Galactic installed
-FROM ros:galactic
+FROM ros:foxy
 
 # Install dependencies from apt
 RUN apt-get update && apt-get install -y \
