@@ -1,2 +1,0 @@
-# Installing on Mac
-TODO
