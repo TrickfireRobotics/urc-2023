@@ -24,5 +24,9 @@ RUN useradd trickfire \
   # Don't make a giant log file for login data, we don't care about it
   --no-log-init
 
+#Install ros2_canopen
+run rosdep update
+cmd cd home/trickfire/urc-2023; rosdep install --from-paths src/ros2_canopen --ignore-src -r -y
+
 # Copy all the bash customizations over to the user.
 COPY .devcontainer/trickfire.bashrc /home/trickfire/.bashrc
