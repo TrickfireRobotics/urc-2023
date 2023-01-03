@@ -1,0 +1,3 @@
+[submodule "src/ros2_canopen"]
+	path = src/ros2_canopen
+	url = https://github.com/ros-industrial/ros2_canopen.git
