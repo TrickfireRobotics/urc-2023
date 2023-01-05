@@ -1,5 +1,5 @@
 # Base image: Ubuntu 20.04 with ROS2 Galactic installed
-FROM ros:foxy
+FROM ros:humble
 
 # Install dependencies from apt
 RUN apt-get update && apt-get install -y \
@@ -13,6 +13,19 @@ RUN apt-get update && apt-get install -y \
   autoconf \
   libtool \
   cmake \
+  mlocate \
+  libtool-bin \
+  ros-humble-rviz2 \
+  ros-humble-joint-state-publisher \
+  ros-humble-hardware-interface \
+  ros-humble-controller-interface \
+  ros-humble-controller-manager \
+  ros-humble-realtime-tools \
+  ros-humble-ros2-control-test-assets \
+  libboost-all-dev \
+  ros-humble-xacro \
+  ros-humble-joint-state-broadcaster \
+  ros-humble-joint-trajectory-controller \
   # Clean out the apt lists after `apt-get update`
   && rm -rf /var/lib/apt/lists/* 
 
@@ -43,14 +56,10 @@ RUN useradd trickfire \
 #RUN rosdep update\
 #RUN rosdep install --from-paths src --ignore-src -r -y
 
-
+WORKDIR urc-2023
+RUN --mount=type=bind,target="." rosdep install --from-paths src/ros2_canopen --ignore-src -r -y
 
 #RUN rosdep update
-#Executes when we run the docker image
-#CMD cd home/trickfire/urc-2023; rosdep install --from-paths src/ros2_canopen --ignore-src -r -y
-RUN rosdep update
-WORKDIR /home/trickfire/urc-2023/src/ros2_canopen
-RUN --mount=type=bind,target="home/trickfire/urc-2023" rosdep install --from-paths src/ros2_canopen --ignore-src -r -y
 
 
 # Copy all the bash customizations over to the user.
