@@ -8,6 +8,6 @@ int main(int argc, char ** argv)
   (void) argv;
 
   printf("hello world interface package\n");
-  cout << "haha new interface time" << endl;
+  cout << "haha interface time" << endl;
   return 0;
 }
