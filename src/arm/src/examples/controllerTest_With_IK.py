@@ -5,25 +5,34 @@ import moteus
 import ikpy.chain
 import ikpy.utils.plot as plot_utils
 import matplotlib.pyplot as plt
+import numpy as np
 
 class ControllerTest:
     def __init__(self):
         self.currentPosition1 = 0
         self.currentPosition2 = 0
         self.currentPosition3 = 0
-        self.currentPosition4 = 0.58
+        self.currentPosition4 = 0
+        self.currentPosition5 = 0.58
         self.actualPosition1 = 0
         self.actualPosition2 = 0
         self.target_position = [0,0,0.58]
         self.computed_position = [0,0,0.58]
-        self.target_orientation =  [-1,0,0]
+        self.alpha = 0
+        self.beta = 0
+        self.zeta = 0
+        self.target_orientation = np.eye(3)
+        print(self.target_orientation)
         self.l_thumb_stick_pos = (0,0)
         self.r_thumb_stick_pos = (0,0)
+        self.l_trigger_pos = 0
+        self.r_trigger_pos = 0
         self.enabled = False
-        self.ik_chain = ikpy.chain.Chain.from_urdf_file("arm_urdf.urdf",active_links_mask=[False, True, True, True, True, True, True])
-        self.ik = self.ik_chain.inverse_kinematics(self.target_position,self.target_orientation, orientation_mode="Z")
+        self.ik_chain = ikpy.chain.Chain.from_urdf_file("untitled.urdf",active_links_mask=[False, True, True, True, True, True, True])
+        self.ik = self.ik_chain.inverse_kinematics(self.target_position,self.target_orientation, orientation_mode="all")
         self.fig, self.ax = plot_utils.init_3d_figure()
-        set_deadzone(DEADZONE_TRIGGER,10) #setup a deadzone for the thumbsticks to avoid stick drift
+        self.ax.legend()
+        set_deadzone(DEADZONE_TRIGGER,10) #setup a deadzone for the thumbsticks to avoid stick driftS
         
        #Connect to two moteus drivers 
        #self.c1 = moteus.Controller(1) # 1 is extend retract antenna
@@ -60,15 +69,31 @@ class ControllerTest:
                         #await self.c2.set_stop()
                     elif event.button == "B":
                         self.enabled = True
+                elif event.type == EVENT_TRIGGER_MOVED:
+                    if event.trigger == LEFT:
+                        self.l_trigger_pos = event.value
+                    elif event.trigger == RIGHT:
+                        self.r_trigger_pos = event.value
+
 
     async def update_ik(self):
 		#some code
         # accumulate the thumbstick value into the current position
         self.currentPosition1 += 0.01 * self.l_thumb_stick_pos[1]
-        self.currentPosition2 += 0.001 * self.r_thumb_stick_pos[0]
+        self.currentPosition2 += 0.1 * self.r_thumb_stick_pos[0]
         self.currentPosition3 += 0.01 * self.l_thumb_stick_pos[0]
-        self.currentPosition4 += 0.01 * self.r_thumb_stick_pos[1]
+        self.currentPosition4 += 0.1 * self.r_thumb_stick_pos[1]
+        self.currentPosition5 += 0.01 * self.r_trigger_pos
+        self.currentPosition5 -= 0.01 * self.l_trigger_pos
+		
+        self.alpha = self.currentPosition2
+        beta = self.currentPosition4
         
+        self.target_orientation = [[math.cos(self.beta)*math.cos(self.zeta), math.sin(self.alpha)*math.sin(self.beta)-math.cos(self.alpha)*math.sin(self.zeta), math.cos(self.alpha)*math.sin(self.beta)*math.cos(self.zeta)+math.sin(self.alpha)*math.sin(self.zeta)],
+                                   [math.cos(self.beta)*math.cos(self.zeta), math.sin(self.alpha)*math.sin(self.beta)+math.cos(self.alpha)*math.sin(self.zeta), math.cos(self.alpha)*math.sin(self.beta)*math.sin(self.zeta)-math.sin(self.alpha)*math.cos(self.zeta)],
+                                   [-math.sin(self.beta), math.sin(self.alpha)*math.cos(self.beta), math.cos(self.alpha)*math.cos(self.beta)]]
+		
+        print(self.target_orientation);
 
         # keep the commanded position close to the actual rotor position so the motor stops in a reasonable time 
         # when the stick is relesased
@@ -80,13 +105,17 @@ class ControllerTest:
         #self.currentPosition1 = self.bound(self.currentPosition1, 20, -20)
         #self.currentPosition2 = self.bound(self.currentPosition2, 20, -20)
 
-        self.target_position = [-self.currentPosition1, self.currentPosition3,self.currentPosition4]
-        self.target_orientation =[self.currentPosition2,0,0]
+        self.target_position = [-self.currentPosition1, self.currentPosition3, self.currentPosition5]
+        # self.target_orientation =[1,self.currentPosition2,self.currentPosition4]
+        print("Position")
+        print(self.target_position)
+        print("Orientation")
+        print(self.target_orientation)
         # print out the commanded position into the console
         #print(self.currentPosition1)
         #print(self.currentPosition2)
         old_position= self.ik.copy()
-        self.ik = self.ik_chain.inverse_kinematics(self.target_position, self.target_orientation, orientation_mode="Z", initial_position=old_position)
+        self.ik = self.ik_chain.inverse_kinematics(self.target_position, self.target_orientation, orientation_mode="all", initial_position=old_position)
         #self.computed_position = self.ik_chain.forward_kinematics(self.ik)[:3, 3]
         #print("Computed position (readable) : %s" % [ '%.2f' % elem for elem in computed_position[:3, 3] ])
         
@@ -114,6 +143,7 @@ class ControllerTest:
         plt.xlim(-0.5, 0.5)
         plt.ylim(-0.5, 0.5)
         self.ax.set_zlim(0, 0.6)
+        self.ax.legend()
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
 	
