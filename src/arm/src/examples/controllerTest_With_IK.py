@@ -87,11 +87,22 @@ class ControllerTest:
         self.currentPosition5 -= 0.01 * self.l_trigger_pos
 		
         self.alpha = self.currentPosition2
-        beta = self.currentPosition4
+        self.beta = self.currentPosition4
+        self.zeta = 0
         
-        self.target_orientation = [[math.cos(self.beta)*math.cos(self.zeta), math.sin(self.alpha)*math.sin(self.beta)-math.cos(self.alpha)*math.sin(self.zeta), math.cos(self.alpha)*math.sin(self.beta)*math.cos(self.zeta)+math.sin(self.alpha)*math.sin(self.zeta)],
-                                   [math.cos(self.beta)*math.cos(self.zeta), math.sin(self.alpha)*math.sin(self.beta)+math.cos(self.alpha)*math.sin(self.zeta), math.cos(self.alpha)*math.sin(self.beta)*math.sin(self.zeta)-math.sin(self.alpha)*math.cos(self.zeta)],
-                                   [-math.sin(self.beta), math.sin(self.alpha)*math.cos(self.beta), math.cos(self.alpha)*math.cos(self.beta)]]
+        aa = math.cos(self.beta)*math.cos(self.zeta)
+        ab = math.sin(self.alpha)*math.sin(self.beta)*math.cos(self.zeta)-math.cos(self.alpha)*math.sin(self.zeta)
+        ac = math.cos(self.alpha)*math.sin(self.beta)*math.cos(self.zeta)+math.sin(self.alpha)*math.sin(self.zeta)
+        ba = math.cos(self.beta)*math.sin(self.zeta)
+        bb = math.sin(self.alpha)*math.sin(self.beta)*math.sin(self.zeta)+math.cos(self.alpha)*math.cos(self.zeta)
+        bc = math.cos(self.alpha)*math.sin(self.beta)*math.sin(self.zeta)-math.sin(self.alpha)*math.cos(self.zeta)
+        ca = -math.sin(self.beta)
+        cb = math.sin(self.alpha)*math.cos(self.beta)
+        cc = math.cos(self.alpha)*math.cos(self.beta)
+        
+        self.target_orientation = [[aa, ab, ac],
+                                   [ba, bb, bc],
+                                   [ca, cb, cc]]
 		
         print(self.target_orientation);
 
@@ -115,7 +126,9 @@ class ControllerTest:
         #print(self.currentPosition1)
         #print(self.currentPosition2)
         old_position= self.ik.copy()
+        self.ik = self.ik_chain.inverse_kinematics(self.target_position)
         self.ik = self.ik_chain.inverse_kinematics(self.target_position, self.target_orientation, orientation_mode="all", initial_position=old_position)
+
         #self.computed_position = self.ik_chain.forward_kinematics(self.ik)[:3, 3]
         #print("Computed position (readable) : %s" % [ '%.2f' % elem for elem in computed_position[:3, 3] ])
         
