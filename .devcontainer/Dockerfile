@@ -1,5 +1,5 @@
 # Base image: Ubuntu 20.04 with ROS2 Galactic installed
-FROM ros:foxy
+FROM ros:humble
 
 # Install dependencies from apt
 RUN apt-get update && apt-get install -y \
@@ -11,6 +11,11 @@ RUN apt-get update && apt-get install -y \
   ssh-client \
   # Clean out the apt lists after `apt-get update`
   && rm -rf /var/lib/apt/lists/*
+
+
+#Install moteus python library https://github.com/mjbots/moteus/tree/main/lib/python
+Run pip3 install moteus
+
 
 # Update pydocstyle to remove a deprecation warning when testing for PEP257
 RUN pip install --upgrade pydocstyle
