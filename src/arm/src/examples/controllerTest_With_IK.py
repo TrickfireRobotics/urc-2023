@@ -9,27 +9,30 @@ import numpy as np
 
 class ControllerTest:
     def __init__(self):
-        self.currentPosition1 = 0
-        self.currentPosition2 = 0
-        self.currentPosition3 = 0
-        self.currentPosition4 = 0
-        self.currentPosition5 = 0.58
-        self.actualPosition1 = 0
-        self.actualPosition2 = 0
-        self.target_position = [0,0,0.58]
-        self.computed_position = [0,0,0.58]
-        self.alpha = 0
-        self.beta = 0
-        self.zeta = 0
-        self.target_orientation = np.eye(3)
-        print(self.target_orientation)
         self.l_thumb_stick_pos = (0,0)
         self.r_thumb_stick_pos = (0,0)
         self.l_trigger_pos = 0
         self.r_trigger_pos = 0
+        self.l_bumper = 0
+        self.r_bumper = 0
+        
         self.enabled = False
+        
+        self.xpos = 0.1
+        self.ypos = 0
+        self.zpos = 0.58
+        self.alpha = 0
+        self.beta = 0
+        self.gamma = 0
+        
+        self.target_position = [0.1,0,0.58]
+        self.ik_result_position = [0.1,0,0.58]
+        self.ik_target_motor_position = [0,0,0,0,0,0]
+        self.motor_report_position = [0,0,0,0,0,0]
+        self.target_orientation = np.eye(3)
         self.ik_chain = ikpy.chain.Chain.from_urdf_file("untitled.urdf",active_links_mask=[False, True, True, True, True, True, True])
         self.ik = self.ik_chain.inverse_kinematics(self.target_position,self.target_orientation, orientation_mode="all")
+        
         self.fig, self.ax = plot_utils.init_3d_figure()
         self.ax.legend()
         set_deadzone(DEADZONE_TRIGGER,10) #setup a deadzone for the thumbsticks to avoid stick driftS
@@ -49,7 +52,7 @@ class ControllerTest:
             value = minimum
         return value  
 
-   
+   #reference - https://github.com/Zuzu-Typ/XInput-Python
     async def controller_update(self):
 		    # update the controller data
             events = get_events()
@@ -69,6 +72,15 @@ class ControllerTest:
                         #await self.c2.set_stop()
                     elif event.button == "B":
                         self.enabled = True
+                    elif event.button == "LEFT_SHOULDER":
+                        self.l_bumper = 1
+                    elif event.button == "RIGHT_SHOULDER":
+                        self.r_bumper = 1
+                elif event.type == EVENT_BUTTON_RELEASED:
+                    if event.button == "LEFT_SHOULDER":
+                        self.l_bumper = 0
+                    elif event.button == "RIGHT_SHOULDER":
+                        self.r_bumper = 0
                 elif event.type == EVENT_TRIGGER_MOVED:
                     if event.trigger == LEFT:
                         self.l_trigger_pos = event.value
@@ -77,25 +89,29 @@ class ControllerTest:
 
 
     async def update_ik(self):
-		#some code
-        # accumulate the thumbstick value into the current position
-        self.currentPosition1 += 0.01 * self.l_thumb_stick_pos[1]
-        self.currentPosition2 += 0.1 * self.r_thumb_stick_pos[0]
-        self.currentPosition3 += 0.01 * self.l_thumb_stick_pos[0]
-        self.currentPosition4 += 0.1 * self.r_thumb_stick_pos[1]
-        self.currentPosition5 += 0.01 * self.r_trigger_pos
-        self.currentPosition5 -= 0.01 * self.l_trigger_pos
-		
-        self.alpha = self.currentPosition2
-        self.beta = self.currentPosition4
-        self.zeta = 0
+
+        #Accumulate the position values from the controller
+        self.xpos += 0.01 * self.l_thumb_stick_pos[1]
+        self.ypos += 0.01 * self.l_thumb_stick_pos[0]
+        self.zpos += 0.01 * self.r_trigger_pos
+        self.zpos -= 0.01 * self.l_trigger_pos
         
-        aa = math.cos(self.beta)*math.cos(self.zeta)
-        ab = math.sin(self.alpha)*math.sin(self.beta)*math.cos(self.zeta)-math.cos(self.alpha)*math.sin(self.zeta)
-        ac = math.cos(self.alpha)*math.sin(self.beta)*math.cos(self.zeta)+math.sin(self.alpha)*math.sin(self.zeta)
-        ba = math.cos(self.beta)*math.sin(self.zeta)
-        bb = math.sin(self.alpha)*math.sin(self.beta)*math.sin(self.zeta)+math.cos(self.alpha)*math.cos(self.zeta)
-        bc = math.cos(self.alpha)*math.sin(self.beta)*math.sin(self.zeta)-math.sin(self.alpha)*math.cos(self.zeta)
+        self.target_position = [-self.xpos, self.ypos, self.zpos]
+        
+        #Accumulate the angle values from the controller
+        self.alpha += 0.1 * self.r_thumb_stick_pos[0]
+        self.beta += 0.1 * self.r_thumb_stick_pos[1]
+        self.gamma = 0
+        
+        # build the "rotational matrix" in the absolute referential see - https://en.wikipedia.org/wiki/Rotation_matrix 
+        # specifically the general rotation matrix with improper Euler angles alpha(x), beta(y), and gamma(z)
+        # and - https://github.com/Phylliade/ikpy/blob/master/tutorials/Orientation.ipynb specifically Orientation on a full referential
+        aa = math.cos(self.beta)*math.cos(self.gamma)
+        ab = math.sin(self.alpha)*math.sin(self.beta)*math.cos(self.gamma)-math.cos(self.alpha)*math.sin(self.gamma)
+        ac = math.cos(self.alpha)*math.sin(self.beta)*math.cos(self.gamma)+math.sin(self.alpha)*math.sin(self.gamma)
+        ba = math.cos(self.beta)*math.sin(self.gamma)
+        bb = math.sin(self.alpha)*math.sin(self.beta)*math.sin(self.gamma)+math.cos(self.alpha)*math.cos(self.gamma)
+        bc = math.cos(self.alpha)*math.sin(self.beta)*math.sin(self.gamma)-math.sin(self.alpha)*math.cos(self.gamma)
         ca = -math.sin(self.beta)
         cb = math.sin(self.alpha)*math.cos(self.beta)
         cc = math.cos(self.alpha)*math.cos(self.beta)
@@ -104,40 +120,46 @@ class ControllerTest:
                                    [ba, bb, bc],
                                    [ca, cb, cc]]
 		
-        print(self.target_orientation);
 
         # keep the commanded position close to the actual rotor position so the motor stops in a reasonable time 
         # when the stick is relesased
-        #self.currentPosition1 = self.bound(self.currentPosition1, self.computed_position[0] + 1, self.computed_position[0] - 1)
-        #self.currentPosition2 = self.bound(self.currentPosition2, self.computed_position[1] + 1, self.computed_position[1] - 1)
+        #self.xpos = self.bound(self.xpos, self.actual_position[0] + 1, self.actual_position[0] - 1)
+        #self.currentPosition2 = self.bound(self.currentPosition2, self.actual_position[1] + 1, self.actual_position[1] - 1)
             
         # Bound the commanded position witin the motor limits set in the onboard config 
         # TODO: this could be read from the moteus driver
-        #self.currentPosition1 = self.bound(self.currentPosition1, 20, -20)
+        #self.xpos = self.bound(self.xpos, 20, -20)
         #self.currentPosition2 = self.bound(self.currentPosition2, 20, -20)
 
-        self.target_position = [-self.currentPosition1, self.currentPosition3, self.currentPosition5]
-        # self.target_orientation =[1,self.currentPosition2,self.currentPosition4]
-        print("Position")
-        print(self.target_position)
-        print("Orientation")
-        print(self.target_orientation)
-        # print out the commanded position into the console
-        #print(self.currentPosition1)
-        #print(self.currentPosition2)
+        print("Commanded Position: %s" % [ '%.2f' % elem for elem in self.target_position ])
+        #print("Commanded Orientation: %s" % [ '%.2f' % elem for elem in self.target_orientation ])
+
+
         old_position= self.ik.copy()
-        self.ik = self.ik_chain.inverse_kinematics(self.target_position)
+        
+        # reach the correct position first
+        self.ik = self.ik_chain.inverse_kinematics(self.target_position, initial_position=old_position)
+        
+        # then reach the correct orientation
+        # reference - https://github.com/Phylliade/ikpy/blob/master/tutorials/Orientation.ipynb
+        # see Orientation and Position section
         self.ik = self.ik_chain.inverse_kinematics(self.target_position, self.target_orientation, orientation_mode="all", initial_position=old_position)
 
-        #self.computed_position = self.ik_chain.forward_kinematics(self.ik)[:3, 3]
-        #print("Computed position (readable) : %s" % [ '%.2f' % elem for elem in computed_position[:3, 3] ])
+
+        self.ik_result_position = self.ik_chain.forward_kinematics(self.ik)[:3, 3]
+        
+        print("Calculated FK(cartesian) position: %s" % [ '%.2f' % elem for elem in self.ik_result_position])
+        
+        # motor map [hand rotation, turntable, shoulder, elbow, forarm rotation, wrist]
+        print("motor map =                   [turntable, shoulder, elbow, forarm rot, wrist, hand rot]")
+        print("Calculated IK(motor) position : %s" % [ '%.2f' % elem for elem in self.ik ][1:])
         
         
     async def command_motors(self):        
             # send the commanded position to the driver, with a given maximum_torque
             # query is set to True to recieve back telemetry and save that into state1 and state2
             if self.enabled:
-                state1 = await self.c1.set_position(position=self.currentPosition1, maximum_torque=15, query=True)
+                state1 = await self.c1.set_position(position=self.ik[0], maximum_torque=15, query=True)
                 state2 = await self.c2.set_position(position=self.currentPosition2, maximum_torque=15, query=True)
 
                 # Read the actual position back from the recieved state variable
