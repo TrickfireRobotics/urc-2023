@@ -22,7 +22,7 @@ class inverse_kinematics:
      
     def produce_ik(self):
         #initilize the process ik variabiles
-        ik_chain = ikpy.chain.Chain.from_urdf_file("untitled.urdf",active_links_mask=[False, True, True, True, True, True, True])
+        ik_chain = ikpy.chain.Chain.from_urdf_file("arm_urdf.urdf",active_links_mask=[False, True, True, True, True, True, True])
         self.ik = ik_chain.inverse_kinematics([0.38,0,0.58])
         while(1):
             if not self.position_Q.empty():
@@ -42,7 +42,7 @@ class inverse_kinematics:
 class ControllerTest:
     def __init__(self):
     
-        self.ik_chain = ikpy.chain.Chain.from_urdf_file("untitled.urdf",active_links_mask=[False, True, True, True, True, True, True])
+        self.ik_chain = ikpy.chain.Chain.from_urdf_file("arm_urdf.urdf",active_links_mask=[False, True, True, True, True, True, True])
         self.ik_process = inverse_kinematics()
         self.ik = [0,0,0,0,0,0,0]
 
@@ -73,9 +73,9 @@ class ControllerTest:
         self.ax.legend()
         set_deadzone(DEADZONE_TRIGGER,10) #setup a deadzone for the thumbsticks to avoid stick driftS
         
-       #Connect to two moteus drivers 
-       #self.c1 = moteus.Controller(1) # 1 is extend retract antenna
-       #self.c2 = moteus.Controller(2)  # 2 is rotate antenna 
+        #Connect to two moteus drivers 
+        self.c1 = moteus.Controller(1) # 1 is extend retract antenna
+        self.c2 = moteus.Controller(2)  # 2 is rotate antenna 
 
 
    #reference - https://github.com/Zuzu-Typ/XInput-Python
@@ -93,11 +93,11 @@ class ControllerTest:
                         # save the position of the right stick into the global variable 
                         self.r_thumb_stick_pos = (int(round(event.x,0)), int(round(event.y,0)))
                 elif event.type == EVENT_BUTTON_PRESSED:
-                    if event.button == "A":
+                    if event.button == "B":
                         self.enabled = False
-                        #await self.c1.set_stoppython
-                        #await self.c2.set_stop()
-                    elif event.button == "B":
+                        await self.c1.set_stop()
+                        await self.c2.set_stop()
+                    elif event.button == "A":
                         self.enabled = True
                     elif event.button == "LEFT_SHOULDER":
                         self.l_bumper = 1
@@ -172,8 +172,8 @@ class ControllerTest:
             # send the commanded position to the driver, with a given maximum_torque
             # query is set to True to recieve back telemetry and save that into state1 and state2
             if self.enabled:
-                state1 = await self.c1.set_position(position=self.ik[2], maximum_torque=15, query=True)
-                state2 = await self.c2.set_position(position=self.ik[1], maximum_torque=15, query=True)
+                state1 = await self.c1.set_position(position=self.ik[2] * 8, maximum_torque=15, query=True)
+                state2 = await self.c2.set_position(position=self.ik[1] * 8, maximum_torque=15, query=True)
 
                 # Read the actual position back from the recieved state variable
                 self.motor_report_position[2] = state1.values[moteus.Register.POSITION]
@@ -182,8 +182,11 @@ class ControllerTest:
 
             # Print blank line so we can separate one iteration from the
             # next
+            print("motor map =                   [turntable, shoulder, elbow, forarm rot, wrist, hand rot]")
+            print("Reported motor position : %s" % [ '%.2f' % elem for elem in self.motor_report_position ][1:])
+
             print()
-            await asyncio.sleep(0.02)
+            await asyncio.sleep(0.01)
 
     async def display_arm(self):
         while True:
@@ -196,14 +199,14 @@ class ControllerTest:
             self.ax.legend()
             self.fig.canvas.draw()
             self.fig.canvas.flush_events()
-            await asyncio.sleep(0.02)
+            await asyncio.sleep(0.05)
 	
 	
     async def main(self):
         # In case the controller had faulted previously, at the start of
         # this script we send the stop command in order to clear it.
-        #await self.c1.set_stop()
-        #await self.c2.set_stop()
+        await self.c1.set_stop()
+        await self.c2.set_stop()
         
         # wait after stop command before sending the next command
         #await asyncio.sleep(0.5)
@@ -237,8 +240,10 @@ class ControllerTest:
         controller_task = asyncio.create_task(self.controller_update())
 
         ik_task = asyncio.create_task(self.consume_ik())
-                    
+   
         display_task = asyncio.create_task(self.display_arm())
+        
+        motor_task = asyncio.create_task(self.command_motors())
         
         await controller_task
                     
