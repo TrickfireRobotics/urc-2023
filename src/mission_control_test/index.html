@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
+  <script defer src="./script.js"></script>
 </head>
 
 <body>
@@ -16,7 +17,7 @@
 
 
   <hr />
-
+  <button onclick=>Test for Latency</button>
   <p>Connection: <span id="status" style="font-weight: bold;">N/A</span></p>
   <p><code>/my_topic</code> messages received:
   <ul id="messages" style="font-weight: bold;"></ul>
@@ -43,20 +44,6 @@
       document.getElementById("status").innerHTML = "closed";
     });
 
-    // Create a listener for /my_topic
-    const my_topic_listener = new ROSLIB.Topic({
-      ros,
-      name: "/ my_topic",
-      messageType: "std_msgs / String"
-    });
-
-    // When we receive a message on /my_topic, add its data as a list item to the “messages" ul
-    my_topic_listener.subscribe((message) => {
-      const ul = document.getElementById("messages");
-      const newMessage = document.createElement("li");
-      newMessage.appendChild(document.createTextNode(message.data));
-      ul.appendChild(newMessage);
-    });
   </script>
 </body>
 

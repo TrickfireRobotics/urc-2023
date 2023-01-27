@@ -1,6 +1,6 @@
 #This Dockerfile differs from the .devcontainer/Dockerfile because this one does not depend on VSCode to inject the
 #codebase into the docker container. As such, we can use this to independently launch a docker container on the robot computer
-FROM ros:foxy
+FROM ros:humble
 
 # Install dependencies from apt
 RUN apt-get update && apt-get install -y \
@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
   python3-pip \
   # To let us sync with GitHub over SSH
   ssh-client \
-  ros-foxy-rosbridge-server \
+  ros-humble-rosbridge-server \
   # Clean out the apt lists after `apt-get update`
   && rm -rf /var/lib/apt/lists/*
 
