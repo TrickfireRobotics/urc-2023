@@ -7,8 +7,6 @@ import moteus
 class RosMotuesBridge(Node):
 
 
-
-
     def __init__(self):
         super().__init__("can_motues_node")
         self.get_logger().info("LAUNCHING can_motues node")
@@ -17,17 +15,10 @@ class RosMotuesBridge(Node):
     def createMoteusMotors(self):
         self.get_logger().info("Creating motors")
 
-        motuesTopicsList = [
-            moteus.Register.MODE, 
-            moteus.Register.HOME_STATE,
-            moteus.Register.POSITION]
-
-        motuesTopicsList2 = [
-            moteus.Register.ABS_POSITION, 
-            moteus.Register.HOME_STATE,
-            moteus.Register.POSITION]
-
-        test = moteus_motor.MoteusMotor(1,"myname", motuesTopicsList, motuesTopicsList2, self)
+        #Creating a moteus motor
+        moteusPubList = [moteus.Register.POSITION]
+        moteusSubList = [moteus.Register.POSITION]
+        motor = moteus_motor.MoteusMotor(1,"myname", moteusPubList, moteusSubList, self)
 
 
 
