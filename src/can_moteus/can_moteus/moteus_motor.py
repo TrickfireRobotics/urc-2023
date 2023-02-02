@@ -7,11 +7,10 @@ import math
 class MoteusMotor:
     canID = None  # int
     name = None  # string
-    moteusRegToDataHashmap = None #Moteus.Register -> some value
-    moteusRegToPubObjHashmap = None #Moteus.Register -> some value
-    rosNode = None #The ros_moteus_bridge.py
-    moteusController = None #moteus.Controller
-    returnedData = None #moteus.Result
+    moteusRegToDataHashmap = None  # Moteus.Register -> some value
+    moteusRegToPubObjHashmap = None  # Moteus.Register -> some value
+    rosNode = None  # The ros_moteus_bridge.py
+    moteusController = None  # moteus.Controller
 
     def __init__(self, canID, name, moteusPubList, moteusSubList, rosNode):
         rosNode.get_logger().info("Creating motor with name: " + name)
@@ -20,40 +19,76 @@ class MoteusMotor:
         self.moteusRegToDataHashmap = {}
         self.rosNode = rosNode
 
+        # Setup subscriber stuff
         self.createMoteusToDataHashmap(moteusSubList)
-        self.createSubscribers(moteusSubList,rosNode)
+        self.createSubscribers(moteusSubList, rosNode)
+
+        # Setup publisher stuff
+        self.createPublishers(moteusPubList)
 
         self.setupMoteusController()
         self.startLoop()
 
     async def startLoop(self):
         while True:
-            self.returnedData = self.moteusController
+            # For now, the only thing that will be sent to the
+            # moteus controller is the position that we want
+            returnedData = await self.moteusController.set_position(
+                position=self.moteusRegToDataHashmap[moteus.Register.POSITION], maximum_torque=15, query=True)
+
+            # Publish data to ROS
+            self.publishDataToRos(returnedData)
 
 
+    #Goes through all of the publishers and sends the correct data from the
+    #data we got from the motors
+    def publishDataToRos(self, moteusResult):
+        for register in self.moteusRegToPubObjHashmap:
+            publisher = self.moteusRegToPubObjHashmap[register]
+            data = moteusResult.values(register)
+
+            publisher.publish(data)
+
+    #Creates a publisher for each register 
+    def createPublishers(self, moteusPubList):
+        self.moteusRegToPubObjHashmap = dict()
+
+        for register in moteusPubList:
+            topicName = self.name + "_" + \
+                str(register).replace("Register.", "") + "_from_can"
+            publisher = self.rosNode.create_publisher(
+                std_msgs.msg.Int32, topicName, 10)
+
+            self.moteusRegToPubObjHashmap[register] = publisher
+
+    #Create a new moteus object
     async def setupMoteusController(self):
         self.moteusController = moteus.Controller(self.canID)
         await self.moteusController.set_stop()
         await self.moteusController.set_position(position=math.nan, query=False)
 
-
+    #Creates a map between the moteus registers and their respective data
     def createMoteusToDataHashmap(self, moteusSubList):
         for moteusRegister in moteusSubList:
-            self.moteusRegToDataHashmap[moteusRegister] = "data" + str(moteusRegister)
+            self.moteusRegToDataHashmap[moteusRegister] = 0
 
-    def createSubscribers(self,moteusSubList,rosNode):
+    #Create a subscriber for each of the registers to listen to
+    def createSubscribers(self, moteusSubList, rosNode):
         for register in moteusSubList:
-            topicName = self.name + "_" + str(register).replace("Register.","") + "_from_robot_interface"
-            rosNode.subscription = rosNode.create_subscription (
+            topicName = self.name + "_" + \
+                str(register).replace("Register.", "") + \
+                "_from_robot_interface"
+            rosNode.subscription = rosNode.create_subscription(
                 std_msgs.msg.Int32,
                 topicName,
-                (lambda self, moteus_motor=self,reg=register: moteus_motor.updateDataHashmap(reg,self)),
+                (lambda self, moteus_motor=self,
+                 reg=register: moteus_motor.updateDataHashmap(reg, self)),
                 10
             )
 
             rosNode.get_logger().info(str(topicName))
 
+    #Update the data when we got it from the subscriber
     def updateDataHashmap(self, register, data):
         self.rosNode.get_logger().info("Change data for register: " + str(register))
         self.moteusRegToDataHashmap[register] = data
-
