@@ -16,7 +16,8 @@ class MoteusMotor:
         rosNode.get_logger().info("Creating motor with name: " + name)
         self.canID = canID
         self.name = name
-        self.moteusRegToDataHashmap = {}
+        self.moteusRegToDataHashmap = dict()
+        self.moteusRegToPubObjHashmap = dict()
         self.rosNode = rosNode
 
         # Setup subscriber stuff
@@ -51,8 +52,6 @@ class MoteusMotor:
 
     #Creates a publisher for each register 
     def createPublishers(self, moteusPubList):
-        self.moteusRegToPubObjHashmap = dict()
-
         for register in moteusPubList:
             topicName = self.name + "_" + \
                 str(register).replace("Register.", "") + "_from_can"
