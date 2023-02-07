@@ -27,8 +27,14 @@ class MoteusMotor:
         # Setup publisher stuff
         self.createPublishers(moteusPubList)
 
-        self.setupMoteusController()
-        self.startLoop()
+        isConnected = asyncio.run(self.setupMoteusController())
+
+        if(isConnected):
+            asyncio.run(self.startLoop())
+        else:
+            rosNode.get_logger().error("FAILED TO CONNECT TO CONTROLLER: NAME: " + name + " CAN ID: " + str(self.canID))
+
+        
 
     async def startLoop(self):
         while True:
@@ -39,6 +45,8 @@ class MoteusMotor:
 
             # Publish data to ROS
             self.publishDataToRos(returnedData)
+            asyncio.sleep(0.02)
+            
 
 
     #Goes through all of the publishers and sends the correct data from the
@@ -63,8 +71,16 @@ class MoteusMotor:
     #Create a new moteus object
     async def setupMoteusController(self):
         self.moteusController = moteus.Controller(self.canID)
-        await self.moteusController.set_stop()
-        await self.moteusController.set_position(position=math.nan, query=False)
+
+        try:
+            await self.moteusController.set_stop()
+            await self.moteusController.set_position(position=math.nan, query=False)
+        except RuntimeError as error:
+            self.rosNode.get_logger().error(error.__str__())
+            return False
+
+
+        return True
 
     #Creates a map between the moteus registers and their respective data
     def createMoteusToDataHashmap(self, moteusSubList):
