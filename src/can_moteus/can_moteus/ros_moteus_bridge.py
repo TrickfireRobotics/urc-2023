@@ -9,7 +9,7 @@ class RosMotuesBridge(Node):
 
     def __init__(self):
         super().__init__("can_motues_node")
-        self.get_logger().info("LAUNCHING can_motues node")
+        self.get_logger().info("Launching can_motues node")
         self.createMoteusMotors()
 
     def createMoteusMotors(self):
@@ -18,7 +18,13 @@ class RosMotuesBridge(Node):
         #Creating a moteus motor
         moteusPubList = [moteus.Register.POSITION]
         moteusSubList = [moteus.Register.POSITION]
-        motor = moteus_motor.MoteusMotor(1,"myname", moteusPubList, moteusSubList, self)
+        motor = moteus_motor.MoteusMotor(
+            1, 
+            moteus_motor.MoteusMotor.Mode.POSITION,
+            "mymotortest", 
+            moteusPubList, 
+            moteusSubList, 
+            self)
 
 
 
