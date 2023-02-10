@@ -65,7 +65,7 @@ class MoteusMotor:
 
     #Goes through all of the publishers and sends the correct data from the
     #data we got from the motors
-    def publishDataToRos(self, moteusResult):
+    async def publishDataToRos(self, moteusResult):
         for register in self._moteusRegToPubObjHashmap:
             publisher = self._moteusRegToPubObjHashmap[register]
             data = moteusResult.values(register)
