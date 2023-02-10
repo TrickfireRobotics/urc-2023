@@ -135,3 +135,20 @@ void RobotInterface::arm3Extend(const double amount) {
 void RobotInterface::arm3Retract(const double amount) {
 
 }
+
+// Antenna movement
+void RobotInterface::antennaExtend() {
+
+}
+
+void RobotInterface::antennaRetract() {
+
+}
+
+void RobotInterface::antennaTurnLeft(const double amount) {
+
+}
+
+void RobotInterface::antennaTurnRight(const double amount) {
+    
+}
