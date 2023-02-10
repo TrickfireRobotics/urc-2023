@@ -73,6 +73,12 @@ class RobotInterface
         // Arm 3 movement
         void arm3Extend(const double amount);
         void arm3Retract(const double amount);
+
+        // Antenna movement
+        void antennaExtend();
+        void antennaRetract();
+        void antennaTurnLeft(const double amount);
+        void antennaTurnRight(const double amount);
 };
 
 #endif
