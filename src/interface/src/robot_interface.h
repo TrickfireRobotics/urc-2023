@@ -23,56 +23,56 @@ class RobotInterface
         */
 
         // General movement including all wheels
-        bool moveForward(const double amount);
-        bool moveBackward(const double amount);
-        bool turnLeft(const double amount);
-        bool turnRight(const double amount);
+        void moveForward(const double amount);
+        void moveBackward(const double amount);
+        void turnLeft(const double amount);
+        void turnRight(const double amount);
 
         // Left front wheel
-        bool leftFrontWheelForward(const double amount);
-        bool leftFrontWheelBack(const double amount);
+        void leftFrontWheelForward(const double amount);
+        void leftFrontWheelBackward(const double amount);
 
         // Right front wheel
-        bool rightFrontWheelForward(const double amount);
-        bool rightFrontWheelBack(const double amount);
+        void rightFrontWheelForward(const double amount);
+        void rightFrontWheelBackward(const double amount);
 
         // Left middle wheel
-        bool leftMiddleWheelForward(const double amount);
-        bool leftMiddleWheelBack(const double amount);
+        void leftMiddleWheelForward(const double amount);
+        void leftMiddleWheelBackward(const double amount);
 
         // Right middle wheel
-        bool rightMiddleWheelForward(const double amount);
-        bool rightMiddleWheelBack(const double amount);
+        void rightMiddleWheelForward(const double amount);
+        void rightMiddleWheelBackward(const double amount);
 
         // Left back wheel
-        bool leftBackWheelForward(const double amount);
-        bool leftBackWheelBack(const double amount);
+        void leftBackWheelForward(const double amount);
+        void leftBackWheelBackward(const double amount);
 
         // Right back wheel
-        bool rightBackWheelForward(const double amount);
-        bool rightBackWheelBack(const double amount);
+        void rightBackWheelForward(const double amount);
+        void rightBackWheelBackward(const double amount);
 
         /*
         * Arm movement/rotation
         */
 
         // Base turntable
-        bool baseRotation(const double amount);
+        void baseRotationLeft(const double amount);
+        void baseRotationRight(const double amount);
 
-        // Base joint
-        // ADD SOMETHING HERE FOR JOINT
+        // Arm 1 is closest to base and arm 3 is furthest from base
 
-        // Arm 1 rotation
-        bool arm1Extend(const double amount);
-        bool arm1Retract(const double amount);
+        // Arm 1 movement
+        void arm1Extend(const double amount);
+        void arm1Retract(const double amount);
 
-        // Arm 2 rotation
-        bool arm2Extend(const double amount);
-        bool arm2Retract(const double amount);
+        // Arm 2 movement
+        void arm2Extend(const double amount);
+        void arm2Retract(const double amount);
 
-        // Arm 3 rotation
-        bool arm3Extend(const double amount);
-        bool arm3Retract(const double amount);
+        // Arm 3 movement
+        void arm3Extend(const double amount);
+        void arm3Retract(const double amount);
 };
 
 #endif
