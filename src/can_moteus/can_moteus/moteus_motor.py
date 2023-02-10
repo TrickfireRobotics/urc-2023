@@ -91,6 +91,8 @@ class MoteusMotor:
     # Returns True if connection was successful
     # Returns False if we had an issue connecting
     async def setupMoteusController(self):
+
+        
         self.moteusController = moteus.Controller(self._canID)
 
         try:

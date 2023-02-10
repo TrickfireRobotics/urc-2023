@@ -19,8 +19,8 @@ class RosMotuesBridge(Node):
         moteusPubList = [moteus.Register.POSITION]
         moteusSubList = [moteus.Register.POSITION]
         motor = moteus_motor.MoteusMotor(
-            1, 
             moteus_motor.MoteusMotor.Mode.POSITION,
+            1, 
             "mymotortest", 
             moteusPubList, 
             moteusSubList, 
