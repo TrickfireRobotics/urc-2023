@@ -7,7 +7,7 @@
     "workspaceFolder": "/home/trickfire/${localWorkspaceFolderBasename}",
     "runArgs": [
         "--cap-add=SYS_PTRACE",
-        "--device=/dev/ttyUSB0",
+        //"--device=/dev/ttyUSB0",
         "--security-opt", "seccomp=unconfined"
     ],
     "extensions": [
