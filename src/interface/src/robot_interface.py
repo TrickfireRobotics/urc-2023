@@ -4,9 +4,12 @@ class RobotInterface:
     #
     # Constructors/Destructors
     #
+
+    def __init__(self):
+        print()
+    def __del__(self):
+        print()
     
-    # RobotInterface();
-    # ~RobotInterface(){};
     # RobotInterface(const RobotInterface&) = delete;
     # RobotInterface& operator=(const RobotInterface&) = delete;
     # RobotInterface(RobotInterface&&) = delete;
