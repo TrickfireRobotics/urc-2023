@@ -1,15 +1,36 @@
 # General interface for robot funcitonality
 
-class RobotInterface:
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
+
+
+class RobotInterface(Node):
     #
     # Constructors/Destructors
     #
 
     def __init__(self):
-        print()
+        super().__init__('robot_interface_publisher')
+        self.publisher_ = self.create_publisher(float, 'topic', 10)
+        timer_period = 0.5  # seconds
+        self.timer = self.create_timer(timer_period, self.timer_callback)
+        self.i = 0
+    
     def __del__(self):
         print()
+
     
+    # TESTING
+    #
+    # def timer_callback(self):
+    #     msg = String()
+    #     msg.data = 'Hello World: %d' % self.i
+    #     self.publisher_.publish(msg)
+    #     self.get_logger().info('Publishing: "%s"' % msg.data)
+    #     self.i += 1
+    
+
     # RobotInterface(const RobotInterface&) = delete;
     # RobotInterface& operator=(const RobotInterface&) = delete;
     # RobotInterface(RobotInterface&&) = delete;
@@ -22,7 +43,10 @@ class RobotInterface:
 
     # General movement including all wheels
     def moveForward(self, amount):
-        print()
+        msg = float()
+        msg.data = amount
+        self.publisher_.publish(msg)
+        self.get_logger().info('moveForward publishing: "%f"' % msg.data)
     def moveBackward(self, amount):
         print()
     def turnLeft(self, amount):
