@@ -1,15 +1,11 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>houdini_launch</name>
+  <name>testingInterface</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="phillipov@outlook.com">trickfire</maintainer>
+  <maintainer email="daniel.kantor2009@gmail.com">trickfire</maintainer>
   <license>TODO: License declaration</license>
-
-  <exec_depend>hello_world</exec_depend>
-  <exec_depend>ros2launch</exec_depend>
-  <exec_depend>interface</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
