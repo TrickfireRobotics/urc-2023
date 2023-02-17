@@ -1,8 +1,6 @@
 import rclpy
 from rclpy.node import Node
-import sys
-sys.path.append('urc-2023/src/interface/src/robot_interface.py')
-import robot_interface.py
+from /interface/robot_interface #FIGURE OUT HOW TO IMPORT ROBOT INTERFACE
 
 
 class testingNode(Node):

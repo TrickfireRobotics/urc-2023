@@ -1,21 +1,37 @@
+#!/usr/bin/env python3
+
 # General interface for robot funcitonality
 
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
-
 class RobotInterface(Node):
     #
     # Constructors/Destructors
     #
 
-    def __init__(self):
-        super().__init__('robot_interface_publisher')
-        self.publisher_ = self.create_publisher(float, 'topic', 10)
-        timer_period = 0.5  # seconds
-        self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.i = 0
+    # def __init__(self):
+    #     super().__init__('robot_interface_publisher')
+    #     self.publisher_ = self.create_publisher(float, 'topic', 10)
+    #     timer_period = 0.5  # seconds
+    #     self.timer = self.create_timer(timer_period, self.timer_callback)
+    #     self.i = 0
+
+    robotPublishers = dict()
+
+    def __init__(self, rosNode):
+        self._rosNode = rosNode
+        publisher = self._rosNode.create_publisher(String, 'topic', 10)
+        self.robotPublishers['moveForward'] = publisher
+        
+
+    # def timer_callback(self):
+    #     msg = String()
+    #     msg.data = 'Hello World: %d' % self.i
+    #     self.publisher_.publish(msg)
+    #     self.get_logger().info('Publishing: "%s"' % msg.data)
+    #     self.i += 1
     
     def __del__(self):
         print()
@@ -42,11 +58,12 @@ class RobotInterface(Node):
     #
 
     # General movement including all wheels
-    def moveForward(self, amount):
-        msg = float()
-        msg.data = amount
-        self.publisher_.publish(msg)
-        self.get_logger().info('moveForward publishing: "%f"' % msg.data)
+    def moveForward():
+        publisher = super().robotPublisher['moveForward']
+        str = String()
+        str.data = "HELLO WORLD HELLO WORLD"
+        publisher.publish(str)
+
     def moveBackward(self, amount):
         print()
     def turnLeft(self, amount):
@@ -129,3 +146,23 @@ class RobotInterface(Node):
         print()
     def antennaTurnRight(self, amount):
         print()
+
+
+def main(args=None):
+    rclpy.init(args=args)
+
+    object1 = RobotInterface()
+
+    minimal_publisher = object1.moveForward()
+
+    rclpy.spin(minimal_publisher)
+
+    # Destroy the node explicitly
+    # (optional - otherwise it will be done automatically
+    # when the garbage collector destroys the node object)
+    minimal_publisher.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
