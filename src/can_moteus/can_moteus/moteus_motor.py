@@ -5,21 +5,14 @@ from multiprocessing import Queue, Process, Pipe
 from std_msgs.msg import Float32
 
 class Mode:
-    POSITION = 0 # Asks for int8/int16/int32. Measured in revolutions
-    CURRENT = 1 # Asks for int8/int16/int32. Measured in Amps
-    VOLTAGE = 2 # Asks for int8/int16/int32. Measured in Volts
+    POSITION = 0 # Asks for float8/float16/float32. Measured in revolutions
+    VELOCITY = 1 # Asks for float8/float16/float32. Measured in revolutions per second
 
 class _PositionData:
     position = 0 # In revoutions
 
-class _CurrentData:
-    dCurrent = 0 # In Amps
-    qCurrent = 0 # In Amps
-
-# make_vfoc()
-class _VoltageData:
-    theta = 0 # Rate of change of electrical phase
-    voltate = 0 # In Amps
+class _VelocityData:
+    velocity = 0
 
 class MoteusMotor: 
     def __init__(self, canID, name, motorMode, moteusPubList, rosNode):
@@ -27,7 +20,7 @@ class MoteusMotor:
         self._canID = canID
         self._name = name
         self._modeData = self.createModeData(motorMode)
-        self._moteusRegToPubObjHashmap = dict()
+        self._moteusRegToPubObjHashmap = {}
         self._rosNode = rosNode
         self._motorMode = motorMode
 
@@ -43,7 +36,7 @@ class MoteusMotor:
         rosNode.create_timer(0.02, self.readMultiQueue)
 
         self._rosNode.get_logger().info("Creating process")
-        moteusAsyncLoopObject =  _MoteusAsyncLoop(self._motorMode, self._moteusRegToPubObjHashmap, self._rosNode, self._canID)
+        moteusAsyncLoopObject =  _MoteusAsyncLoop(self._motorMode, moteusPubList, self._rosNode, self._canID)
         moteusAsyncProcess = Process(target=moteusAsyncLoopObject.startAsyncMoteusLoop, args=(child_conn, self.dataQueue,))
         moteusAsyncProcess.start()
 
@@ -55,7 +48,7 @@ class MoteusMotor:
             register = dataRecieved[0]
             data = dataRecieved[1]
 
-            self._rosNode.get_logger().info( "data from queue" + str(dataRecieved))
+            self._rosNode.get_logger().info("data from queue" + str(dataRecieved))
 
             publisher = self._moteusRegToPubObjHashmap[register]
             msg = Float32()
@@ -67,10 +60,9 @@ class MoteusMotor:
     def createModeData(self, motorMode):
         if(motorMode == Mode.POSITION):
             return _PositionData()
-        elif (motorMode == Mode.CURRENT):
-            return _CurrentData()
-        elif (motorMode == Mode.VOLTAGE):
-            return _VoltageData()
+        elif (motorMode == Mode.VELOCITY):
+            return _VelocityData()
+
         return None
 
     # For each register/data that we want to publish to ROS,
@@ -88,19 +80,15 @@ class MoteusMotor:
             
 
     def createSubscribers(self):
-
         dataName = ""
         callbackFunction = None
 
         if(self._motorMode == Mode.POSITION):
             dataName = "position"
             callbackFunction = self._positionCallback
-        elif (self._motorMode == Mode.CURRENT):
-            dataName = "current"
-            callbackFunction = self._currentCallback
-        elif (self._motorMode == Mode.VOLTAGE):
-            dataName = "voltage"
-            callbackFunction = self._voltageCallback
+        elif (self._motorMode == Mode.VELOCITY):
+            dataName = "velocity"
+            callbackFunction = self._velocityCallback
 
         topicName = self._name + "_" + dataName + "_from_robot_interface"
 
@@ -115,15 +103,14 @@ class MoteusMotor:
     def _positionCallback(self, data):
         self._rosNode.get_logger().info("position callback with data: " + str(data.data))
         self._modeData.position = data.data
-        positonData = _PositionData()
-        positonData.position = data.data
-        self._parent_conn.send(positonData)
+        self._parent_conn.send(self._modeData)
 
-    def _currentCallback(self, data):
-        self._rosNode.get_logger().info("current callback")
 
-    def _voltageCallback(self, data):
-        self._rosNode.get_logger().info("voltage callback")
+    def _velocityCallback(self, data):
+        self._rosNode.get_logger().info("velocity callback with data: " + str(data.data))
+        self._modeData.velocity = data.data
+        self._parent_conn.send(self._modeData)
+
 
 
 
@@ -148,21 +135,19 @@ class MoteusMotor:
 
 class _MoteusAsyncLoop:
     
-    def __init__(self,motorMode, moteusRegToPubObjHashmap, rosNode, canID):
+    def __init__(self,motorMode, _registersToPublish, rosNode, canID):
         rosNode.get_logger().info("Inside __init__")
         self._motorMode = motorMode
         self._modeData = None
-        self._moteusRegToPubObjHashmap = moteusRegToPubObjHashmap
+        self._registersToPublish = _registersToPublish
         self._rosNode = rosNode
         self._moteusController = None
         self._canID = canID
 
         if(motorMode == Mode.POSITION):
             self._modeData = _PositionData()
-        elif(motorMode == Mode.CURRENT):
-            self._modeData = _CurrentData()
-        elif(motorMode == Mode.VOLTAGE):
-            self._modeData = _VoltageData()
+        elif(motorMode == Mode.VELOCITY):
+            self._modeData = _VelocityData()
         
 
     def startAsyncMoteusLoop(self, pipeEnd, childQueue):
@@ -177,6 +162,7 @@ class _MoteusAsyncLoop:
         for register in self._moteusRegToPubObjHashmap:
             array = [register,resultFromMoteus.values[register]]
             childQueue.put(array)
+
 
     async def _loop(self, pipeEnd, childQueue):
         isSuccessfulConnection = False
@@ -198,17 +184,12 @@ class _MoteusAsyncLoop:
 
             if (self._motorMode == Mode.POSITION):
                 resultFromMoteus = await self._moteusController.set_position(position=self._modeData.position,query=True)
-            elif (self._motorMode == Mode.CURRENT):
-                #resultFromMoteus = await self._moteusController.set_current(d_A=self._modeData.dCurrent,q_A=self._modeData.qCurrent,query=True)
-                pass
-            elif (self._motorMode == Mode.VOLTAGE):
-                #resultFromMoteus = await self._moteusController.set_vfoc(theta=self._modeData.theta,voltage=self._modeData.voltate,query=True)
-                pass
+            elif(self._motorMode == Mode.VELOCITY):
+                resultFromMoteus = await self._moteusController.set_position(velocity=self._modeData.velocity,query=True)
 
 
             self.publishdata(resultFromMoteus, childQueue)
             
-
             await asyncio.sleep(0.02)
             
 
