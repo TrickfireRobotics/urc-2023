@@ -79,7 +79,7 @@ class MoteusMotor:
             data = dataRecieved[1]  # is a floating point number
 
             self._rosNode.get_logger().info("data from queue" + str(dataRecieved)
-                                            )  # TODO Remove this logger
+                                            )  # TODO Remove this logger            
 
             publisher = self._moteusRegToPubObjHashmap[register]
             msg = Float32()
@@ -291,7 +291,7 @@ class _MoteusAsyncLoop:
             node can publish the data
         """
 
-        for register in self._moteusRegToPubObjHashmap:
+        for register in self._registersToPublish:
             # [0] moteus.Register
             # [1] floating point number (the data)
             message = [register, resultFromMoteus.values[register]]

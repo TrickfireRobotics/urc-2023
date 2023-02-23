@@ -15,11 +15,11 @@ class RosMotuesBridge(Node):
         self.get_logger().info("Creating motors")
 
         # Creating a moteus motor
-        moteusPubList = [moteus.Register.POSITION]
+        moteusPubList = [moteus.Register.VELOCITY]
         motor = moteus_motor.MoteusMotor(
-            1,
+            3,
             "mymotor",
-            moteus_motor.Mode.POSITION,
+            moteus_motor.Mode.VELOCITY,
             moteusPubList,
             self)
 
