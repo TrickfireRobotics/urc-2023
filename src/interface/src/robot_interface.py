@@ -20,15 +20,21 @@ class RobotInterface(Node):
     #     self.timer = self.create_timer(timer_period, self.timer_callback)
     #     self.i = 0
 
-    
-
     def __init__(self, rosNode):
         self._rosNode = rosNode
         print("GOT TO __init__")
         publisher = self._rosNode.create_publisher(String, 'topic', 10)
-        robotPublishers['leftFrontWheelForward'] = publisher
+        robotPublishers['leftFrontWheel'] = publisher
         publisher = self._rosNode.create_publisher(String, 'topic', 10)
-        robotPublishers['leftFrontWheelBackward'] = publisher
+        robotPublishers['rightFrontWheel'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'topic', 10)
+        robotPublishers['leftMiddleWheel'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'topic', 10)
+        robotPublishers['rightMiddleWheel'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'topic', 10)
+        robotPublishers['leftBackWheel'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'topic', 10)
+        robotPublishers['rightBackWheel'] = publisher
         
 
     # def timer_callback(self):
@@ -74,50 +80,76 @@ class RobotInterface(Node):
         print()
 
     # Left front wheel
-    def leftFrontWheelForward(self, amount):
-        publisher = robotPublishers['leftFrontWheelForward']
+    def leftFrontWheel(self, amount):
+        # Converting from input "meters per second" to output "revolutions per second"
+        revolutionsOutput = 5.681818181818182 * amount
+
+        publisher = robotPublishers['leftFrontWheel']
         strMsg = String()
-        strMsg.data = str(amount)
+        strMsg.data = str(revolutionsOutput)
         publisher.publish(strMsg)
 
-        print('Publishing leftFrontWheelForward: "%s"' % strMsg.data)
-    def leftFrontWheelBackward(self, amount):
-        publisher = robotPublishers['leftFrontWheelBackward']
-        strMsg = String()
-        strMsg.data = str(amount)
-        publisher.publish(strMsg)
-
-        print('Publishing leftFrontWheelBackward: "%s"' % strMsg.data)
+        print('Publishing leftFrontWheel: "%s"' % strMsg.data)
 
     # Right front wheel
-    def rightFrontWheelForward(self, amount):
-        print()
-    def rightFrontWheelBackward(self, amount):
-        print()
+    def rightFrontWheel(self, amount):
+        # Converting from input "meters per second" to output "revolutions per second"
+        revolutionsOutput = 5.681818181818182 * amount
+
+        publisher = robotPublishers['rightFrontWheel']
+        strMsg = String()
+        strMsg.data = str(revolutionsOutput)
+        publisher.publish(strMsg)
+
+        print('Publishing rightFrontWheel: "%s"' % strMsg.data)
 
     # Left middle wheel
-    def leftMiddleWheelForward(self, amount):
-        print()
-    def leftMiddleWheelBackward(self, amount):
-        print()
+    def leftMiddleWheel(self, amount):
+        # Converting from input "meters per second" to output "revolutions per second"
+        revolutionsOutput = 5.681818181818182 * amount
+
+        publisher = robotPublishers['leftMiddleWheel']
+        strMsg = String()
+        strMsg.data = str(revolutionsOutput)
+        publisher.publish(strMsg)
+
+        print('Publishing leftMiddleWheel: "%s"' % strMsg.data)
 
     # Right middle wheel
-    def rightMiddleWheelForward(self, amount):
-        print()
-    def rightMiddleWheelBackward(self, amount):
-        print()
+    def rightMiddleWheel(self, amount):
+        # Converting from input "meters per second" to output "revolutions per second"
+        revolutionsOutput = 5.681818181818182 * amount
+
+        publisher = robotPublishers['rightMiddleWheel']
+        strMsg = String()
+        strMsg.data = str(revolutionsOutput)
+        publisher.publish(strMsg)
+
+        print('Publishing rightMiddleWheel: "%s"' % strMsg.data)
 
     # Left back wheel
-    def leftBackWheelForward(self, amount):
-        print()
-    def leftBackWheelBackward(self, amount):
-        print()
+    def leftBackWheel(self, amount):
+        # Converting from input "meters per second" to output "revolutions per second"
+        revolutionsOutput = 5.681818181818182 * amount
+
+        publisher = robotPublishers['leftBackWheel']
+        strMsg = String()
+        strMsg.data = str(revolutionsOutput)
+        publisher.publish(strMsg)
+
+        print('Publishing leftBackWheel: "%s"' % strMsg.data)
 
     # Right back wheel
-    def rightBackWheelForward(self, amount):
-        print()
-    def rightBackWheelBackward(self, amount):
-        print()
+    def rightBackWheel(self, amount):
+        # Converting from input "meters per second" to output "revolutions per second"
+        revolutionsOutput = 5.681818181818182 * amount
+
+        publisher = robotPublishers['rightBackWheel']
+        strMsg = String()
+        strMsg.data = str(revolutionsOutput)
+        publisher.publish(strMsg)
+
+        print('Publishing rightBackWheel: "%s"' % strMsg.data)
 
     #
     # Arm movement/rotation
@@ -171,19 +203,23 @@ class MyTestingNode(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    node = MyTestingNode()
+    testNode = MyTestingNode()
 
-    object1 = RobotInterface(node)
+    object1 = RobotInterface(testNode)
 
-    minimal_publisher = object1.leftFrontWheelForward(10)
-    minimal_publisher = object1.leftFrontWheelBackward(999)
-
-    rclpy.spin(node)
+    object1.leftFrontWheel(10)
+    object1.rightFrontWheel(15)
+    object1.leftMiddleWheel(20)
+    object1.rightMiddleWheel(25)
+    object1.leftBackWheel(30)
+    object1.rightBackWheel(9999)
+    
+    rclpy.spin(testNode)
 
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
-    minimal_publisher.destroy_node()
+    testNode.destroy_node()
     rclpy.shutdown()
 
 
