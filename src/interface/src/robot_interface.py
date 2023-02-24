@@ -59,10 +59,7 @@ class RobotInterface(Node):
 
     # General movement including all wheels
     def moveForward():
-        publisher = super().robotPublisher['moveForward']
-        str = String()
-        str.data = "HELLO WORLD HELLO WORLD"
-        publisher.publish(str)
+        print()
 
     def moveBackward(self, amount):
         print()
@@ -73,7 +70,10 @@ class RobotInterface(Node):
 
     # Left front wheel
     def leftFrontWheelForward(self, amount):
-        print()
+        publisher = super().robotPublisher['leftFrontWheelForward']
+        str = String()
+        str.data = "HELLO WORLD HELLO WORLD"
+        publisher.publish(str)
     def leftFrontWheelBackward(self, amount):
         print()
 
@@ -151,9 +151,11 @@ class RobotInterface(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    object1 = RobotInterface()
+    node = Node('my_testing_node')
 
-    minimal_publisher = object1.moveForward()
+    object1 = RobotInterface(node)
+
+    minimal_publisher = object1.leftFrontWheelForward(10)
 
     rclpy.spin(minimal_publisher)
 
@@ -166,3 +168,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
