@@ -20,22 +20,31 @@ class RosMotuesBridge(Node):
         moteusMultiprocess = moteus_multiprocess.MoteusMultiprocess(self)
 
 
+        #EXAMPLES
+        # moteusPubList = [moteus.Register.VELOCITY]
+        # moteusMultiprocess.addMotor(
+        #     3,
+        #     "topmotor",
+        #     moteus_motor.Mode.VELOCITY,
+        #     moteusPubList,
+        # )
 
-        moteusPubList = [moteus.Register.VELOCITY]
-        moteusMultiprocess.addMotor(
-            1,
-            "topmotor",
-            moteus_motor.Mode.VELOCITY,
-            moteusPubList,
-        )
+        # moteusPubList2 = [moteus.Register.POSITION]
+        # moteusMultiprocess.addMotor(
+        #     2,
+        #     "middlemotor",
+        #     moteus_motor.Mode.POSITION,
+        #     moteusPubList2,
+        # )
 
-        moteusPubList2 = [moteus.Register.POSITION]
-        moteusMultiprocess.addMotor(
-            2,
-            "bottommotor",
-            moteus_motor.Mode.POSITION,
-            moteusPubList2,
-        )
+        # moteusPubList3 = [moteus.Register.POSITION]
+        # moteusMultiprocess.addMotor(
+        #     1,
+        #     "bottommotor",
+        #     moteus_motor.Mode.POSITION,
+        #     moteusPubList3,
+        # )
+
 
 
 

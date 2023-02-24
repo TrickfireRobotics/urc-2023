@@ -14,9 +14,23 @@ class _MotorData:
     moteusController = None
 
 class MoteusMultiprocess:
-
+    """Connects to moteus controllers and sends data to each controller in order
+    
+        ------
+        This will create a multiprocess queue for each moteus motor to send
+        data that it should publish. There will be one queue that all the motors
+        will push to.
+    """
 
     def __init__(self, rosNode):
+        """
+        Parameters
+        ----------
+        rosNode : Node
+            This is used, and should only be used, as a way to print logging
+            information to the console. 
+        """
+
         self._queueToMoteus = Queue()
         self._canIDToMotorData = {}
         self._rosNode = rosNode
@@ -24,7 +38,22 @@ class MoteusMultiprocess:
 
 
     def addMotor(self, canID, name, motorMode, moteusPubList):
-
+        """
+        Parameters
+        ----------
+        canID : int
+            Can ID of the moteus controller you are trying to connect to
+        name : str
+            The name of the controller. This string is used in the topic 
+            names of both subscribers and publishers
+        motorMode : moteus_controller.Mode
+            The mode of this controller. This effects what kind of data 
+            the object expects and what data the object will send to the 
+            moteus controller
+        moteusPubList : moteus.Register[]
+            Determines what data from the motor will be published to ROS
+        
+        """
         toPublisherQueue = Queue()
 
         # Create motor
@@ -52,16 +81,41 @@ class MoteusMultiprocess:
     # Multiprocess realm
 
     def start(self):
+        """
+            Starts the multiprocess. Call this after you added all the motors
+        """
         moteusAsyncProcess = Process(target=self._startLoop, args=(self._queueToMoteus,))
         moteusAsyncProcess.start()
 
 
     def _startLoop(self,queueToMoteus):
+        """
+            This is now inside the multiprocess. Do any setup here
+            that does not depend on asyncio
 
+            Parameters
+            ----------
+            queueToMoteus : Queue
+                This queue is what the multiprocess will read from to update
+                its internal data for each motor
+        """
         asyncio.run(self._loop(queueToMoteus))
 
 
     async def _loop(self,queueToMoteus):
+        """
+            Connect to the motors and start the loop. For each
+            motor, call the correct moteus method and send 
+            the correct data
+
+            Parameters
+            ----------
+            queueToMoteus : Queue
+                This queue is what the multiprocess will read from to update
+                its internal data for each motor
+        """
+
+
         await self._connectToMoteusControllers()
 
         while True:
@@ -70,14 +124,14 @@ class MoteusMultiprocess:
             for canID in self._canIDToMotorData:
                 motorData = self._canIDToMotorData[canID]
 
-                if (self._motorMode == motorData.mode.POSITION):
-                    resultFromMoteus = await self._moteusController.set_position(position=motorData.data, query=True)
-                elif (self._motorMode == motorData.mode.VELOCITY):
+                if (motorData.mode == moteus_motor.Mode.POSITION):
+                    resultFromMoteus = await motorData.moteusController.set_position(position=motorData.data, query=True)
+                elif (motorData.mode == moteus_motor.Mode.VELOCITY):
                     # moteus controllers will only go a velocity only if it
                     # has reached its given position OR we give it math.nan
-                    resultFromMoteus = await self._moteusController.set_position(position=math.nan, velocity=motorData.data, query=True)
+                    resultFromMoteus = await motorData.moteusController.set_position(position=math.nan, velocity=motorData.data, query=True)
 
-                self.publishdata(canID, resultFromMoteus)
+                self._sendDataToMotor(canID, resultFromMoteus)
 
 
 
@@ -86,8 +140,21 @@ class MoteusMultiprocess:
 
 
     def _sendDataToMotor(self, canID, moteusResult):
+        """
+            Send the requested data for the specified motor via its canID
+
+            Parameters
+            ----------
+            canID : int
+                The canID for the motor
+            moteusResult : moteus.Result
+                The data returned from the moteus motor
+        """
+
+        # Get the motor from the can ID
         motorData = self._canIDToMotorData[canID]
 
+        # Goe through all the registers we want to publish
         for register in motorData.moteusPubList:
             dataToMotor = [register, moteusResult.values[register]]
 
@@ -95,6 +162,16 @@ class MoteusMultiprocess:
 
 
     def _readqueueToMoteus(self,queueToMoteus):
+        """
+            Reads one value from the queue to the moteus multiprocess
+
+            Process
+            -------
+            queueToMoteus : Queue
+                The queue that every motor will send their data to
+
+        """
+
 
         if not queueToMoteus.empty():
             dataRecieved = queueToMoteus.get()
@@ -104,13 +181,14 @@ class MoteusMultiprocess:
             motorData = self._canIDToMotorData[canID]
             motorData.data = data
 
-            #self._rosNode.get_logger().info("Number from queue: " + str(data) + " from CANID: " + str(canID))
-
-
-
-
 
     async def _connectToMoteusControllers(self):
+        """
+            Attempts to connect to every moteus controller.
+            If an attempt fails, it is removed from the dictionary
+
+            
+        """
 
         for canID in list(self._canIDToMotorData):
             motorData = self._canIDToMotorData[canID]
