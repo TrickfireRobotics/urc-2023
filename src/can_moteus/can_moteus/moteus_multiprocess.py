@@ -9,6 +9,7 @@ class _MotorData:
     canID = -1
     mode = None
     publisherQueue = None # [0] Register [1] data
+    moteusPubList = None
     data = 0
     moteusController = None
 
@@ -27,9 +28,11 @@ class MoteusMultiprocess:
         motorData = _MotorData()
         motorData.canID = motor._canID
         motorData.mode = motor._motorMode
+        motorData.moteusPubList = motor._moteusPubList
         motorData.publisherQueue = Queue()
 
         motor._queueToMoteus = self._queueToMoteus
+        motor._readMultiQueue = motorData.publisherQueue
         # Add this to the map
         self._canIDToMotorData[motorData.canID] = motorData
 
@@ -52,8 +55,21 @@ class MoteusMultiprocess:
         while True:
             self._readqueueToMoteus(queueToMoteus)
 
+            self._sendDataToMotor(2,None)
+
             await asyncio.sleep(0.02)
 
+
+
+    def _sendDataToMotor(self, canID, moteusResult):
+        motorData = self._canIDToMotorData[canID]
+        publisherQueue = motorData.publisherQueue
+
+        for register in motorData.moteusPubList:
+            dataToMotor = [register, 420.0]
+            # message = [register, moteusResult.values[register]]
+
+            publisherQueue.put(dataToMotor)
 
 
     def _readqueueToMoteus(self,queueToMoteus):

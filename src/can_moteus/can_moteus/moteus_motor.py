@@ -48,6 +48,7 @@ class MoteusMotor:
         self._modeData = self._createModeData()
         self._queueToMoteus = None
         self._readMultiQueue = None
+        self._moteusPubList = moteusPubList
 
         # Create subscribers and publishers
         self._createPublishers(moteusPubList)
@@ -80,8 +81,7 @@ class MoteusMotor:
             register = dataRecieved[0]  # is a moteus.Register enum
             data = dataRecieved[1]  # is a floating point number
 
-            self._rosNode.get_logger().info("data from queue" + str(dataRecieved)
-                                            )  # TODO Remove this logger            
+            self._rosNode.get_logger().info("data from queue" + str(dataRecieved) + " motor name and ID" + self._name + " " + str(self._canID))  # TODO Remove this logger            
 
             publisher = self._moteusRegToPubObjHashmap[register]
             msg = Float32()
