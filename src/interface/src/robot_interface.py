@@ -6,6 +6,8 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
+robotPublishers = dict()
+
 class RobotInterface(Node):
     #
     # Constructors/Destructors
@@ -18,12 +20,15 @@ class RobotInterface(Node):
     #     self.timer = self.create_timer(timer_period, self.timer_callback)
     #     self.i = 0
 
-    robotPublishers = dict()
+    
 
     def __init__(self, rosNode):
         self._rosNode = rosNode
+        print("GOT TO __init__")
         publisher = self._rosNode.create_publisher(String, 'topic', 10)
-        self.robotPublishers['moveForward'] = publisher
+        robotPublishers['leftFrontWheelForward'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'topic', 10)
+        robotPublishers['leftFrontWheelBackward'] = publisher
         
 
     # def timer_callback(self):
@@ -70,12 +75,19 @@ class RobotInterface(Node):
 
     # Left front wheel
     def leftFrontWheelForward(self, amount):
-        publisher = super().robotPublisher['leftFrontWheelForward']
-        str = String()
-        str.data = "HELLO WORLD HELLO WORLD"
-        publisher.publish(str)
+        publisher = robotPublishers['leftFrontWheelForward']
+        strMsg = String()
+        strMsg.data = str(amount)
+        publisher.publish(strMsg)
+
+        print('Publishing leftFrontWheelForward: "%s"' % strMsg.data)
     def leftFrontWheelBackward(self, amount):
-        print()
+        publisher = robotPublishers['leftFrontWheelBackward']
+        strMsg = String()
+        strMsg.data = str(amount)
+        publisher.publish(strMsg)
+
+        print('Publishing leftFrontWheelBackward: "%s"' % strMsg.data)
 
     # Right front wheel
     def rightFrontWheelForward(self, amount):
@@ -148,16 +160,25 @@ class RobotInterface(Node):
         print()
 
 
+class MyTestingNode(Node):
+    def __init__(self):
+        super().__init__('my_testing_node')
+        #self.create_timer(0.2, self.timer_callback)
+        self.get_logger().info("Hello ROS2")
+    #def timer_callback(self):
+    #    self.get_logger().info("Hello ROS2")
+
 def main(args=None):
     rclpy.init(args=args)
 
-    node = Node('my_testing_node')
+    node = MyTestingNode()
 
     object1 = RobotInterface(node)
 
     minimal_publisher = object1.leftFrontWheelForward(10)
+    minimal_publisher = object1.leftFrontWheelBackward(999)
 
-    rclpy.spin(minimal_publisher)
+    rclpy.spin(node)
 
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
