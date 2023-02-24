@@ -1,19 +1,32 @@
 import rclpy
 from rclpy.node import Node
 
+from ...interface import botInterface
+
 from std_msgs.msg import String
 
 
 class Drivebase(Node):
 
+    botInterface: botInterface = botInterface(self)
+
     def __init__(self):
         super().__init__('drivebase')
-        self.subscription = self.create_subscription(
-            String, 'controller', self.listener_callback, 10)
+        self.left_subscription = self.create_subscription(
+            String, 'controller_left', self.move_left_side, 10)
+        self.right_subscription = self.create_subscription(
+            String, 'controller_right', self.move_right_side, 10)
         self.subscription  # prevent unused variable warning
 
-    def listener_callback(self, msg):
-        self.get_logger().info('I heard: "%s"' % msg.data)
+    def move_left_side(self, msg):
+        botInterface.leftFrontWheelForward(msg)
+        botInterface.leftMiddleWheelForward(msg)
+        botInterface.leftBackWheelForward(msg)
+    
+    def move_right_side(self, msg):
+        botInterface.rightFrontWheelForward()
+        botInterface.rightMiddleWheelForward()
+        botInterface.rightBackWheelForward()
 
 
 def main(args=None):
@@ -22,9 +35,8 @@ def main(args=None):
     drivebase = Drivebase()
 
     print("drivebase test")
-    print(drivebase.get_subscriptions_info_by_topic('controller'))
 
-    rclpy.spin_once(drivebase) # prints callbacks
+    rclpy.spin(drivebase) # prints callbacks
 
 
     # Destroy the node explicitly
