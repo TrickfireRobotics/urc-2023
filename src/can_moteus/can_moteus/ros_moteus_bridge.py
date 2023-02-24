@@ -1,7 +1,9 @@
 import rclpy
 from . import moteus_motor
+from . import moteus_multiprocess
 from rclpy.node import Node
 import moteus
+from multiprocessing import Queue
 
 
 class RosMotuesBridge(Node):
@@ -14,14 +16,31 @@ class RosMotuesBridge(Node):
     def createMoteusMotors(self):
         self.get_logger().info("Creating motors")
 
+        
+        moteusMultiprocess = moteus_multiprocess.MoteusMultiprocess(self)
+
         # Creating a moteus motor
         moteusPubList = [moteus.Register.VELOCITY]
-        motor = moteus_motor.MoteusMotor(
+        mymotor = moteus_motor.MoteusMotor(
             3,
             "mymotor",
             moteus_motor.Mode.VELOCITY,
             moteusPubList,
             self)
+        
+        moteusPubList2 = [moteus.Register.VELOCITY]
+        mymotor2 = moteus_motor.MoteusMotor(
+            2,
+            "mymotor2",
+            moteus_motor.Mode.POSITION,
+            moteusPubList2,
+            self)
+        
+
+        moteusMultiprocess.addMotor(mymotor)
+        moteusMultiprocess.addMotor(mymotor2)
+
+        moteusMultiprocess.start()
 
 
 def main(args=None):

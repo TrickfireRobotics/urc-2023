@@ -46,6 +46,8 @@ class MoteusMotor:
         self._rosNode = rosNode
         self._motorMode = motorMode
         self._modeData = self._createModeData()
+        self._queueToMoteus = None
+        self._readMultiQueue = None
 
         # Create subscribers and publishers
         self._createPublishers(moteusPubList)
@@ -55,26 +57,26 @@ class MoteusMotor:
         # subscriber to the multiprocess where it will then be sent to
         #  the moteus controller
         # Pipes to communicate between ROS process and moteus process
-        self._ros_pipe_conn, multiprocess_conn = Pipe()
+        # self._ros_pipe_conn, multiprocess_conn = Pipe()
 
         # This queue is used to send moteus results to ROS publishers
         # Every 0.02 seconds, call readMultiQueue
-        self._dataQueue = Queue()
-        rosNode.create_timer(0.02, self._readMultiQueue)
+        # self._dataQueue = Queue()
+        rosNode.create_timer(0.02, self._readFromMoteusQueue)
 
         # Creates a seperate process to control the moteus controller
-        self._rosNode.get_logger().info("Creating process")  # TODO Remove this logger
-        moteusAsyncLoopObject = _MoteusAsyncLoop(
-            self._motorMode, moteusPubList, self._rosNode, self._canID)
-        moteusAsyncProcess = Process(target=moteusAsyncLoopObject.startAsyncMoteusLoop, args=(
-            multiprocess_conn, self._dataQueue,))
-        moteusAsyncProcess.start()
+        # self._rosNode.get_logger().info("Creating process")  # TODO Remove this logger
+        # moteusAsyncLoopObject = _MoteusAsyncLoop(
+        #     self._motorMode, moteusPubList, self._rosNode, self._canID)
+        # moteusAsyncProcess = Process(target=moteusAsyncLoopObject.startAsyncMoteusLoop, args=(
+        #     multiprocess_conn, self._dataQueue,))
+        # moteusAsyncProcess.start()
 
-    def _readMultiQueue(self):
+    def _readFromMoteusQueue(self):
         """Recieve data from multiprocess and publish it to the corresponding register topic"""
 
-        if not self._dataQueue.empty():
-            dataRecieved = self._dataQueue.get()
+        if (self._readMultiQueue != None) and (not self._readMultiQueue.empty()):
+            dataRecieved = self._readMultiQueue.get()
             register = dataRecieved[0]  # is a moteus.Register enum
             data = dataRecieved[1]  # is a floating point number
 
@@ -89,13 +91,14 @@ class MoteusMotor:
 
     def _createModeData(self):
         """Create data object according to the motor mode"""
-
+        command = None
         if (self._motorMode == Mode.POSITION):
-            return _PositionData()
+            command = _PositionData()
         elif (self._motorMode == Mode.VELOCITY):
-            return _VelocityData()
+            command = _VelocityData()
 
-        return None
+        command.canID = self._canID
+        return command
 
     def _createPublishers(self, moteusPubList):
         """Create a publisher for data for each moteus register
@@ -165,7 +168,15 @@ class MoteusMotor:
         self._rosNode.get_logger().info("position callback with data: " +
                                         str(msg.data))  # TODO remove this logger
         self._modeData.position = msg.data
-        self._ros_pipe_conn.send(self._modeData)
+
+
+        if self._queueToMoteus != None:
+            # [0] can ID
+            # [1] data value
+            toMultiprocess = [self._canID,self._modeData.position]
+            self._queueToMoteus.put(toMultiprocess)
+
+        # self._ros_pipe_conn.send(self._modeData)
 
     def _velocityCallback(self, msg):
         """Send the data to the multiprocess for velocity
@@ -175,124 +186,132 @@ class MoteusMotor:
 
         self._rosNode.get_logger().info("velocity callback with data: " + str(msg.data))
         self._modeData.velocity = msg.data
-        self._ros_pipe_conn.send(self._modeData)
+
+        if self._queueToMoteus != None:
+            # [0] can ID
+            # [1] data value
+            toMultiprocess = [self._canID,self._modeData.velocity]
+            self._queueToMoteus.put(toMultiprocess)
 
 
-class _MoteusAsyncLoop:
-    """An object used to create a moteus motor multiprocess"""
+        # self._ros_pipe_conn.send(self._modeData)
 
-    def __init__(self, motorMode, registersToPublish, rosNode, canID):
-        """
-        motorMode : Mode
-            The mode of this controller. This effects what kind of data 
-            the object expects and what data the object will send to the 
-            moteus controller
-        registersToPublish : array of moteus.Register
-            Determines what data to be queries from moteus.Result
-        rosNode : node
-            This node is not the same as the ROS node process. It is cloned.
-            As such, you cannot use this node for any ROS tooling - except
-            for get_logger().info() and get_logger().error(), which works
-        canID : int
-            Can ID of the moteus controller you are trying to connect to
-        """
 
-        rosNode.get_logger().info("Inside __init__")
-        self._motorMode = motorMode
-        self._modeData = None
-        self._registersToPublish = registersToPublish
-        self._rosNode = rosNode
-        self._moteusController = None
-        self._canID = canID
+# class _MoteusAsyncLoop:
+#     """An object used to create a moteus motor multiprocess"""
 
-        if (motorMode == Mode.POSITION):
-            self._modeData = _PositionData()
-        elif (motorMode == Mode.VELOCITY):
-            self._modeData = _VelocityData()
+#     def __init__(self, motorMode, registersToPublish, rosNode, canID):
+#         """
+#         motorMode : Mode
+#             The mode of this controller. This effects what kind of data 
+#             the object expects and what data the object will send to the 
+#             moteus controller
+#         registersToPublish : array of moteus.Register
+#             Determines what data to be queries from moteus.Result
+#         rosNode : node
+#             This node is not the same as the ROS node process. It is cloned.
+#             As such, you cannot use this node for any ROS tooling - except
+#             for get_logger().info() and get_logger().error(), which works
+#         canID : int
+#             Can ID of the moteus controller you are trying to connect to
+#         """
 
-    def startAsyncMoteusLoop(self, pipeEnd, rosQueue):
-        """Set up before going into loop for the process"""
+#         rosNode.get_logger().info("Inside __init__")
+#         self._motorMode = motorMode
+#         self._modeData = None
+#         self._registersToPublish = registersToPublish
+#         self._rosNode = rosNode
+#         self._moteusController = None
+#         self._canID = canID
 
-        self._rosNode.get_logger().info(
-            "startAsyncMoteusLoop called")  # TODO remove this logger
+#         if (motorMode == Mode.POSITION):
+#             self._modeData = _PositionData()
+#         elif (motorMode == Mode.VELOCITY):
+#             self._modeData = _VelocityData()
 
-        asyncio.run(self._loop(pipeEnd, rosQueue))
+#     def startAsyncMoteusLoop(self, pipeEnd, rosQueue):
+#         """Set up before going into loop for the process"""
 
-    async def _connect(self):
-        """
-        Attempts to create a connection to the moteus controller; sends the reset command
+#         self._rosNode.get_logger().info(
+#             "startAsyncMoteusLoop called")  # TODO remove this logger
 
-        Returns
-        -------
-        boolean
-            True if connection was successful, False if not
-        """
+#         asyncio.run(self._loop(pipeEnd, rosQueue))
 
-        self._moteusController = moteus.Controller(self._canID)
+#     async def _connect(self):
+#         """
+#         Attempts to create a connection to the moteus controller; sends the reset command
 
-        try:
-            # Reset the controller
-            await self._moteusController.set_stop()
-        except RuntimeError as error:
-            self._rosNode.get_logger().error(
-                "FAILED TO CONNECT TO MOTEUS CONTROLLER WITH CAN ID " + str(self._canID))
-            self._rosNode.get_logger().error(error.__str__())
-            return False
+#         Returns
+#         -------
+#         boolean
+#             True if connection was successful, False if not
+#         """
 
-        return True
+#         self._moteusController = moteus.Controller(self._canID)
 
-    async def _loop(self, pipeEnd, rosQueue):
-        """The main loop of the process
+#         try:
+#             # Reset the controller
+#             await self._moteusController.set_stop()
+#         except RuntimeError as error:
+#             self._rosNode.get_logger().error(
+#                 "FAILED TO CONNECT TO MOTEUS CONTROLLER WITH CAN ID " + str(self._canID))
+#             self._rosNode.get_logger().error(error.__str__())
+#             return False
 
-        Parameter
-        ---------
-        pipeEnd : Pipe
-            This the second part of the pipe that was made in the ROS process.
-            It will be used to only recieve updated data from the ROS subscribers
+#         return True
 
-        rosQueue : Queue
-            This is used to put data from the moteus controller so that the ROS
-            node can publish the data
-        """
+#     async def _loop(self, pipeEnd, rosQueue):
+#         """The main loop of the process
 
-        isSuccessfulConnection = await self._connect()
+#         Parameter
+#         ---------
+#         pipeEnd : Pipe
+#             This the second part of the pipe that was made in the ROS process.
+#             It will be used to only recieve updated data from the ROS subscribers
 
-        # Go into the loop
-        while isSuccessfulConnection:
+#         rosQueue : Queue
+#             This is used to put data from the moteus controller so that the ROS
+#             node can publish the data
+#         """
 
-            # If there is data to be read in the pipe, update the data thats
-            # going to be sent to the moteus controller
-            # Else send what we recieved last time
-            if (pipeEnd.poll()):
-                self._modeData = pipeEnd.recv()
+#         isSuccessfulConnection = await self._connect()
 
-            resultFromMoteus = None
+#         # Go into the loop
+#         while isSuccessfulConnection:
 
-            if (self._motorMode == Mode.POSITION):
-                resultFromMoteus = await self._moteusController.set_position(position=self._modeData.position, query=True)
-            elif (self._motorMode == Mode.VELOCITY):
-                # moteus controllers will only go a velocity only if it
-                # has reached its given position OR we give it math.nan
-                resultFromMoteus = await self._moteusController.set_position(position=math.nan, velocity=self._modeData.velocity, query=True)
+#             # If there is data to be read in the pipe, update the data thats
+#             # going to be sent to the moteus controller
+#             # Else send what we recieved last time
+#             if (pipeEnd.poll()):
+#                 self._modeData = pipeEnd.recv()
 
-            self.publishdata(resultFromMoteus, rosQueue)
+#             resultFromMoteus = None
 
-            await asyncio.sleep(0.02)
+#             if (self._motorMode == Mode.POSITION):
+#                 resultFromMoteus = await self._moteusController.set_position(position=self._modeData.position, query=True)
+#             elif (self._motorMode == Mode.VELOCITY):
+#                 # moteus controllers will only go a velocity only if it
+#                 # has reached its given position OR we give it math.nan
+#                 resultFromMoteus = await self._moteusController.set_position(position=math.nan, velocity=self._modeData.velocity, query=True)
 
-    def publishdata(self, resultFromMoteus, rosQueue):
-        """For each register, send data through the queue to the main ROS process
+#             self.publishdata(resultFromMoteus, rosQueue)
 
-        Parameters
-        ----------
-        resultFromMoteus : moteus.Result
-            This contains all the data from the moteus
-        rosQueue : Queue
-            This is used to put data from the moteus controller so that the ROS
-            node can publish the data
-        """
+#             await asyncio.sleep(0.02)
 
-        for register in self._registersToPublish:
-            # [0] moteus.Register
-            # [1] floating point number (the data)
-            message = [register, resultFromMoteus.values[register]]
-            rosQueue.put(message)
+#     def publishdata(self, resultFromMoteus, rosQueue):
+#         """For each register, send data through the queue to the main ROS process
+
+#         Parameters
+#         ----------
+#         resultFromMoteus : moteus.Result
+#             This contains all the data from the moteus
+#         rosQueue : Queue
+#             This is used to put data from the moteus controller so that the ROS
+#             node can publish the data
+#         """
+
+#         for register in self._registersToPublish:
+#             # [0] moteus.Register
+#             # [1] floating point number (the data)
+#             message = [register, resultFromMoteus.values[register]]
+#             rosQueue.put(message)
