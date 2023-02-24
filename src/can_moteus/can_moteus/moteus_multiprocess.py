@@ -8,7 +8,7 @@ from . import moteus_motor
 class _MotorData:
     canID = -1
     mode = None
-    publisherQueue = None # [0] Register [1] data
+    toPublisherQueue = None # [0] Register [1] data
     moteusPubList = None
     data = 0
     moteusController = None
@@ -23,18 +23,30 @@ class MoteusMultiprocess:
         
 
 
-    def addMotor(self, motor):
+    def addMotor(self, canID, name, motorMode, moteusPubList):
 
+        toPublisherQueue = Queue()
+
+        # Create motor
+        motor = moteus_motor.MoteusMotor(
+            canID,
+            name,
+            motorMode,
+            moteusPubList,
+            self._queueToMoteus,
+            toPublisherQueue,
+            self._rosNode
+        )
+
+        # Create motor data
         motorData = _MotorData()
-        motorData.canID = motor._canID
-        motorData.mode = motor._motorMode
-        motorData.moteusPubList = motor._moteusPubList
-        motorData.publisherQueue = Queue()
-
-        motor._queueToMoteus = self._queueToMoteus
-        motor._readMultiQueue = motorData.publisherQueue
+        motorData.canID = canID
+        motorData.mode = motorMode
+        motorData.toPublisherQueue = toPublisherQueue
+        motorData.moteusPubList = moteusPubList
+    
         # Add this to the map
-        self._canIDToMotorData[motorData.canID] = motorData
+        self._canIDToMotorData[canID] = motorData
 
 
     # Multiprocess realm
@@ -55,7 +67,19 @@ class MoteusMultiprocess:
         while True:
             self._readqueueToMoteus(queueToMoteus)
 
-            self._sendDataToMotor(2,None)
+            for canID in self._canIDToMotorData:
+                motorData = self._canIDToMotorData[canID]
+
+                if (self._motorMode == motorData.mode.POSITION):
+                    resultFromMoteus = await self._moteusController.set_position(position=motorData.data, query=True)
+                elif (self._motorMode == motorData.mode.VELOCITY):
+                    # moteus controllers will only go a velocity only if it
+                    # has reached its given position OR we give it math.nan
+                    resultFromMoteus = await self._moteusController.set_position(position=math.nan, velocity=motorData.data, query=True)
+
+                self.publishdata(canID, resultFromMoteus)
+
+
 
             await asyncio.sleep(0.02)
 
@@ -63,13 +87,11 @@ class MoteusMultiprocess:
 
     def _sendDataToMotor(self, canID, moteusResult):
         motorData = self._canIDToMotorData[canID]
-        publisherQueue = motorData.publisherQueue
 
         for register in motorData.moteusPubList:
-            dataToMotor = [register, 420.0]
-            # message = [register, moteusResult.values[register]]
+            dataToMotor = [register, moteusResult.values[register]]
 
-            publisherQueue.put(dataToMotor)
+            motorData.toPublisherQueue.put(dataToMotor)
 
 
     def _readqueueToMoteus(self,queueToMoteus):
@@ -82,7 +104,7 @@ class MoteusMultiprocess:
             motorData = self._canIDToMotorData[canID]
             motorData.data = data
 
-            self._rosNode.get_logger().info("Number from queue: " + str(data) + " from CANID: " + str(canID))
+            #self._rosNode.get_logger().info("Number from queue: " + str(data) + " from CANID: " + str(canID))
 
 
 
@@ -90,7 +112,7 @@ class MoteusMultiprocess:
 
     async def _connectToMoteusControllers(self):
 
-        for canID in self._canIDToMotorData:
+        for canID in list(self._canIDToMotorData):
             motorData = self._canIDToMotorData[canID]
 
             moteusMotorController = moteus.Controller(motorData.canID)
@@ -104,6 +126,8 @@ class MoteusMultiprocess:
                 self._rosNode.get_logger().error(
                     "FAILED TO CONNECT TO MOTEUS CONTROLLER WITH CAN ID " + str(motorData.canID))
                 self._rosNode.get_logger().error(error.__str__())
+
+                del self._canIDToMotorData[canID]
 
 
 

@@ -10,19 +10,10 @@ class Mode:
     POSITION = 0  # Asks for float8/float16/float32. Measured in revolutions
     VELOCITY = 1  # Asks for float8/float16/float32. Measured in revolutions per second
 
-
-class _PositionData:
-    position = 0  # In revoutions
-
-
-class _VelocityData:
-    velocity = 0
-
-
 class MoteusMotor:
     """Connects to a moteus controller. Publishes desired register's values from controller"""
 
-    def __init__(self, canID, name, motorMode, moteusPubList, rosNode):
+    def __init__(self, canID, name, motorMode, moteusPubList, queueToMoteus, toPublisherQueue, rosNode):
         """    
         Parameters
         ----------
@@ -45,39 +36,22 @@ class MoteusMotor:
         self._moteusRegToPubObjHashmap = {}
         self._rosNode = rosNode
         self._motorMode = motorMode
-        self._modeData = self._createModeData()
-        self._queueToMoteus = None
-        self._readMultiQueue = None
+        self._queueToMoteus = queueToMoteus
+        self._toPublisherQueue = toPublisherQueue
         self._moteusPubList = moteusPubList
 
         # Create subscribers and publishers
         self._createPublishers(moteusPubList)
         self._createSubscribers()
 
-        # This pipe is used to send the updated values recieved in the
-        # subscriber to the multiprocess where it will then be sent to
-        #  the moteus controller
-        # Pipes to communicate between ROS process and moteus process
-        # self._ros_pipe_conn, multiprocess_conn = Pipe()
-
-        # This queue is used to send moteus results to ROS publishers
-        # Every 0.02 seconds, call readMultiQueue
-        # self._dataQueue = Queue()
         rosNode.create_timer(0.02, self._readFromMoteusQueue)
 
-        # Creates a seperate process to control the moteus controller
-        # self._rosNode.get_logger().info("Creating process")  # TODO Remove this logger
-        # moteusAsyncLoopObject = _MoteusAsyncLoop(
-        #     self._motorMode, moteusPubList, self._rosNode, self._canID)
-        # moteusAsyncProcess = Process(target=moteusAsyncLoopObject.startAsyncMoteusLoop, args=(
-        #     multiprocess_conn, self._dataQueue,))
-        # moteusAsyncProcess.start()
 
     def _readFromMoteusQueue(self):
         """Recieve data from multiprocess and publish it to the corresponding register topic"""
 
-        if (self._readMultiQueue != None) and (not self._readMultiQueue.empty()):
-            dataRecieved = self._readMultiQueue.get()
+        if (self._toPublisherQueue != None) and (not self._toPublisherQueue.empty()):
+            dataRecieved = self._toPublisherQueue.get()
             register = dataRecieved[0]  # is a moteus.Register enum
             data = dataRecieved[1]  # is a floating point number
 
@@ -89,16 +63,6 @@ class MoteusMotor:
 
             publisher.publish(msg)
 
-    def _createModeData(self):
-        """Create data object according to the motor mode"""
-        command = None
-        if (self._motorMode == Mode.POSITION):
-            command = _PositionData()
-        elif (self._motorMode == Mode.VELOCITY):
-            command = _VelocityData()
-
-        command.canID = self._canID
-        return command
 
     def _createPublishers(self, moteusPubList):
         """Create a publisher for data for each moteus register
@@ -167,7 +131,6 @@ class MoteusMotor:
 
         self._rosNode.get_logger().info("position callback with data: " +
                                         str(msg.data))  # TODO remove this logger
-        self._modeData.position = msg.data
 
 
         if self._queueToMoteus != None:
@@ -185,7 +148,6 @@ class MoteusMotor:
         """
 
         self._rosNode.get_logger().info("velocity callback with data: " + str(msg.data))
-        self._modeData.velocity = msg.data
 
         if self._queueToMoteus != None:
             # [0] can ID
