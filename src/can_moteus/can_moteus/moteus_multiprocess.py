@@ -206,16 +206,3 @@ class MoteusMultiprocess:
                 self._rosNode.get_logger().error(error.__str__())
 
                 del self._canIDToMotorData[canID]
-
-
-
-
-
-
-
-
-
-
-
-
-
