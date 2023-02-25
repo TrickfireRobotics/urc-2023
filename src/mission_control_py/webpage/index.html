@@ -3,48 +3,20 @@
 
 <head>
   <meta charset="utf-8" />
+  <script defer type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
   <script defer src="./script.js"></script>
 </head>
 
 <body>
   <h1>Rosbridge demo</h1>
-
-  <p>To see this page update:</p>
-  <ul>
-    <li>Run a Rosbridge connection at <code>ws://localhost:9090</code></li>
-    <li>Start publishing ROS messages to <code>/my_topic</code></li>
-  </ul>
-
-
   <hr />
   <button onclick=>Test for Latency</button>
   <p>Connection: <span id="status" style="font-weight: bold;">N/A</span></p>
-  <p><code>/my_topic</code> messages received:
-  <ul id="messages" style="font-weight: bold;"></ul>
+  <p>Latency: <span id="latency">N/A</span></p>
+  <p>Left stick: <span id="left-stick">N/A</span></p>
+  <p>Right stick: <span id="right-stick">N/A</span></p>
   </p>
 
-  <script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
-
-  <script type="text/javascript" type="text/javascript">
-    // Create ros object to communicate over your Rosbridge connection
-    const ros = new ROSLIB.Ros({ url: 'ws://localhost:9090' });
-
-    // When the Rosbridge server connects, fill the span with id “status" with “successful"
-    ros.on('connection', () => {
-      document.getElementById("status").innerHTML = "successful";
-    });
-
-    // When the Rosbridge server experiences an error, fill the “status" span with the returned error
-    ros.on('error', (error) => {
-      document.getElementById("status").innerHTML = `errored out (${error})`;
-    });
-
-    // When the Rosbridge server shuts down, fill the “status" span with “closed"
-    ros.on('close', () => {
-      document.getElementById("status").innerHTML = "closed";
-    });
-
-  </script>
 </body>
 
 </html>
