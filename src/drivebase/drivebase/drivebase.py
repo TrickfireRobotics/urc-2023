@@ -15,19 +15,19 @@ class Drivebase(Node):
         botInterface = RobotInterface(self)
 
         self.left_subscription = self.create_subscription(
-            String, 'controller_left', self.move_left_side, 10)
+            String, 'move_left_drivebase_side_message', self.move_left_side, 10)
         self.right_subscription = self.create_subscription(
-            String, 'controller_right', self.move_right_side, 10)
+            String, 'move_right_drivebase_side_message', self.move_right_side, 10)
 
     def move_left_side(self, msg):
-        botInterface.leftFrontWheelForward(msg)
-        botInterface.leftMiddleWheelForward(msg)
-        botInterface.leftBackWheelForward(msg)
+        botInterface.leftFrontWheel(msg)
+        botInterface.leftMiddleWheel(msg)
+        botInterface.leftBackWheel(msg)
     
     def move_right_side(self, msg):
-        botInterface.rightFrontWheelForward(msg)
-        botInterface.rightMiddleWheelForward(msg)
-        botInterface.rightBackWheelForward(msg)
+        botInterface.rightFrontWheel(msg)
+        botInterface.rightMiddleWheel(msg)
+        botInterface.rightBackWheel(msg)
 
 
 def main(args=None):
