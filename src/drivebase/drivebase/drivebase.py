@@ -1,22 +1,23 @@
 import rclpy
 from rclpy.node import Node
 
-from ...interface import botInterface
+from robot_interface import RobotInterface
 
 from std_msgs.msg import String
 
 
 class Drivebase(Node):
 
-    botInterface: botInterface = botInterface(self)
+    global botInterface
 
     def __init__(self):
         super().__init__('drivebase')
+        botInterface = RobotInterface(self)
+
         self.left_subscription = self.create_subscription(
             String, 'controller_left', self.move_left_side, 10)
         self.right_subscription = self.create_subscription(
             String, 'controller_right', self.move_right_side, 10)
-        self.subscription  # prevent unused variable warning
 
     def move_left_side(self, msg):
         botInterface.leftFrontWheelForward(msg)
@@ -24,9 +25,9 @@ class Drivebase(Node):
         botInterface.leftBackWheelForward(msg)
     
     def move_right_side(self, msg):
-        botInterface.rightFrontWheelForward()
-        botInterface.rightMiddleWheelForward()
-        botInterface.rightBackWheelForward()
+        botInterface.rightFrontWheelForward(msg)
+        botInterface.rightMiddleWheelForward(msg)
+        botInterface.rightBackWheelForward(msg)
 
 
 def main(args=None):
@@ -34,7 +35,7 @@ def main(args=None):
 
     drivebase = Drivebase()
 
-    print("drivebase test")
+    print("drivebase main")
 
     rclpy.spin(drivebase) # prints callbacks
 
