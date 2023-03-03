@@ -1,6 +1,7 @@
 import launch
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
+from launch_ros.actions import Node
 
 hello_node = ComposableNode(
     package='hello_world',
@@ -8,11 +9,12 @@ hello_node = ComposableNode(
     name='hello_node'
 )
 
-testing_node = Node(
-    package='interface',
-    executable='testingNode',
-    name='testing_node'
+can_moteus_node = Node(
+    package='can_moteus',
+    executable='can_moteus',
+    name='can_moteus_node'
 )
+
 
 # Composable Nodes launched in a Composable Node container will share a process
 # and can use very fast inter-process communication instead of publishing
@@ -33,5 +35,6 @@ robot_container = ComposableNodeContainer(
 
 def generate_launch_description():
     return launch.LaunchDescription([
-        robot_container, testing_node
+        robot_container,
+        can_moteus_node
     ])
