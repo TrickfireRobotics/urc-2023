@@ -6,7 +6,7 @@
         "/opt/ros/galactic/lib/python3.8/site-packages"
     ],
     "cmake.configureOnOpen": false,
-    "python.linting.enabled": true,
+    "python.linting.enabled": false,
     "python.linting.flake8Enabled": true,
     "cmake.sourceDirectory": "${workspaceFolder}/src/hello_world",
     "files.associations": {
