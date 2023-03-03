@@ -82,7 +82,7 @@ class RobotInterface(Node):
     # Left front wheel
     def leftFrontWheel(self, amount):
         # Converting from input "meters per second" to output "revolutions per second"
-        revolutionsOutput = 5.681818181818182 * amount
+        revolutionsOutput = 1.76838724851 * amount
 
         publisher = robotPublishers['leftFrontWheel']
         strMsg = String()
@@ -94,7 +94,7 @@ class RobotInterface(Node):
     # Right front wheel
     def rightFrontWheel(self, amount):
         # Converting from input "meters per second" to output "revolutions per second"
-        revolutionsOutput = 5.681818181818182 * amount
+        revolutionsOutput = 1.76838724851 * amount
 
         publisher = robotPublishers['rightFrontWheel']
         strMsg = String()
@@ -106,7 +106,7 @@ class RobotInterface(Node):
     # Left middle wheel
     def leftMiddleWheel(self, amount):
         # Converting from input "meters per second" to output "revolutions per second"
-        revolutionsOutput = 5.681818181818182 * amount
+        revolutionsOutput = 1.76838724851 * amount
 
         publisher = robotPublishers['leftMiddleWheel']
         strMsg = String()
@@ -118,7 +118,7 @@ class RobotInterface(Node):
     # Right middle wheel
     def rightMiddleWheel(self, amount):
         # Converting from input "meters per second" to output "revolutions per second"
-        revolutionsOutput = 5.681818181818182 * amount
+        revolutionsOutput = 1.76838724851 * amount
 
         publisher = robotPublishers['rightMiddleWheel']
         strMsg = String()
@@ -130,7 +130,7 @@ class RobotInterface(Node):
     # Left back wheel
     def leftBackWheel(self, amount):
         # Converting from input "meters per second" to output "revolutions per second"
-        revolutionsOutput = 5.681818181818182 * amount
+        revolutionsOutput = 1.76838724851 * amount
 
         publisher = robotPublishers['leftBackWheel']
         strMsg = String()
@@ -142,7 +142,7 @@ class RobotInterface(Node):
     # Right back wheel
     def rightBackWheel(self, amount):
         # Converting from input "meters per second" to output "revolutions per second"
-        revolutionsOutput = 5.681818181818182 * amount
+        revolutionsOutput = 1.76838724851 * amount
 
         publisher = robotPublishers['rightBackWheel']
         strMsg = String()
