@@ -9,8 +9,15 @@ RUN apt-get update && apt-get install -y \
   python3-pip \
   # To let us sync with GitHub over SSH
   ssh-client \
+  # Install usb utilities
+  usbutils \ 
   # Clean out the apt lists after `apt-get update`
   && rm -rf /var/lib/apt/lists/*
+
+
+#Install moteus python library https://github.com/mjbots/moteus/tree/main/lib/python
+Run pip3 install moteus
+
 
 # Update pydocstyle to remove a deprecation warning when testing for PEP257
 RUN pip install --upgrade pydocstyle
