@@ -11,5 +11,6 @@
     "cmake.sourceDirectory": "${workspaceFolder}/src/hello_world",
     "files.associations": {
         "*.tcc": "cpp"
-    }
+    },
+    "python.formatting.provider": "yapf"
 }
