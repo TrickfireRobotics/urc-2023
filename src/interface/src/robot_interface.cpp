@@ -25,7 +25,7 @@ RobotInterface &RobotInterface::operator=(RobotInterface &&) = delete;
 
 // General movement including all wheels
 void RobotInterface::moveForward(const double amount) {
-
+    cout << "Testing moveForward" << endl;
 }
 
 void RobotInterface::moveBackward(const double amount) {
