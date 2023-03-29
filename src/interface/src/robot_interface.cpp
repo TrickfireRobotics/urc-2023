@@ -41,56 +41,32 @@ void RobotInterface::turnRight(const double amount) {
 }
 
 // Left front wheel
-void RobotInterface::leftFrontWheelForward(const double amount) {
-
-}
-
-void RobotInterface::leftFrontWheelBackward(const double amount) {
+void RobotInterface::leftFrontWheel(const double amount) {
 
 }
 
 // Right front wheel
-void RobotInterface::rightFrontWheelForward(const double amount) {
-
-}
-
-void RobotInterface::rightFrontWheelBackward(const double amount) {
+void RobotInterface::rightFrontWheel(const double amount) {
 
 }
 
 // Left middle wheel
-void RobotInterface::leftMiddleWheelForward(const double amount) {
-
-}
-
-void RobotInterface::leftMiddleWheelBackward(const double amount) {
+void RobotInterface::leftMiddleWheel(const double amount) {
 
 }
 
 // Right middle wheel
-void RobotInterface::rightMiddleWheelForward(const double amount) {
-
-}
-
-void RobotInterface::rightMiddleWheelBackward(const double amount) {
+void RobotInterface::rightMiddleWheel(const double amount) {
 
 }
 
 // Left back wheel
-void RobotInterface::leftBackWheelForward(const double amount) {
-
-}
-
-void RobotInterface::leftBackWheelBackward(const double amount) {
+void RobotInterface::leftBackWheel(const double amount) {
 
 }
 
 // Right back wheel
-void RobotInterface::rightBackWheelForward(const double amount) {
-
-}
-
-void RobotInterface::rightBackWheelBackward(const double amount) {
+void RobotInterface::rightBackWheel(const double amount) {
 
 }
 
@@ -99,40 +75,24 @@ void RobotInterface::rightBackWheelBackward(const double amount) {
  */
 
 // Base turntable
-void RobotInterface::baseRotationLeft(const double amount) {
-
-}
-
-void RobotInterface::baseRotationRight(const double amount) {
+void RobotInterface::baseRotation(const double amount) {
 
 }
 
 // Arm 1 is closest to base and arm 3 is furthest from base
 
 // Arm 1 movement
-void RobotInterface::arm1Extend(const double amount) {
-
-}
-
-void RobotInterface::arm1Retract(const double amount) {
+void RobotInterface::arm1(const double amount) {
 
 }
 
 // Arm 2 movement
-void RobotInterface::arm2Extend(const double amount) {
-
-}
-
-void RobotInterface::arm2Retract(const double amount) {
+void RobotInterface::arm2(const double amount) {
 
 }
 
 // Arm 3 movement
-void RobotInterface::arm3Extend(const double amount) {
-
-}
-
-void RobotInterface::arm3Retract(const double amount) {
+void RobotInterface::arm3(const double amount) {
 
 }
 
@@ -145,10 +105,6 @@ void RobotInterface::antennaRetract() {
 
 }
 
-void RobotInterface::antennaTurnLeft(const double amount) {
+void RobotInterface::antennaTurntable(const double amount) {
 
-}
-
-void RobotInterface::antennaTurnRight(const double amount) {
-    
 }

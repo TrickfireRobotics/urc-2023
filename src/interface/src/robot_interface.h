@@ -29,56 +29,45 @@ class RobotInterface
         void turnRight(const double amount);
 
         // Left front wheel
-        void leftFrontWheelForward(const double amount);
-        void leftFrontWheelBackward(const double amount);
+        void leftFrontWheel(const double amount);
 
         // Right front wheel
-        void rightFrontWheelForward(const double amount);
-        void rightFrontWheelBackward(const double amount);
+        void rightFrontWheel(const double amount);
 
         // Left middle wheel
-        void leftMiddleWheelForward(const double amount);
-        void leftMiddleWheelBackward(const double amount);
+        void leftMiddleWheel(const double amount);
 
         // Right middle wheel
-        void rightMiddleWheelForward(const double amount);
-        void rightMiddleWheelBackward(const double amount);
+        void rightMiddleWheel(const double amount);
 
         // Left back wheel
-        void leftBackWheelForward(const double amount);
-        void leftBackWheelBackward(const double amount);
+        void leftBackWheel(const double amount);
 
         // Right back wheel
-        void rightBackWheelForward(const double amount);
-        void rightBackWheelBackward(const double amount);
+        void rightBackWheel(const double amount);
 
         /*
         * Arm movement/rotation
         */
 
         // Base turntable
-        void baseRotationLeft(const double amount);
-        void baseRotationRight(const double amount);
+        void baseRotation(const double amount);
 
         // Arm 1 is closest to base and arm 3 is furthest from base
 
         // Arm 1 movement
-        void arm1Extend(const double amount);
-        void arm1Retract(const double amount);
+        void arm1(const double amount);
 
         // Arm 2 movement
-        void arm2Extend(const double amount);
-        void arm2Retract(const double amount);
+        void arm2(const double amount);
 
         // Arm 3 movement
-        void arm3Extend(const double amount);
-        void arm3Retract(const double amount);
+        void arm3(const double amount);
 
         // Antenna movement
         void antennaExtend();
         void antennaRetract();
-        void antennaTurnLeft(const double amount);
-        void antennaTurnRight(const double amount);
+        void antennaTurntable(const double amount);
 };
 
 #endif
