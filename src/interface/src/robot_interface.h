@@ -68,6 +68,8 @@ class RobotInterface
         void antennaExtend();
         void antennaRetract();
         void antennaTurntable(const double amount);
+
+        unordered_map<string, any> robotPublishers;
 };
 
 #endif
