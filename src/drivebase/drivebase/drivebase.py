@@ -12,6 +12,8 @@ class Drivebase(Node):
 
     def __init__(self):
         super().__init__('drivebase')
+
+        global botInterface
         botInterface = RobotInterface(self)
 
         self.left_subscription = self.create_subscription(
@@ -23,7 +25,7 @@ class Drivebase(Node):
         botInterface.leftFrontWheel(msg)
         botInterface.leftMiddleWheel(msg)
         botInterface.leftBackWheel(msg)
-    
+
     def move_right_side(self, msg):
         botInterface.rightFrontWheel(msg)
         botInterface.rightMiddleWheel(msg)
@@ -38,7 +40,6 @@ def main(args=None):
     print("drivebase main")
 
     rclpy.spin(drivebase) # prints callbacks
-
 
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
