@@ -16,7 +16,7 @@ ros.on('close', () => {
   document.getElementById("status").innerHTML = "closed";
 });
 
-//listens to mission_control_py
+//listens to mission_control
 const latency_listener = new ROSLIB.Topic({
   ros,
   name : "/latency",

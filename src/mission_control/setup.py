@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'mission_control_py'
+package_name = 'mission_control'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'talker = mission_control_py.publisher_member_function:main',
+            'talker = mission_control.publisher_member_function:main',
         ],
     },
 )
