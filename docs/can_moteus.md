@@ -87,7 +87,7 @@ Each motor's callback function for their subscribers writes to the `_queueToMote
 ```
 
 ### **Queue From Multiprocess to Each Motor**
-Each motor has its own multiprocess queue, `toPublisherQueue` that is created in `moteus_multiprocess.py`, which is then populated by the Moteus multiprocess for each corresponding motor. The type of data that is sent is dictated by the `moteusPubList` array as seen earilier in the example motor. The data that is enqueued is an array of length two in the following format:
+Each motor has its own multiprocess queue, `toPublisherQueue` that is created in `moteus_multiprocess.py`, which is then populated by the Moteus multiprocess for each corresponding motor. The type of data that is sent is dictated by the `moteusPubList` array as seen earlier in the example motor. The data that is enqueued is an array of length two in the following format:
 
 ```
 [0] = moteus.Register
