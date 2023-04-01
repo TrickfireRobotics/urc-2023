@@ -31,4 +31,4 @@ Here is a good video that talks more about ROS and its other communicate protoco
 All of the documentation for this codebase is stored inside this `docs` folder. Here, you will find a markdown file for each ROS Node (packge/folder) under the `src` folder that explains its workings in more detail. 
 
 ## **What Should I do Now?**
-After reading this document, you should follow the instructors for [install_on_windows.md](./install_on_windows.md) if you will be developing code on a Windows machine or [install_on_linux.md](./install_on_linux.md) if you will be developing on Linux/Mac
+After reading this document, you should follow the instructors for [install_on_windows.md](./install_on_windows.md) if you will be developing code on a Windows machine or [install_on_linux.md](./install_on_linux.md) if you will be developing on Linux.
