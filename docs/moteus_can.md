@@ -64,11 +64,38 @@ For example, using the motor above, it would subscribe to the topics of:
 
 Every cycle (every 0.02 seconds), the motor would read data it recieved from the Moteus controller and publish it. 
 
-## How it is implemented
+## **How it is implemented**
+
+### **Overview**
+The core idea is that there are two distinct Python processes running that communicate with each other via several different multiprocess queues. The first process is the "main" process where ROS lives and does whatever it needs to do. The second process is started by us and is used to send and read data to the Moteus controllers. 
+
+### **Queue from motors to multiprocess**
+
+Each motor's callback function for their subscribers write to the `_queueToMoteus` queue (created in `moteus_multiprocess.py`), where only one such queue exists. The data that is sent is an array of length two in the following format:
+
+```
+[0] = CANID
+[1] = data
+```
+
+### **Queue from multiprocess to each motor**
+Each motor creates its own multiprocess queue, `toPublisherQueue`, which is populated by the Moteus multiprocess for each corresponding motor. The data that is sent is dictated by the `moteusPubList` array as seen earilier in the example motor. The data that is sent is an array in the following format:
+
+```
+[0] = moteus.Register
+[1] = data
+```
+
+### **The Multiprocess Cycle**
+Each cycle, 0.02 seconds, the moteus multiprocess reads the head of the `_queueToMoteus` and updates the set value for the corresponding motor. It then goes through each motor that was succesfully connected to the CAN/CANFD bus and sends its data. After it sends the data, it recieves the Moteus controller and fills each motor's `toPublisherQueue`. 
+
+Here is a diagram of the process
+
+![what](./resources/moteus_docs.png)
 
 
 ## What is a Moteus Unit?
-The documentation for Moteus units are found here[here](https://github.com/mjbots/moteus/blob/main/docs/reference.md) under the `A.2 Register Usage` heading. Depending ont he type of data being handled, the unit will differ. As such, any reference of a "Moteus unit" references this section. 
+The documentation for Moteus units are found [here](https://github.com/mjbots/moteus/blob/main/docs/reference.md) under the **`A.2 Register Usage`** heading. Depending ont he type of data being handled, the unit will differ. As such, any reference of a "Moteus unit" references this section. 
 
 
 
