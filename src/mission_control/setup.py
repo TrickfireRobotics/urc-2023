@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'talker = mission_control.publisher_member_function:main',
+            'mission_control = mission_control.publisher_member_function:main',
         ],
     },
 )
