@@ -26,6 +26,16 @@ Here is a good video that talks more about ROS and its other communicate protoco
 
 [![IMAGE ALT TEXT](https://img.youtube.com/vi/7TVWlADXwRw/0.jpg)](https://www.youtube.com/watch?v=7TVWlADXwRw "Video Title")
 
+## **What is Git/Github?**
+Git is an open source version control software that makes working on the same codebase much easier. 
+
+The core idea of Git is that code lives on different "branches" where code differs as developers work on it. There is always a "master/main" branch which represents code that is ready to be deployed into action. 
+
+As you work on your code in a **feature branch**, you will "save" changes represented as a **Git commit**. After you have committed enough changes/additions, you then can open up a **Pull Request** in order for other developers to review your code before it then gets merged into the master/main branch. After it is merged, congratulations your feature is now live. 
+
+Github is a website that allows us to have a Git repository that lives on the cloud. This makes sharing remote repositories very easy. 
+
+If you have no clue what commands to use for Git, go [here](https://learngitbranching.js.org/?locale=en_US) to learn! Just a couple of lessons are enough to understand how it works.
 
 ## **Documentation**
 All of the documentation for this codebase is stored inside this `docs` folder. Here, you will find a markdown file for each ROS Node (packge/folder) under the `src` folder that explains its workings in more detail. 
