@@ -4,7 +4,7 @@ Software developed by [Trickfire Robotics'](https://www.linkedin.com/company/tri
 ## Getting Started
 We develop using [Docker](https://en.wikipedia.org/wiki/Docker_(software)) and [Visual Studio Code](https://code.visualstudio.com/). Docker containers keep the development environment well-defined and repeatable: no more mysterious missing dependencies. VS Code is a customizable text editor that has extensions for Docker and all of our programming languages.
 
-A new member with no clue what to do? Get started [here!](./docs/getting_started.md)
+A new member with no clue what to do? Get started [here!](../urc-2023/docs/getting_started.md)
 
 Already know how ROS, Git, and Docker work? Then setup your workspace! [Windows](docs/install_on_windows.md) | [Linux](docs/install_on_linux.md) 
 

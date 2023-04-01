@@ -8,26 +8,18 @@ Most of the codebase is written in Pyton due as most of the other components are
 ## **Components of the CodeBase**
 ### **CAN Related**
 
-### **`moteus_can`**
-[Docs link](./moteus_can.md)
+### **`can_moteus`**
+[Docs link](./can_moteus.md)
 
-This is responsible for sending/recieving data from the [moteus controllers](https://github.com/mjbots/moteus) that are connected via a CANFD to USB adapter. This will also send/recieve moetus-formatted data from `robot_interface` python class. 
-
-This package will publish certain piece of data to ROS from the moteus controllers. It will also subscribe to data that is sent from the `robot_interface` class. 
-
+This is a **ROS Node** that is responsible for communication between the [**Moteus motor controllers**](https://github.com/mjbots/moteus) (via a FDCAN/CAN Bus) and **ROS** that the rest of the codebase is written in. 
 
 ### **`robot_interface`**
-This is responsible for converting human formatted units into units that the moteus controllers can understand through a long list of methods that correspond to functionality on the actual rover. 
-
-For example, each wheel on the drivebase will have a method that will take in some sort of human-readable value, convert it to a moteus-readable value, and then publish it to the correct topic. The `moteus_can` will then actually send it to the hardware. 
-
-This is not a ROS node, but instead will be created as an object via a ROS node. 
-
+This is responsible for converting human units into Moteus units that the Moteus controllers can understand. This is **not** a ROS Node, and instead will be an object that **takes in** a ROS Node to subscribe to data published by `can_moteus`. There are a long list of methods that correspond to the functionality of the rover; i.e. `setBottomArmMotorAngle(123)` would set the angle of the bottom motor of the arm to 123 degrees.
 
 ### **Robot Functionality**
 
 ### **`antenna`**
-This is responsible for pointing the robot antenna to always point to the base station's antenna to secure the srongest WiFi signal.
+This is responsible for pointing the robot antenna to always point to the base station's antenna to secure the strongest WiFi signal.
 
 ### **`drivebase`**
 This is responsible for implementing *how* a drivebase should work depending on user input. 
@@ -41,8 +33,8 @@ This is responsible for controlling the arm via high level control schemes using
 This detects life somehow. The physical design is still in progress
 
 ### **Base Station**
-### **`TODO: add docs for the base station package`**
-This will recieve controller data from the browser and publish it to the ROS network.
+### **`mission_control`**
+This will host a webpage through sockets utilizing rosbridge to expose ROS-like behavior. The webpage will display information about the rover in addition to video output. The webpage will also sent controller input to the ROS network.
 
 ### **Miscellaneous**
 
@@ -50,7 +42,7 @@ This will recieve controller data from the browser and publish it to the ROS net
 This launches all of the ROS nodes in our code. If you want to add a node, make sure to update the [`robot.launch.py`](../src/viator_launch/launch/robot.launch.py) and the [`package.xml`](../src/viator_launch/setup.py) files. 
 
 ### **`can`**
-This is resonsible for using the CANOpen protocol using the [ros2_canopen](https://github.com/ros-industrial/ros2_canopen) library to communicate between a few parts of the rover which cannot use the moteus controllers. 
+This is responsible for using the CANOpen protocol using the [ros2_canopen](https://github.com/ros-industrial/ros2_canopen) library to communicate between a few parts of the rover which cannot use the moteus controllers. 
 
 
 ### **`monitering`**
