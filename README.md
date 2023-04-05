@@ -4,7 +4,9 @@ Software developed by [Trickfire Robotics'](https://www.linkedin.com/company/tri
 ## Getting Started
 We develop using [Docker](https://en.wikipedia.org/wiki/Docker_(software)) and [Visual Studio Code](https://code.visualstudio.com/). Docker containers keep the development environment well-defined and repeatable: no more mysterious missing dependencies. VS Code is a customizable text editor that has extensions for Docker and all of our programming languages.
 
-Get started on [Windows](docs/install_on_windows.md) | [Linux](docs/install_on_linux.md) |
+A new member with no clue what to do? Get started [here!](./docs/getting_started.md)
+
+Already know how ROS, Git, and Docker work? Then setup your workspace! [Windows](docs/install_on_windows.md) | [Linux](docs/install_on_linux.md) 
 
 ## Quick Reference (VS Code)
 Open/close the terminal in VS Code with `` Ctrl+` `` (backtick `` ` `` is on the same key as tilde `~`).
@@ -14,5 +16,7 @@ Open/close the terminal in VS Code with `` Ctrl+` `` (backtick `` ` `` is on the
 | Build all packages | `./build.sh`     | `Ctrl+Shift+B`                            |
 | Test all packages  | `./test.sh`      | `Ctrl+P`, type `task test`, press `Enter` |
 | Launch nodes       | `./launch.sh`    |                                           |
+| Build Docker Image | `./build_only_docker.sh` | 
+| Launch Docker Image| `./launch_only_docker.sh`| 
 
 Where available, use the VS Code shortcuts because they come with in-editor features such as problem matchers.
