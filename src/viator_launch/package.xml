@@ -10,6 +10,7 @@
   <exec_depend>hello_world</exec_depend>
   <exec_depend>mission_control</exec_depend>
   <exec_depend>ros2launch</exec_depend>
+  <exec_depend>rosbridge_websocket_launch.xml</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
