@@ -36,12 +36,12 @@ robot_container = ComposableNodeContainer(
 
 
 def generate_launch_description():
-    ld = launch.LaunchDescription()
     rosbridge_launch = IncludeLaunchDescription(
         XMLLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('rosbridge_server'), 
+            os.path.join(get_package_share_directory('rosbridge_server'),
                          'launch/rosbridge_websocket_launch.xml')))
-    ld.add_action(robot_container)
-    ld.add_action(mission_control_node)
-    ld.add_action(rosbridge_launch)
-    return ld
+    return launch.LaunchDescription([
+        robot_container,
+        mission_control_node,
+        rosbridge_launch
+    ])
