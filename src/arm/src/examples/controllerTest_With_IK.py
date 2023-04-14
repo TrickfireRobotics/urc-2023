@@ -22,7 +22,7 @@ class display:
  
         
     def display_ik(self):
-        ik_chain = ikpy.chain.Chain.from_urdf_file("untitled.urdf",active_links_mask=[False, True, True, True, True, True, True])
+        ik_chain = ikpy.chain.Chain.from_urdf_file("arm_urdf.urdf",active_links_mask=[False, True, True, True, True, True, True])
         ik = [0,0,0,0,0,0,0]
         target_position = [0,0,0]
         
@@ -39,10 +39,6 @@ class display:
         
             ik = self.disp_ik_Q.get()
             target_position = self.disp_target_Q.get()
-            
-            #Start timer
-            stw = time.time()
-            stp = time.process_time()
             
             #0.01s
             self.ax.clear()
@@ -61,19 +57,7 @@ class display:
       
             #0.05
             self.fig.canvas.flush_events()
-            
-            #End timer
-            etw = time.time()
-            etp = time.process_time()
-            
-            #Report timer
-            resw = etw - stw
-            resp = etp - stp
-            
-            if resw > 0:
-                print('Total Process time:', resw, 'seconds')
-                print('CPU Execution time:', resp, 'seconds')
-        
+
 
 class inverse_kinematics:
     def __init__(self):
@@ -88,7 +72,7 @@ class inverse_kinematics:
      
     def produce_ik(self):
         #initilize the process ik variabiles
-        ik_chain = ikpy.chain.Chain.from_urdf_file("untitled.urdf",active_links_mask=[False, True, True, True, True, True, True])
+        ik_chain = ikpy.chain.Chain.from_urdf_file("arm_urdf.urdf",active_links_mask=[False, True, True, True, True, True, True])
         self.ik = ik_chain.inverse_kinematics([0.38,0,0.58])
         
         while(1):
@@ -106,24 +90,12 @@ class inverse_kinematics:
                 # see Orientation and Position section
                 self.ik = ik_chain.inverse_kinematics(position, orientation, orientation_mode="all", initial_position=position_ik)
                 self.ikQ.put(self.ik)
-            
-            
-            #etw = time.time()
-            #etp = time.process_time()
-            
-            #resw = etw - stw
-            #resp = etp - stp
-            
-            #if resw > 0:
-            #    print('Total Process time:', resw, 'seconds')
-            #    print('CPU Execution time:', resp, 'seconds')
-            
 
 
 class ControllerTest:
     def __init__(self):
     
-        self.ik_chain = ikpy.chain.Chain.from_urdf_file("untitled.urdf",active_links_mask=[False, True, True, True, True, True, True])
+        self.ik_chain = ikpy.chain.Chain.from_urdf_file("arm_urdf.urdf",active_links_mask=[False, True, True, True, True, True, True])
         self.ik_process = inverse_kinematics()
         self.display_process = display()
         self.ik = [0,0,0,0,0,0,0]
@@ -150,12 +122,20 @@ class ControllerTest:
         self.ik_result_position = [0.38,0,0.58]
         self.ik_target_motor_position = [0,0,0,0,0,0]
         self.motor_report_position = [0,0,0,0,0,0]
+        self.offset = [0,0,0,0,0,0]
+        self.selected_axis = 0
+        # 1 = ik mode, -1 = per axis mode
+        self.control_mode = 1
         
         set_deadzone(DEADZONE_TRIGGER,10) #setup a deadzone for the thumbsticks to avoid stick driftS
         
        #Connect to two moteus drivers 
-       #self.c1 = moteus.Controller(1) # 1 is extend retract antenna
-       #self.c2 = moteus.Controller(2)  # 2 is rotate antenna 
+        self.c1 = moteus.Controller(1) # 1 is Turntable
+        self.c2 = moteus.Controller(2)  # 2 is Shoulder 
+        self.c3 = moteus.Controller(3)  # 3 is Elbow 
+        self.c4 = moteus.Controller(4)  # 3 is Elbow 
+        self.c5 = moteus.Controller(5)  # 3 is Elbow 
+        self.c5 = moteus.Controller(6)  # 3 is Elbow 
 
 
    #reference - https://github.com/Zuzu-Typ/XInput-Python
@@ -173,16 +153,23 @@ class ControllerTest:
                         # save the position of the right stick into the global variable 
                         self.r_thumb_stick_pos = (int(round(event.x,0)), int(round(event.y,0)))
                 elif event.type == EVENT_BUTTON_PRESSED:
-                    if event.button == "A":
+                    if event.button == "B":
                         self.enabled = False
-                        #await self.c1.set_stoppython
-                        #await self.c2.set_stop()
-                    elif event.button == "B":
+                        await self.c1.set_stop()
+                        await self.c2.set_stop()
+                        await self.c3.set_stop()
+                        await self.c4.set_stop()
+                        await self.c5.set_stop()
+                        await self.c6.set_stop()
+                    elif event.button == "A":
                         self.enabled = True
                     elif event.button == "LEFT_SHOULDER":
                         self.l_bumper = 1
                     elif event.button == "RIGHT_SHOULDER":
                         self.r_bumper = 1
+                        
+                    elif event.button == "Y":
+                        self.control_mode = self.control_mode * -1
                 elif event.type == EVENT_BUTTON_RELEASED:
                     if event.button == "LEFT_SHOULDER":
                         self.l_bumper = 0
@@ -224,67 +211,80 @@ class ControllerTest:
                                       [ba, bb, bc],
                                       [ca, cb, cc]]
 
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0.05)
     
     async def consume_ik(self):
-
         while True:
+            while self.control_mode == 1:
 
-            #print("Commanded Position: %s" % [ '%.2f' % elem for elem in self.target_position ])
-            #print("Commanded Orientation: %s" % [ '%.2f' % elem for elem in self.target_orientation ])
-            
-            self.ik_process.orientation_Q.put(self.target_orientation)
-            self.ik_process.position_Q.put(self.target_position)
+                #print("Commanded Position: %s" % [ '%.2f' % elem for elem in self.target_position ])
+                #print("Commanded Orientation: %s" % [ '%.2f' % elem for elem in self.target_orientation ])
+                
+                self.ik_process.orientation_Q.put(self.target_orientation)
+                self.ik_process.position_Q.put(self.target_position)
 
-            #wait for a new ik        
-            self.ik = self.ik_process.ikQ.get()
+                #wait for a new ik        
+                self.ik = self.ik_process.ikQ.get()
 
-            self.ik_result_position = self.ik_chain.forward_kinematics(self.ik)[:3, 3]
-            
-            #print("Calculated FK(cartesian) position: %s" % [ '%.2f' % elem for elem in self.ik_result_position])
-            
-            # motor map [hand rotation, turntable, shoulder, elbow, forarm rotation, wrist]
-            #print("motor map =                   [turntable, shoulder, elbow, forarm rot, wrist, hand rot]")
-            #print("Calculated IK(motor) position : %s" % [ '%.2f' % elem for elem in self.ik ][1:])
+                self.ik_result_position = self.ik_chain.forward_kinematics(self.ik)[:3, 3]
+                
+                #print("Calculated FK(cartesian) position: %s" % [ '%.2f' % elem for elem in self.ik_result_position])
+                
+                # motor map [hand rotation, turntable, shoulder, elbow, forarm rotation, wrist]
+                #print("motor map =                   [turntable, shoulder, elbow, forarm rot, wrist, hand rot]")
+                #print("Calculated IK(motor) position : %s" % [ '%.2f' % elem for elem in self.ik ][1:])
 
-            await asyncio.sleep(0.01)
+                await asyncio.sleep(0.05)
+            while self.control_mode == -1:
+                self.ik_target_motor_position[self.selected_axis] += self.l_thumb_stick_pos[1]
         
     async def command_motors(self):
         max = 0
         first = 1    
         while True:
         
-            stw = time.time()
-            stp = time.process_time()
+
             
             # send the commanded position to the driver, with a given maximum_torque
             # query is set to True to recieve back telemetry and save that into state1 and state2
             if self.enabled:
-                state1 = await self.c1.set_position(position=self.ik[2], maximum_torque=15, query=True)
-                state2 = await self.c2.set_position(position=self.ik[1], maximum_torque=15, query=True)
+                stw = time.time()
+                stp = time.process_time()
+                
+                # Ik returns output position in radians, moteus expects position in number of motor rotor rotations
+                # motor command = ik result / 2pi * gear ratio
+                # turntable example motor command = ik result /2pi * 32.7 = ik result * 5.204
+                # use a negative to get the direction correct
+                state1 = await self.c1.set_position(position=self.ik[1] * 5.204, maximum_torque=15, query=False)
+                state2 = await self.c2.set_position(position=self.ik[2] * 3.979, maximum_torque=15, query=False)
+                state3 = await self.c3.set_position(position=self.ik[3] * 5.204, maximum_torque=15, query=False)
+                state4 = await self.c4.set_position(position=self.ik[4] * 3.820, maximum_torque=15, query=False)
+                state5 = await self.c5.set_position(position=self.ik[5] * 3.820 maximum_torque=15, query=False)
+                state6 = await self.c6.set_position(position=self.ik[6] / 6.283, maximum_torque=15, query=False)
 
                 # Read the actual position back from the recieved state variable
-                self.motor_report_position[2] = state1.values[moteus.Register.POSITION]
-                self.motor_report_position[1] = state2.values[moteus.Register.POSITION]    
-        
+                # self.motor_report_position[2] = state1.values[moteus.Register.POSITION]
+                # self.motor_report_position[1] = state2.values[moteus.Register.POSITION]    
+                
+                # etw = time.time()
+                # etp = time.process_time()
+            
+                # resw = etw - stw
+                # resp = etp - stp
+                # if resw > max:
+                #    if first == 1:
+                #        first = 0
+                #    else:
+                #        max = resw
+                #if resw > 0:
+                #    print('Total Process time:', resw, 'seconds')
+                #    print('CPU Execution time:', resp, 'seconds')
+                #    print('MAX Process time:', max, 'seconds')
 
             # Print blank line so we can separate one iteration from the
             # next
-            print()
-            etw = time.time()
-            etp = time.process_time()
-            
-            resw = etw - stw
-            resp = etp - stp
-            if resw > max:
-                if first == 1:
-                    first = 0
-                else:
-                    max = resw
-            if resw > 0:
-                print('Total Process time:', resw, 'seconds')
-                print('CPU Execution time:', resp, 'seconds')
-                print('MAX Process time:', max, 'seconds')
+            #print()
+
             await asyncio.sleep(0.01)
     
     async def display_arm(self):
@@ -294,33 +294,21 @@ class ControllerTest:
             self.display_process.disp_ik_Q.put(self.ik)
             self.display_process.disp_target_Q.put(self.target_position)
 
-            await asyncio.sleep(0.15)
+            await asyncio.sleep(0.25)
 	
 	
     async def main(self):
         # In case the controller had faulted previously, at the start of
         # this script we send the stop command in order to clear it.
-        #await self.c1.set_stop()
-        #await self.c2.set_stop()
+        await self.c1.set_stop()
+        await self.c2.set_stop()
+        await self.c3.set_stop()
+        await self.c4.set_stop()
+        await self.c5.set_stop()
+        await self.c6.set_stop()
         
         # wait after stop command before sending the next command
-        #await asyncio.sleep(0.5)
-
-        # reset the zero position
-        #await self.c1.set_position(position=math.nan, query=False)
-        #await self.c2.set_position(position=math.nan, query=False)
-        
-        # wait before starting the main loop 
-        #await asyncio.sleep(0.02)
-        
-        #await self.c1.set_stop()
-        #pythoawait self.c2.set_stop()
-		
-		#setup the ik figure 
-
-        
-        # wait before starting the main loop 
-        await asyncio.sleep(0.02)
+        await asyncio.sleep(0.5)
         
         ik_producer = Process(target=self.ik_process.produce_ik)
         ik_producer.start()
@@ -333,6 +321,8 @@ class ControllerTest:
         ik_task = asyncio.create_task(self.consume_ik())
                     
         display_task = asyncio.create_task(self.display_arm())
+        
+        motor_task = asyncio.create_task(self.command_motors())
         
         await controller_task
                     
