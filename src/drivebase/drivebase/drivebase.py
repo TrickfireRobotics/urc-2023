@@ -9,6 +9,7 @@ from std_msgs.msg import String
 class Drivebase(Node):
 
     global botInterface
+    SPEED = 1
 
     def __init__(self):
         super().__init__('drivebase')
@@ -22,11 +23,15 @@ class Drivebase(Node):
             float, 'move_right_drivebase_side_message', self.move_right_side)
 
     def move_left_side(self, msg):
+        global SPEED
+        msg = msg * SPEED
         botInterface.leftFrontWheel(msg)
         botInterface.leftMiddleWheel(msg)
         botInterface.leftBackWheel(msg)
 
     def move_right_side(self, msg):
+        global SPEED
+        msg = msg * SPEED
         botInterface.rightFrontWheel(msg)
         botInterface.rightMiddleWheel(msg)
         botInterface.rightBackWheel(msg)
