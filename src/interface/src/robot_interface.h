@@ -1,17 +1,25 @@
 #ifndef ROBOT_INTERFACE_H
 #define ROBOT_INTERFACE_H
 
+#include "rclcpp/rclcpp.hpp"
+#include <unordered_map>
+
+using namespace std::chrono_literals;
+
 /**
  * General interface for robot funcitonality
  * (Functions with actions return bool status code)
 */
-class RobotInterface
+class RobotInterface : public rclcpp::Node
 {
     public:
         /*
         * Constructors/Destructors
         */
-        RobotInterface();
+
+        Node selfNode;
+
+        RobotInterface::RobotInterface(Node rosNode);
         ~RobotInterface(){};
         RobotInterface(const RobotInterface&) = delete;
         RobotInterface& operator=(const RobotInterface&) = delete;
@@ -69,7 +77,8 @@ class RobotInterface
         void antennaRetract();
         void antennaTurntable(const double amount);
 
-        unordered_map<string, any> robotPublishers;
+        rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
+        unordered_map<string, rclcpp::Publisher<std_msgs::msg::String>::SharedPtr> robotPublishers;   
 };
 
 #endif
