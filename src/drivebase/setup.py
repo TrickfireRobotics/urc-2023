@@ -4,7 +4,7 @@ package_name = 'drivebase'
 
 setup(
     name=package_name,
-    version='0.0.0',
+    version='0.0.1',
     packages=[package_name],
     data_files=[
         ('share/ament_index/resource_index/packages',
@@ -14,8 +14,8 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='trickfire',
-    maintainer_email='aimeilicke@gmail.com',
-    description='TODO: Package description',
+    maintainer_email='cklay@uw.edu',
+    description='Connects controller to wheel motors',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
