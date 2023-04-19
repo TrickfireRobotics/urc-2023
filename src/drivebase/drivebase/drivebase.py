@@ -18,18 +18,18 @@ class Drivebase(Node):
         botInterface = RobotInterface(self)
 
         self.left_subscription = self.create_subscription(
-            float, 'move_left_drivebase_side_message', self.move_left_side)
+            float, 'move_left_drivebase_side_message', self.moveLeftSide)
         self.right_subscription = self.create_subscription(
-            float, 'move_right_drivebase_side_message', self.move_right_side)
+            float, 'move_right_drivebase_side_message', self.moveRightSide)
 
-    def move_left_side(self, msg):
+    def moveLeftSide(self, msg):
         global SPEED
         msg = msg * SPEED
         botInterface.leftFrontWheel(msg)
         botInterface.leftMiddleWheel(msg)
         botInterface.leftBackWheel(msg)
 
-    def move_right_side(self, msg):
+    def moveRightSide(self, msg):
         global SPEED
         msg = msg * SPEED
         botInterface.rightFrontWheel(msg)
