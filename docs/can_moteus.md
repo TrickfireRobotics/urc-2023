@@ -33,8 +33,8 @@ moteusMultiprocess.addMotor(
 ```
 This motor has a CAN ID of **three** with the name **"topmotor"**. The motor is running in **VELOCITY** mode, and as such expects incoming data intended for the motor to set its velocity in Moteus units. Each time the motor reads data from the Moteus controller, it will publish its **VELOCITY** and **POSITION** values to the ROS network in Moteus units. 
 
-### **Inputs**
 
+### **Inputs**
 
 When a motor is created, it will create a ROS subscriber to the following topic:
 
@@ -97,6 +97,6 @@ Each motor has its own multiprocess queue, `toPublisherQueue` that is created in
 ### **The Multiprocess Cycle**
 Each cycle, 0.02 seconds, the Moteus multiprocess reads the head of the `_queueToMoteus` and updates the set value for the target motor. It then goes through each motor that was succesfully connected to the CAN/CANFD bus and sends their set data. At the same time, it recieves information about the Moteus controller and populates each motor's `toPublisherQueue`.
 
-Here is a diagram of the process
+Here is a diagram of the process:
 
 ![what](./resources/moteus_docs.png)
