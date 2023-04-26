@@ -1,9 +1,7 @@
 
 ## **CAN IDs**
 
-Each Moteus controller is identified with a CAN ID.
-
-Moteus controllers with lower CAN IDs have higher priority and will get messages before motors with higher CAN ID numbers.
+Lower CAN IDs have higher priority and will get messages before motors with higher CAN ID numbers.
 
 
 The CAN IDs we use are as follows:
