@@ -33,8 +33,22 @@ moteusMultiprocess.addMotor(
 ```
 This motor has a CAN ID of **three** with the name **"topmotor"**. The motor is running in **VELOCITY** mode, and as such expects incoming data intended for the motor to set its velocity in Moteus units. Each time the motor reads data from the Moteus controller, it will publish its **VELOCITY** and **POSITION** values to the ROS network in Moteus units. 
 
-### **Inputs**
 
+### **CAN IDs**
+
+Motors with lower CAN ID numbers have higher priority and will get messages before motors with higher CAN ID numbers.
+
+The CAN IDs we use are as follows:
+
+| Arm | Drivebase | Antenna | Life Detection |
+|:---:|:---------:|:-------:|:--------------:|
+| 1-9 |   20-29   |  40-49  |     60-69      |
+
+
+Moteus controllers don't support CAN ID 0
+
+
+### **Inputs**
 
 When a motor is created, it will create a ROS subscriber to the following topic:
 
