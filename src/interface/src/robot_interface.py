@@ -25,39 +25,39 @@ class RobotInterface(Node):
         print("GOT TO __init__")
 
         # Drive base
-        publisher = self._rosNode.create_publisher(String, 'front_left_drive_motor_Velocity_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'front_left_drive_motor_velocity_from_interface', 10)
         robotPublishers['front_left_drive_motor'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'front_right_drive_motor_Velocity_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'front_right_drive_motor_velocity_from_interface', 10)
         robotPublishers['front_right_drive_motor'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'mid_left_drive_motor_Velocity_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'mid_left_drive_motor_velocity_from_interface', 10)
         robotPublishers['mid_left_drive_motor'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'mid_right_drive_motor_Velocity_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'mid_right_drive_motor_velocity_from_interface', 10)
         robotPublishers['mid_right_drive_motor'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'rear_left_drive_motor_Velocity_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'rear_left_drive_motor_velocity_from_interface', 10)
         robotPublishers['rear_left_drive_motor'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'rear_right_drive_motor_Velocity_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'rear_right_drive_motor_velocity_from_interface', 10)
         robotPublishers['rear_right_drive_motor'] = publisher
         
         # Arm
-        publisher = self._rosNode.create_publisher(String, 'arm_turntable_motor_Position_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'arm_turntable_motor_position_from_interface', 10)
         robotPublishers['arm_turntable_motor'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'arm_shoulder_motor_Position_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'arm_shoulder_motor_position_from_interface', 10)
         robotPublishers['arm_shoulder_motor'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'arm_elbow_motor_Position_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'arm_elbow_motor_position_from_interface', 10)
         robotPublishers['arm_elbow_motor'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'arm_forearm_motor_Position_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'arm_forearm_motor_position_from_interface', 10)
         robotPublishers['arm_forearm_motor'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'arm_wrist_motor_Position_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'arm_wrist_motor_position_from_interface', 10)
         robotPublishers['arm_wrist_motor'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'arm_hand_motor_Position_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'arm_hand_motor_position_from_interface', 10)
         robotPublishers['arm_hand_motor'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'arm_fingers_motor_Position_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'arm_fingers_motor_position_from_interface', 10)
         robotPublishers['arm_fingers_motor'] = publisher
 
         # Antenna
-        publisher = self._rosNode.create_publisher(String, 'antenna_motor_Position_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'antenna_motor_position_from_interface', 10)
         robotPublishers['antenna_motor'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'antenna_turntable_motor_Position_from_interface', 10)
+        publisher = self._rosNode.create_publisher(String, 'antenna_turntable_motor_position_from_interface', 10)
         robotPublishers['antenna_turntable_motor'] = publisher
 
     # def timer_callback(self):
