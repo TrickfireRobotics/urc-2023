@@ -23,30 +23,42 @@ class RobotInterface(Node):
     def __init__(self, rosNode):
         self._rosNode = rosNode
         print("GOT TO __init__")
-        publisher = self._rosNode.create_publisher(String, 'leftFrontWheel_Velocity_from_interface', 10)
-        robotPublishers['leftFrontWheel'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'rightFrontWheel_Velocity_from_interface', 10)
-        robotPublishers['rightFrontWheel'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'leftMiddleWheel_Velocity_from_interface', 10)
-        robotPublishers['leftMiddleWheel'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'rightMiddleWheel_Velocity_from_interface', 10)
-        robotPublishers['rightMiddleWheel'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'leftBackWheel_Velocity_from_interface', 10)
-        robotPublishers['leftBackWheel'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'rightBackWheel_Velocity_from_interface', 10)
-        robotPublishers['rightBackWheel'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'baseRotation_Position_from_interface', 10)
-        robotPublishers['baseRotation'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'arm1_Position_from_interface', 10)
-        robotPublishers['arm1'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'arm2_Position_from_interface', 10)
-        robotPublishers['arm2'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'arm3_Position_from_interface', 10)
-        robotPublishers['arm3'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'antenna_Position_from_interface', 10)
-        robotPublishers['antenna'] = publisher
-        publisher = self._rosNode.create_publisher(String, 'antennaTurntable_Position_from_interface', 10)
-        robotPublishers['antennaTurntable'] = publisher
+
+        # Drive base
+        publisher = self._rosNode.create_publisher(String, 'front_left_drive_motor_Velocity_from_interface', 10)
+        robotPublishers['front_left_drive_motor'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'front_right_drive_motor_Velocity_from_interface', 10)
+        robotPublishers['front_right_drive_motor'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'mid_left_drive_motor_Velocity_from_interface', 10)
+        robotPublishers['mid_left_drive_motor'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'mid_right_drive_motor_Velocity_from_interface', 10)
+        robotPublishers['mid_right_drive_motor'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'rear_left_drive_motor_Velocity_from_interface', 10)
+        robotPublishers['rear_left_drive_motor'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'rear_right_drive_motor_Velocity_from_interface', 10)
+        robotPublishers['rear_right_drive_motor'] = publisher
+        
+        # Arm
+        publisher = self._rosNode.create_publisher(String, 'arm_turntable_motor_Position_from_interface', 10)
+        robotPublishers['arm_turntable_motor'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'arm_shoulder_motor_Position_from_interface', 10)
+        robotPublishers['arm_shoulder_motor'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'arm_elbow_motor_Position_from_interface', 10)
+        robotPublishers['arm_elbow_motor'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'arm_forearm_motor_Position_from_interface', 10)
+        robotPublishers['arm_forearm_motor'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'arm_wrist_motor_Position_from_interface', 10)
+        robotPublishers['arm_wrist_motor'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'arm_hand_motor_Position_from_interface', 10)
+        robotPublishers['arm_hand_motor'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'arm_fingers_motor_Position_from_interface', 10)
+        robotPublishers['arm_fingers_motor'] = publisher
+
+        # Antenna
+        publisher = self._rosNode.create_publisher(String, 'antenna_motor_Position_from_interface', 10)
+        robotPublishers['antenna_motor'] = publisher
+        publisher = self._rosNode.create_publisher(String, 'antenna_turntable_motor_Position_from_interface', 10)
+        robotPublishers['antenna_turntable_motor'] = publisher
 
     # def timer_callback(self):
     #     msg = String()
@@ -91,164 +103,194 @@ class RobotInterface(Node):
         print()
 
     # Left front wheel
-    def leftFrontWheel(self, amount):
+    def front_left_drive_motor(self, amount):
         # Converting from input "meters per second" to output "revolutions per second"
         revolutionsOutput = 1.76838724851 * amount
 
-        publisher = robotPublishers['leftFrontWheel']
+        publisher = robotPublishers['front_left_drive_motor']
         strMsg = String()
         strMsg.data = str(revolutionsOutput)
         publisher.publish(strMsg)
 
-        print('Publishing leftFrontWheel: "%s"' % strMsg.data)
+        print('Publishing front_left_drive_motor: "%s"' % strMsg.data)
 
     # Right front wheel
-    def rightFrontWheel(self, amount):
+    def front_right_drive_motor(self, amount):
         # Converting from input "meters per second" to output "revolutions per second"
         revolutionsOutput = 1.76838724851 * amount
 
-        publisher = robotPublishers['rightFrontWheel']
+        publisher = robotPublishers['front_right_drive_motor']
         strMsg = String()
         strMsg.data = str(revolutionsOutput)
         publisher.publish(strMsg)
 
-        print('Publishing rightFrontWheel: "%s"' % strMsg.data)
+        print('Publishing front_right_drive_motor: "%s"' % strMsg.data)
 
     # Left middle wheel
-    def leftMiddleWheel(self, amount):
+    def mid_left_drive_motor(self, amount):
         # Converting from input "meters per second" to output "revolutions per second"
         revolutionsOutput = 1.76838724851 * amount
 
-        publisher = robotPublishers['leftMiddleWheel']
+        publisher = robotPublishers['mid_left_drive_motor']
         strMsg = String()
         strMsg.data = str(revolutionsOutput)
         publisher.publish(strMsg)
 
-        print('Publishing leftMiddleWheel: "%s"' % strMsg.data)
+        print('Publishing mid_left_drive_motor: "%s"' % strMsg.data)
 
     # Right middle wheel
-    def rightMiddleWheel(self, amount):
+    def mid_right_drive_motor(self, amount):
         # Converting from input "meters per second" to output "revolutions per second"
         revolutionsOutput = 1.76838724851 * amount
 
-        publisher = robotPublishers['rightMiddleWheel']
+        publisher = robotPublishers['mid_right_drive_motor']
         strMsg = String()
         strMsg.data = str(revolutionsOutput)
         publisher.publish(strMsg)
 
-        print('Publishing rightMiddleWheel: "%s"' % strMsg.data)
+        print('Publishing mid_right_drive_motor: "%s"' % strMsg.data)
 
     # Left back wheel
-    def leftBackWheel(self, amount):
+    def rear_left_drive_motor(self, amount):
         # Converting from input "meters per second" to output "revolutions per second"
         revolutionsOutput = 1.76838724851 * amount
 
-        publisher = robotPublishers['leftBackWheel']
+        publisher = robotPublishers['rear_left_drive_motor']
         strMsg = String()
         strMsg.data = str(revolutionsOutput)
         publisher.publish(strMsg)
 
-        print('Publishing leftBackWheel: "%s"' % strMsg.data)
+        print('Publishing rear_left_drive_motor: "%s"' % strMsg.data)
 
     # Right back wheel
-    def rightBackWheel(self, amount):
+    def rear_right_drive_motor(self, amount):
         # Converting from input "meters per second" to output "revolutions per second"
         revolutionsOutput = 1.76838724851 * amount
 
-        publisher = robotPublishers['rightBackWheel']
+        publisher = robotPublishers['rear_right_drive_motor']
         strMsg = String()
         strMsg.data = str(revolutionsOutput)
         publisher.publish(strMsg)
 
-        print('Publishing rightBackWheel: "%s"' % strMsg.data)
+        print('Publishing rear_right_drive_motor: "%s"' % strMsg.data)
 
-    #
-    # Arm movement/rotation
-    #
-
-    # Base turntable
-    def baseRotation(self, amount):
+    # Arm turntable
+    def arm_turntable_motor(self, amount):
         # Converting from input "degrees" to output "revolutions"
         revolutionsOutput = amount / 360
 
-        publisher = robotPublishers['baseRotation']
+        publisher = robotPublishers['arm_turntable_motor']
         strMsg = String()
         strMsg.data = str(revolutionsOutput)
         publisher.publish(strMsg)
 
-        print('Publishing baseRotation: "%s"' % strMsg.data)
+        print('Publishing arm_turntable_motor: "%s"' % strMsg.data)
 
-    # Arm 1 is closest to base and arm 3 is furthest from base
-
-    # Arm 1 movement
-    def arm1(self, amount):
+    # Arm Shoulder movement
+    def arm_shoulder_motor(self, amount):
         # Converting from input "degrees" to output "revolutions"
         revolutionsOutput = amount / 360
 
-        publisher = robotPublishers['arm1']
+        publisher = robotPublishers['arm_shoulder_motor']
         strMsg = String()
         strMsg.data = str(revolutionsOutput)
         publisher.publish(strMsg)
 
-        print('Publishing arm1: "%s"' % strMsg.data)
+        print('Publishing arm_shoulder_motor: "%s"' % strMsg.data)
 
-    # Arm 2 movement
-    def arm2(self, amount):
+    # Arm Elbow movement
+    def arm_elbow_motor(self, amount):
         # Converting from input "degrees" to output "revolutions"
         revolutionsOutput = amount / 360
 
-        publisher = robotPublishers['arm2']
+        publisher = robotPublishers['arm_elbow_motor']
         strMsg = String()
         strMsg.data = str(revolutionsOutput)
         publisher.publish(strMsg)
 
-        print('Publishing arm2: "%s"' % strMsg.data)
+        print('Publishing arm_elbow_motor: "%s"' % strMsg.data)
 
-    # Arm 3 movement
-    def arm3(self, amount):
+    # Arm Forearm movement
+    def arm_forearm_motor(self, amount):
         # Converting from input "degrees" to output "revolutions"
         revolutionsOutput = amount / 360
 
-        publisher = robotPublishers['arm3']
+        publisher = robotPublishers['arm_forearm_motor']
         strMsg = String()
         strMsg.data = str(revolutionsOutput)
         publisher.publish(strMsg)
 
-        print('Publishing arm3: "%s"' % strMsg.data)
+        print('Publishing arm_forearm_motor: "%s"' % strMsg.data)
+    
+    # Arm Forearm movement
+    def arm_wrist_motor(self, amount):
+        # Converting from input "degrees" to output "revolutions"
+        revolutionsOutput = amount / 360
 
-    # Atenna movement
-    def antennaExtend(self):
+        publisher = robotPublishers['arm_wrist_motor']
+        strMsg = String()
+        strMsg.data = str(revolutionsOutput)
+        publisher.publish(strMsg)
+
+        print('Publishing arm_wrist_motor: "%s"' % strMsg.data)
+
+    # Arm Hand movement
+    def arm_hand_motor(self, amount):
+        # Converting from input "degrees" to output "revolutions"
+        revolutionsOutput = amount / 360
+
+        publisher = robotPublishers['arm_hand_motor']
+        strMsg = String()
+        strMsg.data = str(revolutionsOutput)
+        publisher.publish(strMsg)
+
+        print('Publishing arm_hand_motor: "%s"' % strMsg.data)
+    
+    # Arm Finger movement
+    def arm_fingers_motor(self, amount):
+        # Converting from input "degrees" to output "revolutions"
+        revolutionsOutput = amount / 360
+
+        publisher = robotPublishers['arm_fingers_motor']
+        strMsg = String()
+        strMsg.data = str(revolutionsOutput)
+        publisher.publish(strMsg)
+
+        print('Publishing arm_fingers_motor: "%s"' % strMsg.data)
+
+    # Antenna movement
+    def antenna_motor_extend(self):
         # Output is in "revolutions"
         revolutionsOutput = 1 # we don't know the actual position it should be. this is a placeholder
 
-        publisher = robotPublishers['antenna']
+        publisher = robotPublishers['antenna_motor']
         strMsg = String()
         strMsg.data = str(revolutionsOutput)
         publisher.publish(strMsg)
 
-        print('Publishing antenna: "%s"' % strMsg.data)
+        print('Publishing antenna_motor: "%s"' % strMsg.data)
 
-    def antennaRetract(self):
+    def antenna_motor_retract(self):
         # Output is in "revolutions"
         revolutionsOutput = 0 # we don't know the actual position it should be. this is a placeholder
 
-        publisher = robotPublishers['antenna']
+        publisher = robotPublishers['antenna_motor']
         strMsg = String()
         strMsg.data = str(revolutionsOutput)
         publisher.publish(strMsg)
 
-        print('Publishing antenna: "%s"' % strMsg.data)
+        print('Publishing antenna_motor: "%s"' % strMsg.data)
 
-    def antennaTurntable(self, amount):
+    def antenna_turntable_motor(self, amount):
         # Converting from input "degrees" to output "revolutions"
         revolutionsOutput = amount / 360
 
-        publisher = robotPublishers['antennaTurntable']
+        publisher = robotPublishers['antenna_turntable_motor']
         strMsg = String()
         strMsg.data = str(revolutionsOutput)
         publisher.publish(strMsg)
 
-        print('Publishing antennaTurntable: "%s"' % strMsg.data)
+        print('Publishing antenna_turntable_motor: "%s"' % strMsg.data)
 
 
 class MyTestingNode(Node):
@@ -266,12 +308,12 @@ def main(args=None):
 
     object1 = RobotInterface(testNode)
 
-    object1.leftFrontWheel(10)
-    object1.rightFrontWheel(15)
-    object1.leftMiddleWheel(20)
-    object1.rightMiddleWheel(25)
-    object1.leftBackWheel(30)
-    object1.rightBackWheel(9999)
+    object1.front_left_drive_motor(10)
+    object1.front_right_drive_motor(15)
+    object1.mid_left_drive_motor(20)
+    object1.mid_right_drive_motor(25)
+    object1.rear_left_drive_motor(30)
+    object1.rear_right_drive_motor(9999)
     
     rclpy.spin(testNode)
 
