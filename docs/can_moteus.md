@@ -10,6 +10,23 @@ The only structure in the whole codebase that should be directly sending data fo
 
 ## **How to use it**
 
+### **CAN IDs**
+
+Each Moteus controller is identified with a CAN ID.
+
+Moteus controllers with lower CAN ID numbers have higher priority and will get messages before motors with higher CAN ID numbers.
+
+
+The CAN IDs we use are as follows:
+
+| Arm | Drivebase | Antenna | Life Detection |
+|:---:|:---------:|:-------:|:--------------:|
+| 1-9 |   20-29   |  40-49  |     60-69      |
+
+
+Moteus controllers don't support CAN ID 0.
+
+
 ### **Adding a Motor in Code**
 As each Moteus controller is connected to **only a single** motor, each motor is represented as a [`MoteusMotor`](../src/can_moteus/can_moteus/moteus_motor.py) object. However, the [`MoteusMultiprocess`](../src/can_moteus/can_moteus/moteus_multiprocess.py) object, of which only one should exist, handles these `MoteusMotors`. As such, motors are added via the `MoteusMultiprocess` object inside [`ros_moteus_bridge.py`](../src/can_moteus/can_moteus/ros_moteus_bridge.py).
 
@@ -32,20 +49,6 @@ moteusMultiprocess.addMotor(
 )
 ```
 This motor has a CAN ID of **three** with the name **"topmotor"**. The motor is running in **VELOCITY** mode, and as such expects incoming data intended for the motor to set its velocity in Moteus units. Each time the motor reads data from the Moteus controller, it will publish its **VELOCITY** and **POSITION** values to the ROS network in Moteus units. 
-
-
-### **CAN IDs**
-
-Motors with lower CAN ID numbers have higher priority and will get messages before motors with higher CAN ID numbers.
-
-The CAN IDs we use are as follows:
-
-| Arm | Drivebase | Antenna | Life Detection |
-|:---:|:---------:|:-------:|:--------------:|
-| 1-9 |   20-29   |  40-49  |     60-69      |
-
-
-Moteus controllers don't support CAN ID 0
 
 
 ### **Inputs**
@@ -111,6 +114,6 @@ Each motor has its own multiprocess queue, `toPublisherQueue` that is created in
 ### **The Multiprocess Cycle**
 Each cycle, 0.02 seconds, the Moteus multiprocess reads the head of the `_queueToMoteus` and updates the set value for the target motor. It then goes through each motor that was succesfully connected to the CAN/CANFD bus and sends their set data. At the same time, it recieves information about the Moteus controller and populates each motor's `toPublisherQueue`.
 
-Here is a diagram of the process
+Here is a diagram of the process:
 
 ![what](./resources/moteus_docs.png)
