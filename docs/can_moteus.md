@@ -10,23 +10,6 @@ The only structure in the whole codebase that should be directly sending data fo
 
 ## **How to use it**
 
-### **CAN IDs**
-
-Each Moteus controller is identified with a CAN ID.
-
-Moteus controllers with lower CAN ID numbers have higher priority and will get messages before motors with higher CAN ID numbers.
-
-
-The CAN IDs we use are as follows:
-
-| Arm | Drivebase | Antenna | Life Detection |
-|:---:|:---------:|:-------:|:--------------:|
-| 1-9 |   20-29   |  40-49  |     60-69      |
-
-
-Moteus controllers don't support CAN ID 0.
-
-
 ### **Adding a Motor in Code**
 As each Moteus controller is connected to **only a single** motor, each motor is represented as a [`MoteusMotor`](../src/can_moteus/can_moteus/moteus_motor.py) object. However, the [`MoteusMultiprocess`](../src/can_moteus/can_moteus/moteus_multiprocess.py) object, of which only one should exist, handles these `MoteusMotors`. As such, motors are added via the `MoteusMultiprocess` object inside [`ros_moteus_bridge.py`](../src/can_moteus/can_moteus/ros_moteus_bridge.py).
 
