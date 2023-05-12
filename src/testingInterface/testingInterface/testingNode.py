@@ -1,14 +1,18 @@
+import sys
 import rclpy
 from rclpy.node import Node
-import sys
-sys.path.insert(1, '/home/trickfire/urc-2023/src/interface')
+
+sys.path.append('/home/trickfire/urc-2023/src/interface')
+from robot_interface import RobotInterface
+
+
 
 class testingNode(Node):
 
     def __init__(self):
         super().__init__("testing_node")
         self.get_logger().info("Launching testing_node node")
-        robotInterface = robotInterface(self)
+        robotInterface = RobotInterface(self)
 
 
 def main(args=None):
