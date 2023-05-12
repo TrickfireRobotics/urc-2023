@@ -15,6 +15,12 @@ can_moteus_node = Node(
     name='can_moteus_node'
 )
 
+testing_node = Node(
+    package='testingInterface',
+    executable='testingInterface',
+    name='testing_node'
+)
+
 
 # Composable Nodes launched in a Composable Node container will share a process
 # and can use very fast inter-process communication instead of publishing
@@ -36,5 +42,6 @@ robot_container = ComposableNodeContainer(
 def generate_launch_description():
     return launch.LaunchDescription([
         robot_container,
-        can_moteus_node
+        can_moteus_node,
+        testing_node
     ])

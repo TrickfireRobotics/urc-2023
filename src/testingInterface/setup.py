@@ -14,14 +14,13 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='trickfire',
-    maintainer_email='daniel.kantor2009@gmail.com',
+    maintainer_email='matthew.c.perry@outlook.com',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'testing_node = testingInterface.testingNode:main'
+            'testingInterface = testingInterface.testingNode:main'
         ],
-
     },
 )
