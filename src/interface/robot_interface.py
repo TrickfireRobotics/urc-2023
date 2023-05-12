@@ -4,7 +4,9 @@
 
 import rclpy
 from rclpy.node import Node
+import std_msgs.msg
 from std_msgs.msg import String
+from std_msgs.msg import Float32
 
 robotPublishers = dict()
 
@@ -108,8 +110,8 @@ class RobotInterface(Node):
         revolutionsOutput = 1.76838724851 * amount
 
         publisher = robotPublishers['front_left_drive_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing front_left_drive_motor: "%s"' % strMsg.data)
@@ -120,8 +122,8 @@ class RobotInterface(Node):
         revolutionsOutput = 1.76838724851 * amount
 
         publisher = robotPublishers['front_right_drive_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing front_right_drive_motor: "%s"' % strMsg.data)
@@ -132,8 +134,8 @@ class RobotInterface(Node):
         revolutionsOutput = 1.76838724851 * amount
 
         publisher = robotPublishers['mid_left_drive_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing mid_left_drive_motor: "%s"' % strMsg.data)
@@ -144,8 +146,8 @@ class RobotInterface(Node):
         revolutionsOutput = 1.76838724851 * amount
 
         publisher = robotPublishers['mid_right_drive_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing mid_right_drive_motor: "%s"' % strMsg.data)
@@ -156,8 +158,8 @@ class RobotInterface(Node):
         revolutionsOutput = 1.76838724851 * amount
 
         publisher = robotPublishers['rear_left_drive_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing rear_left_drive_motor: "%s"' % strMsg.data)
@@ -168,8 +170,8 @@ class RobotInterface(Node):
         revolutionsOutput = 1.76838724851 * amount
 
         publisher = robotPublishers['rear_right_drive_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing rear_right_drive_motor: "%s"' % strMsg.data)
@@ -180,8 +182,8 @@ class RobotInterface(Node):
         revolutionsOutput = amount / 360
 
         publisher = robotPublishers['arm_turntable_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing arm_turntable_motor: "%s"' % strMsg.data)
@@ -192,8 +194,8 @@ class RobotInterface(Node):
         revolutionsOutput = amount / 360
 
         publisher = robotPublishers['arm_shoulder_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing arm_shoulder_motor: "%s"' % strMsg.data)
@@ -204,8 +206,8 @@ class RobotInterface(Node):
         revolutionsOutput = amount / 360
 
         publisher = robotPublishers['arm_elbow_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing arm_elbow_motor: "%s"' % strMsg.data)
@@ -216,8 +218,8 @@ class RobotInterface(Node):
         revolutionsOutput = amount / 360
 
         publisher = robotPublishers['arm_forearm_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing arm_forearm_motor: "%s"' % strMsg.data)
@@ -228,8 +230,8 @@ class RobotInterface(Node):
         revolutionsOutput = amount / 360
 
         publisher = robotPublishers['arm_wrist_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing arm_wrist_motor: "%s"' % strMsg.data)
@@ -240,8 +242,8 @@ class RobotInterface(Node):
         revolutionsOutput = amount / 360
 
         publisher = robotPublishers['arm_hand_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing arm_hand_motor: "%s"' % strMsg.data)
@@ -252,8 +254,8 @@ class RobotInterface(Node):
         revolutionsOutput = amount / 360
 
         publisher = robotPublishers['arm_fingers_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing arm_fingers_motor: "%s"' % strMsg.data)
@@ -264,8 +266,8 @@ class RobotInterface(Node):
         revolutionsOutput = 1 # we don't know the actual position it should be. this is a placeholder
 
         publisher = robotPublishers['antenna_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing antenna_motor: "%s"' % strMsg.data)
@@ -275,8 +277,8 @@ class RobotInterface(Node):
         revolutionsOutput = 0 # we don't know the actual position it should be. this is a placeholder
 
         publisher = robotPublishers['antenna_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing antenna_motor: "%s"' % strMsg.data)
@@ -286,8 +288,8 @@ class RobotInterface(Node):
         revolutionsOutput = amount / 360
 
         publisher = robotPublishers['antenna_turntable_motor']
-        strMsg = String()
-        strMsg.data = str(revolutionsOutput)
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
         print('Publishing antenna_turntable_motor: "%s"' % strMsg.data)
