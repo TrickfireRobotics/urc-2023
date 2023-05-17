@@ -8,20 +8,16 @@ import std_msgs.msg
 from std_msgs.msg import String
 from std_msgs.msg import Float32
 
+VELOCITY_CONVERSION = 1.76838724851
+POSITION_CONVERSION = 0.159155
+
 robotPublishers = dict()
 
 class RobotInterface(Node):
     #
     # Constructors/Destructors
     #
-
-    # def __init__(self):
-    #     super().__init__('robot_interface_publisher')
-    #     self.publisher_ = self.create_publisher(float, 'topic', 10)
-    #     timer_period = 0.5  # seconds
-    #     self.timer = self.create_timer(timer_period, self.timer_callback)
-    #     self.i = 0
-
+    
     def __init__(self, rosNode):
         self._rosNode = rosNode
         print("GOT TO __init__")
@@ -61,27 +57,16 @@ class RobotInterface(Node):
         robotPublishers['antenna_motor'] = publisher
         publisher = self._rosNode.create_publisher(Float32, 'antenna_turntable_motor_position_from_interface', 10)
         robotPublishers['antenna_turntable_motor'] = publisher
-
-    # def timer_callback(self):
-    #     msg = String()
-    #     msg.data = 'Hello World: %d' % self.i
-    #     self.publisher_.publish(msg)
-    #     self.get_logger().info('Publishing: "%s"' % msg.data)
-    #     self.i += 1
     
     def __del__(self):
         print()
+    
+    def velocityConversion(self, amount):
+        return amount * VELOCITY_CONVERSION
 
-    
-    # TESTING
-    #
-    # def timer_callback(self):
-    #     msg = String()
-    #     msg.data = 'Hello World: %d' % self.i
-    #     self.publisher_.publish(msg)
-    #     self.get_logger().info('Publishing: "%s"' % msg.data)
-    #     self.i += 1
-    
+    # Converting from input "radians" to output "revolutions"
+    def positionConversion(self, amount):
+        return amount * POSITION_CONVERSION
 
     # RobotInterface(const RobotInterface&) = delete;
     # RobotInterface& operator=(const RobotInterface&) = delete;
@@ -96,7 +81,6 @@ class RobotInterface(Node):
     # General movement including all wheels
     def moveForward():
         print()
-
     def moveBackward(self, amount):
         print()
     def turnLeft(self, amount):
@@ -106,196 +90,140 @@ class RobotInterface(Node):
 
     # Left front wheel
     def front_left_drive_motor(self, amount):
-        # Converting from input "meters per second" to output "revolutions per second"
-        revolutionsOutput = 1.76838724851 * amount
-
+        revolutionsOutput = self.velocityConversion(amount)
         publisher = robotPublishers['front_left_drive_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
-        self._rosNode.get_logger().info(str(revolutionsOutput))
-
-        
+        #self._rosNode.get_logger().info(str(revolutionsOutput))
         publisher.publish(strMsg)
-
-        #print('Publishing front_left_drive_motor: "%s"' % strMsg.data)
 
     # Right front wheel
     def front_right_drive_motor(self, amount):
-        # Converting from input "meters per second" to output "revolutions per second"
-        revolutionsOutput = 1.76838724851 * amount
-
+        revolutionsOutput = self.velocityConversion(amount)
         publisher = robotPublishers['front_right_drive_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
-        print('Publishing front_right_drive_motor: "%s"' % strMsg.data)
-
     # Left middle wheel
     def mid_left_drive_motor(self, amount):
-        # Converting from input "meters per second" to output "revolutions per second"
-        revolutionsOutput = 1.76838724851 * amount
-
+        revolutionsOutput = self.velocityConversion(amount)
         publisher = robotPublishers['mid_left_drive_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
-        print('Publishing mid_left_drive_motor: "%s"' % strMsg.data)
-
     # Right middle wheel
     def mid_right_drive_motor(self, amount):
-        # Converting from input "meters per second" to output "revolutions per second"
-        revolutionsOutput = 1.76838724851 * amount
-
+        revolutionsOutput = self.velocityConversion(amount)
         publisher = robotPublishers['mid_right_drive_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
-        print('Publishing mid_right_drive_motor: "%s"' % strMsg.data)
-
     # Left back wheel
     def rear_left_drive_motor(self, amount):
-        # Converting from input "meters per second" to output "revolutions per second"
-        revolutionsOutput = 1.76838724851 * amount
-
+        revolutionsOutput = self.velocityConversion(amount)
         publisher = robotPublishers['rear_left_drive_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
-        print('Publishing rear_left_drive_motor: "%s"' % strMsg.data)
-
     # Right back wheel
     def rear_right_drive_motor(self, amount):
-        # Converting from input "meters per second" to output "revolutions per second"
-        revolutionsOutput = 1.76838724851 * amount
-
+        revolutionsOutput = self.velocityConversion(amount)
         publisher = robotPublishers['rear_right_drive_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
-        print('Publishing rear_right_drive_motor: "%s"' % strMsg.data)
-
     # Arm turntable
     def arm_turntable_motor(self, amount):
-        # Converting from input "degrees" to output "revolutions"
-        revolutionsOutput = amount / 360
-
+        revolutionsOutput = self.positionConversion(amount) * 5.204 # 5.204 is the gear ratio for turntable
         publisher = robotPublishers['arm_turntable_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
-        print('Publishing arm_turntable_motor: "%s"' % strMsg.data)
-
     # Arm Shoulder movement
     def arm_shoulder_motor(self, amount):
-        # Converting from input "degrees" to output "revolutions"
-        revolutionsOutput = amount / 360
-
+        revolutionsOutput = self.positionConversion(amount) * 3.979 # 3.979 is gear ratio for shoulder
         publisher = robotPublishers['arm_shoulder_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
-        print('Publishing arm_shoulder_motor: "%s"' % strMsg.data)
-
     # Arm Elbow movement
     def arm_elbow_motor(self, amount):
-        # Converting from input "degrees" to output "revolutions"
-        revolutionsOutput = amount / 360
-
+        revolutionsOutput = self.positionConversion(amount) * 5.204 # 5.204 is gear ratio for elbow
         publisher = robotPublishers['arm_elbow_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
-        print('Publishing arm_elbow_motor: "%s"' % strMsg.data)
-
     # Arm Forearm movement
     def arm_forearm_motor(self, amount):
-        # Converting from input "degrees" to output "revolutions"
-        revolutionsOutput = amount / 360
-
+        revolutionsOutput = self.positionConversion(amount) * 3.820 # 3.820 is gear ratio for forearm
         publisher = robotPublishers['arm_forearm_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
-
-        print('Publishing arm_forearm_motor: "%s"' % strMsg.data)
     
-    # Arm Forearm movement
-    def arm_wrist_motor(self, amount):
-        # Converting from input "degrees" to output "revolutions"
-        revolutionsOutput = amount / 360
-
-        publisher = robotPublishers['arm_wrist_motor']
+    # Arm Up Down Wrist movement
+    def arm_wrist_updown_motor(self, amount):
+        revolutionsOutput = self.positionConversion(amount) * 3.820 # 3.820 is gear ratio for wrist up down
+        publisher = robotPublishers['arm_wrist_updown_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
-        print('Publishing arm_wrist_motor: "%s"' % strMsg.data)
+    # Arm Wrist rotation movement
+    def arm_wrist_rotation_motor(self, amount):
+        revolutionsOutput = self.positionConversion(amount) / 6.283 # 6.283 is gear ratio for wrist rotation
+        publisher = robotPublishers['arm_wrist_rotation_motor']
+        strMsg = Float32()
+        strMsg.data = revolutionsOutput
+        publisher.publish(strMsg)
 
     # Arm Hand movement
     def arm_hand_motor(self, amount):
-        # Converting from input "degrees" to output "revolutions"
-        revolutionsOutput = amount / 360
-
+        revolutionsOutput = self.positionConversion(amount)
         publisher = robotPublishers['arm_hand_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
-
-        print('Publishing arm_hand_motor: "%s"' % strMsg.data)
     
     # Arm Finger movement
     def arm_fingers_motor(self, amount):
-        # Converting from input "degrees" to output "revolutions"
-        revolutionsOutput = amount / 360
-
+        revolutionsOutput = self.positionConversion(amount)
         publisher = robotPublishers['arm_fingers_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
-        print('Publishing arm_fingers_motor: "%s"' % strMsg.data)
-
     # Antenna movement
     def antenna_motor_extend(self):
         # Output is in "revolutions"
         revolutionsOutput = 1 # we don't know the actual position it should be. this is a placeholder
-
         publisher = robotPublishers['antenna_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
-
-        print('Publishing antenna_motor: "%s"' % strMsg.data)
 
     def antenna_motor_retract(self):
         # Output is in "revolutions"
         revolutionsOutput = 0 # we don't know the actual position it should be. this is a placeholder
-
         publisher = robotPublishers['antenna_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
-        print('Publishing antenna_motor: "%s"' % strMsg.data)
-
     def antenna_turntable_motor(self, amount):
-        # Converting from input "degrees" to output "revolutions"
-        revolutionsOutput = amount / 360
-
+        revolutionsOutput = self.positionConversion(amount)
         publisher = robotPublishers['antenna_turntable_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
-
-        print('Publishing antenna_turntable_motor: "%s"' % strMsg.data)
 
 
 class MyTestingNode(Node):
@@ -331,4 +259,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
