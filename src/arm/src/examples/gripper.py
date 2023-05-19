@@ -8,8 +8,14 @@ class Gripper:
         self.rotation = 0
         self.ser = serial.Serial("COM6", 115200)
         set_deadzone(DEADZONE_TRIGGER,10) #setup a deadzone for the thumbsticks to avoid stick driftS
-
-
+        self.extentionMax = 80
+        self.defaultExtentionMax = 80
+        self.extentionMin = 30
+        self.interfearanceValue = 70
+        
+        self.rotationMax = 90
+        self.rotationMin = 30
+        self.interfearanceCheck = 80
 
     async def writeToMicrocontroller(self):
         print("Starting to write to microcontroller")
@@ -17,20 +23,20 @@ class Gripper:
             command = b"c " +  str(int(self.rotation)).encode() + b" " + str(int(self.extention)).encode() + b"\n"
             print(command.decode("utf-8"))
             self.ser.write(command)
-            resp = self.ser.readline()
-            print(resp.decode("utf-8"))
-            resp = resp.split(b"=")
-            resp = resp[1]
-            resp = resp.strip()
-            resp = int(resp)
-            self.extention = resp
-            resp = self.ser.readline()
-            print(resp.decode("utf-8"))
-            resp = resp.split(b"=")
-            resp = resp[1]
-            resp = resp.strip()
-            resp = int(resp)
-            self.rotation = resp
+            #resp = self.ser.readline()
+            #print(resp.decode("utf-8"))
+            #resp = resp.split(b"=")
+            #resp = resp[1]
+            #resp = resp.strip()
+            #resp = int(resp)
+            #self.extention = resp
+            #resp = self.ser.readline()
+            #print(resp.decode("utf-8"))
+            #resp = resp.split(b"=")
+            #resp = resp[1]
+            #resp = resp.strip()
+            #resp = int(resp)
+            #self.rotation = resp
             await asyncio.sleep(0.01)
 
     async def readController(self):
@@ -44,8 +50,16 @@ class Gripper:
                 if event.type == EVENT_STICK_MOVED:
                     if event.stick == RIGHT:
                         currentStick = (event.x, event.y)
-            self.extention += round(currentStick[1] * 10,0)
-            self.rotation += round(currentStick[0] * 10,0)
+            self.extention += round(currentStick[1] * 1,0)
+            if self.extention > self.extentionMax:
+                self.extention = self.extentionMax
+            elif self.extention < self.extentionMin:
+                self.extention = self.extentionMin
+            self.rotation += round(currentStick[0] * 1,0)
+            if self.rotation > self.rotationMax:
+                self.rotation = self.rotationMax
+            elif self.rotation < self.rotationMin:
+                self.rotation = self.rotationMin
             await asyncio.sleep(0.01)
 
     async def main(self):
