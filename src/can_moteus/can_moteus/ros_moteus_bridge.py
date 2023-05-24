@@ -21,13 +21,13 @@ class RosMotuesBridge(Node):
 
 
         #EXAMPLES
-        # moteusPubList = [moteus.Register.VELOCITY]
-        # moteusMultiprocess.addMotor(
-        #     6,
-        #     "front_left_drive_motor",
-        #     moteus_motor.Mode.VELOCITY,
-        #     moteusPubList,
-        # )
+        moteusPubList = [moteus.Register.VELOCITY]
+        moteusMultiprocess.addMotor(
+            6,
+            "front_left_drive_motor",
+            moteus_motor.Mode.VELOCITY,
+            moteusPubList,
+        )
 
         # moteusPubList = [moteus.Register.VELOCITY]
         # moteusMultiprocess.addMotor(
