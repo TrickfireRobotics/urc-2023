@@ -61,7 +61,6 @@ class RobotInterface(Node):
     def __del__(self):
         print()
     
-    # Converting meters per second to output "revolutions per second"
     def velocityConversion(self, amount):
         return amount * VELOCITY_CONVERSION
 
@@ -69,10 +68,25 @@ class RobotInterface(Node):
     def positionConversion(self, amount):
         return amount * POSITION_CONVERSION
 
+    # RobotInterface(const RobotInterface&) = delete;
+    # RobotInterface& operator=(const RobotInterface&) = delete;
+    # RobotInterface(RobotInterface&&) = delete;
+    # RobotInterface& operator=(RobotInterface&&) = delete;
+
 
     #
     # Movement
     #
+
+    # General movement including all wheels
+    def moveForward():
+        print()
+    def moveBackward(self, amount):
+        print()
+    def turnLeft(self, amount):
+        print()
+    def turnRight(self, amount):
+        print()
 
     # Left front wheel
     def front_left_drive_motor(self, amount):
@@ -80,6 +94,7 @@ class RobotInterface(Node):
         publisher = robotPublishers['front_left_drive_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
+        #self._rosNode.get_logger().info(str(revolutionsOutput))
         publisher.publish(strMsg)
 
     # Right front wheel
@@ -214,7 +229,10 @@ class RobotInterface(Node):
 class MyTestingNode(Node):
     def __init__(self):
         super().__init__('my_testing_node')
+        #self.create_timer(0.2, self.timer_callback)
         self.get_logger().info("Hello ROS2")
+    #def timer_callback(self):
+    #    self.get_logger().info("Hello ROS2")
 
 def main(args=None):
     rclpy.init(args=args)
