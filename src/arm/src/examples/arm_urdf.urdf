@@ -21,13 +21,14 @@
       <child link="TSL"/>
       <origin xyz="0 0 0.072" rpy="0 0 0" />
       <axis xyz="0 0 -1"/>
+	  <limit lower="-10" upper="10" /> 
     </joint>
     
     <link name="upper_arm">
 		<visual>
           <origin xyz="0 0 0.25" rpy="0 0 0" />
           	<geometry>
-            	<cylinder length="0.5" radius="0.022"/>
+            	<cylinder length="0.28" radius="0.022"/>
 			</geometry>
 		</visual>	
 	</link>
@@ -36,7 +37,7 @@
       <child link="upper_arm"/>
       <origin xyz="0 0 0.027" rpy="0 0 0" />
       <axis xyz="1 0 0"/>
-      <limit lower="-0.9" upper="0.9" />
+      <limit lower="-2" upper="2" />
     </joint>
     
     <link name="EFL">
@@ -53,7 +54,7 @@
       <child link="EFL"/>
       <origin xyz="0 0 0.5" rpy="0 0 0" />
       <axis xyz="1 0 0"/>
-        <limit lower="-2.8" upper="2.8" />
+        <limit lower="-3.14" upper="3.14" />
     </joint>
     
     <link name="forearm">
@@ -69,15 +70,15 @@
       <parent link="EFL"/>
       <child link="forearm"/>
       <origin xyz="0 0 0.35" rpy="0 0 0" />
-      <axis xyz="0 0 -1"/>
-      <limit lower="-1.57" upper="2.8" />       
+      <axis xyz="0 0 -1"/>  
+	  <limit lower="-6" upper="6" /> 
     </joint>
     
     <link name="hand">
 		<visual>
           <origin xyz="0 0 0.05" rpy="0 0 0" />
           	<geometry>
-            	<cylinder length="0.1" radius="0.02"/>
+            	<cylinder length="0.02" radius="0.02"/>
 			</geometry>
 		</visual>	
 	</link>
@@ -87,14 +88,14 @@
       <child link="hand"/>
       <origin xyz="0 0 0.05" rpy="0 0 0" />
       <axis xyz="-1 0 0"/>
-      <limit lower="-4" upper="4" />       
+      <limit lower="-3" upper="3" />       
     </joint>
     
     <link name="end_effector">
 		<visual>
           <origin xyz="0 0 0.05" rpy="0 0 0" />
           	<geometry>
-            	<box size="0.02 0.02 0.1" />
+            	<box size="0.02 0.02 0.02" />
 			</geometry>
 		</visual>	
 	</link>
@@ -104,6 +105,7 @@
       <child link="end_effector"/>
       <origin xyz="0 0 0.045" rpy="0 0 0" />
       <axis xyz="0 0 1"/>
+	  <limit lower="-6" upper="6" /> 
     </joint>
     
 </robot>
