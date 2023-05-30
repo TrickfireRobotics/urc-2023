@@ -3,7 +3,7 @@
 		<visual>
 		    <origin xyz="0 0 0.0225" rpy="0 0 0"/>
 			<geometry>
-				<cylinder length="0.050" radius="0.089"/>
+				<box size=".20 .20 .05"/>
 			</geometry>
 		</visual>	
 	</link>
@@ -11,7 +11,7 @@
     <link name="TSL">
 		<visual>
           	<geometry>
-                <box size="0.05 0.05 0.053" />
+                <cylinder length=".0175" radius=".06"/>
 			</geometry>
 		</visual>	
 	</link>
@@ -19,32 +19,32 @@
     <joint name="turntable" type="revolute">
       <parent link="base_link"/>
       <child link="TSL"/>
-      <origin xyz="0 0 0.072" rpy="0 0 0" />
+      <origin xyz="0 .0 .05" rpy="0 0 0" />
       <axis xyz="0 0 -1"/>
 	  <limit lower="-10" upper="10" /> 
     </joint>
     
     <link name="upper_arm">
 		<visual>
-          <origin xyz="0 0 0.25" rpy="0 0 0" />
+          <origin xyz="0 0 0.26" rpy="0 0 0" />
           	<geometry>
-            	<cylinder length="0.28" radius="0.022"/>
+            	<box size=".11 .09 .51"/>
 			</geometry>
 		</visual>	
 	</link>
     <joint name="shoulder" type="revolute">
       <parent link="TSL"/>
       <child link="upper_arm"/>
-      <origin xyz="0 0 0.027" rpy="0 0 0" />
+      <origin xyz="0 0.06 0.075" rpy="0 0 0" />
       <axis xyz="1 0 0"/>
       <limit lower="-2" upper="2" />
     </joint>
     
     <link name="EFL">
 		<visual>
-          <origin xyz="0 0 0.2" rpy="0 0 0" />
+          <origin xyz="0.0 -0.06 0" rpy="0 0 0" />
           	<geometry>
-            	<cylinder length="0.1" radius="0.0175"/>
+            	<box size=".085 .16 .115"/>
 			</geometry>
 		</visual>	
 	</link>
@@ -52,16 +52,16 @@
     <joint name="elbow" type="revolute">
       <parent link="upper_arm"/>
       <child link="EFL"/>
-      <origin xyz="0 0 0.5" rpy="0 0 0" />
+      <origin xyz="0 0.0 0.51" rpy="0 0 0" />
       <axis xyz="1 0 0"/>
         <limit lower="-3.14" upper="3.14" />
     </joint>
     
     <link name="forearm">
 		<visual>
-          <origin xyz="0 0 0.045" rpy="0 0 0" />
+          <origin xyz="0 0 0.25" rpy="0 0 0" />
           	<geometry>
-            	<box size="0.09 0.03 0.045" />
+            	<box size="0.07 0.07 0.38" />
 			</geometry>
 		</visual>	
     </link>
@@ -69,16 +69,16 @@
     <joint name="forearm_rotation" type="revolute">
       <parent link="EFL"/>
       <child link="forearm"/>
-      <origin xyz="0 0 0.35" rpy="0 0 0" />
+      <origin xyz="0 -0.1 0" rpy="0 0 0" />
       <axis xyz="0 0 -1"/>  
 	  <limit lower="-6" upper="6" /> 
     </joint>
     
     <link name="hand">
 		<visual>
-          <origin xyz="0 0 0.05" rpy="0 0 0" />
+          <origin xyz="0 0 0.21" rpy="0 0 0" />
           	<geometry>
-            	<cylinder length="0.02" radius="0.02"/>
+            	<cylinder length="0.42" radius="0.04"/>
 			</geometry>
 		</visual>	
 	</link>
@@ -86,14 +86,14 @@
   <joint name="wrist" type="revolute">
       <parent link="forearm"/>
       <child link="hand"/>
-      <origin xyz="0 0 0.05" rpy="0 0 0" />
-      <axis xyz="-1 0 0"/>
+      <origin xyz="0 0 0.48" rpy="0 0 0" />
+      <axis xyz="1 0 0"/>
       <limit lower="-3" upper="3" />       
     </joint>
     
     <link name="end_effector">
 		<visual>
-          <origin xyz="0 0 0.05" rpy="0 0 0" />
+          <origin xyz="0 0 0.38" rpy="0 0 0" />
           	<geometry>
             	<box size="0.02 0.02 0.02" />
 			</geometry>
@@ -103,7 +103,7 @@
     <joint name="hand_rotation" type="revolute">
       <parent link="hand"/>
       <child link="end_effector"/>
-      <origin xyz="0 0 0.045" rpy="0 0 0" />
+      <origin xyz="0 0 0.048" rpy="0 0 0" />
       <axis xyz="0 0 1"/>
 	  <limit lower="-6" upper="6" /> 
     </joint>
