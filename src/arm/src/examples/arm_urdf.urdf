@@ -21,7 +21,7 @@
       <child link="TSL"/>
       <origin xyz="0 .0 .05" rpy="0 0 0" />
       <axis xyz="0 0 -1"/>
-	  <limit lower="-10" upper="10" /> 
+	  <limit lower="-1.5" upper="1.5" /> 
     </joint>
     
     <link name="upper_arm">
@@ -37,7 +37,7 @@
       <child link="upper_arm"/>
       <origin xyz="0 0.06 0.075" rpy="0 0 0" />
       <axis xyz="1 0 0"/>
-      <limit lower="-2" upper="2" />
+      <limit lower="-1.5" upper="1.5" />
     </joint>
     
     <link name="EFL">
@@ -54,7 +54,7 @@
       <child link="EFL"/>
       <origin xyz="0 0.0 0.51" rpy="0 0 0" />
       <axis xyz="1 0 0"/>
-        <limit lower="-3.14" upper="3.14" />
+        <limit lower="-3.14" upper="1" />
     </joint>
     
     <link name="forearm">
@@ -71,7 +71,7 @@
       <child link="forearm"/>
       <origin xyz="0 -0.1 0" rpy="0 0 0" />
       <axis xyz="0 0 -1"/>  
-	  <limit lower="-6" upper="6" /> 
+	  <limit lower="-3.14" upper="3.14" /> 
     </joint>
     
     <link name="hand">
@@ -88,7 +88,7 @@
       <child link="hand"/>
       <origin xyz="0 0 0.48" rpy="0 0 0" />
       <axis xyz="1 0 0"/>
-      <limit lower="-3" upper="3" />       
+      <limit lower="-2" upper="2" />       
     </joint>
     
     <link name="end_effector">
