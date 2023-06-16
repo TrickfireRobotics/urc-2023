@@ -16,7 +16,7 @@ In this particular codebase, we use the following libraries/tools/technologies
 Docker allows us to create "virtual machines" called **containers** without actually running a proper virtual machine. To create a **container**, we use a **docker image**. This [Stackoverflow](https://stackoverflow.com/questions/28089344/docker-what-is-it-and-what-is-the-purpose) post explains it quite well.
 
 ## **What is ROS?**
-The **Robot Operating System (ROS)** is not an operating system, but instead a collection of libraries and tools that allow software developers to write code more focused on robots. We use [**ROS2 Humble**](https://docs.ros.org/en/humble/index.html)
+The **Robot Operating System (ROS)** is not an operating system, but instead a collection of libraries and tools that allow software developers to write code more focused on robots. We use ROS2 Humble.
 
 The core component of ROS are **Nodes** and its **Observer Pattern** in the form of **Subscribers/Publishers**. Each **node** is essentially its own little program doing its own thing. If you have two, or perhaps more, **nodes** that you want to communicate, how do you do that? Here comes the **publisher** - it allows a **node** to publish ("yell out") data on a certain topic (like a frequency for a radio). To receive this data, a node can subscribe ("listen to") to a topic published by another node.
 
