@@ -7,8 +7,6 @@ To install Docker on a MacBook Pro, you can follow these steps:
 
 1. **Check System Requirements:** Ensure that your MacBook Pro meets the minimum system requirements for Docker. Visit the Docker documentation or official website to check the requirements for the specific version you intend to install.
 
--   Note: There are known issue when trying to access Docker through Mac products with M1 chips: these issues and solutions may be found on Docker's [Known issues page](https://docs.docker.com/desktop/troubleshoot/known-issues/) under the 'For Mac with Apple Silicon' tab.
-
 2. **Download Docker for Mac:** Open a web browser and go to the Docker website (https://www.docker.com/products/docker-desktop). On the Docker Desktop page, click on the "Download for Mac" button to start downloading the Docker installation package.
 
 3. **Install Docker:** Once the download is complete, locate the downloaded Docker installation package (usually in your Downloads folder) and double-click on it to start the installation process.
