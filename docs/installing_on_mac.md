@@ -11,19 +11,19 @@ To install Docker on a MacBook Pro, you can follow these steps:
 
 2. **Download Docker for Mac:** Open a web browser and go to the Docker website (https://www.docker.com/products/docker-desktop). On the Docker Desktop page, click on the "Download for Mac" button to start downloading the Docker installation package.
 
-4. **Install Docker:** Once the download is complete, locate the downloaded Docker installation package (usually in your Downloads folder) and double-click on it to start the installation process.
+3. **Install Docker:** Once the download is complete, locate the downloaded Docker installation package (usually in your Downloads folder) and double-click on it to start the installation process.
 
-5. **Drag Docker to Applications:** After opening the Docker installation package, you'll see the Docker icon. Drag the Docker icon to the Applications folder to install Docker on your MacBook Pro.
+4. **Drag Docker to Applications:** After opening the Docker installation package, you'll see the Docker icon. Drag the Docker icon to the Applications folder to install Docker on your MacBook Pro.
 
-6. **Launch Docker:** Open the Applications folder and locate the Docker application. Double-click on the Docker icon to launch it. Docker will start initializing and setting up the necessary components.
+5. **Launch Docker:** Open the Applications folder and locate the Docker application. Double-click on the Docker icon to launch it. Docker will start initializing and setting up the necessary components.
 
-7. **Provide System Authentication:** During the installation process, you may be prompted to enter your system password to authorize Docker to make changes to your system.
+6. **Provide System Authentication:** During the installation process, you may be prompted to enter your system password to authorize Docker to make changes to your system.
 
-8. **Wait for Initialization:** Docker may take a few minutes to complete the initialization process. It will set up the required components, including downloading the Docker Engine, creating the Docker virtual machine, and configuring networking.
+7. **Wait for Initialization:** Docker may take a few minutes to complete the initialization process. It will set up the required components, including downloading the Docker Engine, creating the Docker virtual machine, and configuring networking.
 
-9. **Enable HyperKit (optional):** Docker for Mac uses HyperKit as the virtualization technology. If you are prompted to enable HyperKit during the installation process, grant the necessary permissions to allow Docker to use it.
+8. **Enable HyperKit (optional):** Docker for Mac uses HyperKit as the virtualization technology. If you are prompted to enable HyperKit during the installation process, grant the necessary permissions to allow Docker to use it.
 
-10. **Check Docker Status:** Once the Docker initialization is complete, you should see the Docker icon appear in the menu bar. Click on the Docker icon to check the status and ensure that Docker is running properly.
+9. **Check Docker Status:** Once the Docker initialization is complete, you should see the Docker icon appear in the menu bar. Click on the Docker icon to check the status and ensure that Docker is running properly.
 
 That's it! Docker should now be installed and running on your MacBook Pro. You can start using Docker by running Docker commands in the terminal or by using graphical user interfaces (GUIs) like Docker Desktop, which provides a user-friendly interface for managing Docker containers and images.
 
