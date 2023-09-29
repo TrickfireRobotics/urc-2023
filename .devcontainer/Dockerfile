@@ -30,6 +30,9 @@ RUN pip install --upgrade pydocstyle
 #Install OpenCV for python
 RUN pip3 install opencv-python
 
+RUN pip3 install numpy --upgrade
+
+
 #Install cv_bridge
 #RUN apt install python3-numpy
 #RUN apt-get install -y libboost-python-dev

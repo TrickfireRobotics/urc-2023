@@ -1,6 +1,5 @@
 import rclpy
 from rclpy.node import Node
-import cv2
 
 
 class RosCameraSub(Node):
