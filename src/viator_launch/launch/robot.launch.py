@@ -34,6 +34,13 @@ drivebase_node = Node(
 )
 
 
+# -----------------------
+heartbeat_node = Node(
+    package='heartbeat',
+    executable='heartbeat',
+    name='heartbeat_node'
+)
+# ------------------------
 
 # Composable Nodes launched in a Composable Node container will share a process
 # and can use very fast inter-process communication instead of publishing
@@ -57,5 +64,7 @@ def generate_launch_description():
         robot_container,
         can_moteus_node,
         #testing_node,
-        drivebase_node
+        drivebase_node,
+        heartbeat_node
     ])
+        
