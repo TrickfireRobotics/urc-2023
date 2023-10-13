@@ -1,3 +1,4 @@
+import math
 from typing import get_args, Literal, TYPE_CHECKING
 
 from rclpy.node import Node
@@ -31,8 +32,8 @@ ATTRIBUTES = Literal[
     "back_right_drive_motor_temperature"
 ]
 
-# Every type in this tuple is the type used for the literal at the same index
-# in ATTRIBUTES
+# Every type in this tuple is the type used for the topic at the same index in
+# ATTRIBUTES
 TYPES = (
     Float32,
     Float32,
@@ -55,11 +56,49 @@ TYPES = (
 )
 
 
+def rotations_to_radians(rotations: float):
+    """Converts the given rotations to radians.
+
+    Args:
+        rotations (float): The rotations to convert
+
+    Returns:
+        float: The given rotations converted to radians.
+    """
+    return rotations * 2 * math.pi
+
+
+# Every method in this tuple is the method used to convert the data in the
+# message used for the topic at the same index in ATTRIBUTES. None signifies no
+# converter is needed.
+CONVERTERS = (
+    rotations_to_radians,
+    rotations_to_radians,
+    rotations_to_radians,
+    rotations_to_radians,
+    rotations_to_radians,
+    rotations_to_radians,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None
+)
+
+
 class RobotInfo:
     """RobotInfo is a class that subscribes to relevant topics and provides an
-    attribute for each value. 
-    
-    Any attribute that hasn't been assigned a value by an event yet will have a 
+    attribute for each value.
+
+    Any attribute that hasn't been assigned a value by an event yet will have a
     value of `None`.
     """
     def __init__(self, node: Node):
@@ -69,8 +108,10 @@ class RobotInfo:
             node (Node): The node RobotInfo uses to subscribe.
         """
         # Create subscriptions
-        for topic, type in zip(get_args(ATTRIBUTES), TYPES):
-            node.create_subscription(type, topic, self._callback, 10)
+        zipped = zip(get_args(ATTRIBUTES), TYPES, CONVERTERS)
+        for topic, type, converter in zipped:
+            callback = self._create_callback(converter)
+            node.create_subscription(type, topic, callback, 10)
 
             # Initialize attribute
             setattr(self, topic, None)
@@ -85,6 +126,14 @@ class RobotInfo:
         def __getattr__(self, _: ATTRIBUTES):
             pass
 
-    def _callback(self, msg):
-        # This actually sets the attribute
-        setattr(self, msg.get_topic_name(), msg.data)
+    def _create_callback(self, converter):
+        def wrapper(msg):
+            # setattr(self, "name", "example value") is equivalent to
+            # self.name = "example value"
+            # so it actually sets the attribute on the RobotInfo object itself.
+            data = msg.data
+            if converter is not None:
+                data = converter(data)
+            setattr(self, msg.get_topic_name(), data)
+
+        return wrapper
