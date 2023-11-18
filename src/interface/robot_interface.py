@@ -9,7 +9,7 @@ from std_msgs.msg import String
 from std_msgs.msg import Float32
 
 VELOCITY_CONVERSION = 1.76838724851
-POSITION_CONVERSION = 0.159155
+POSITION_CONVERSION = 33 / (6.28) #Radians to position ticks
 
 robotPublishers = dict()
 
@@ -139,7 +139,7 @@ class RobotInterface(Node):
 
     # Arm turntable
     def arm_turntable_motor(self, amount):
-        revolutionsOutput = self.positionConversion(amount) * 5.204 # 5.204 is the gear ratio for turntable
+        revolutionsOutput = self.positionConversion(amount) #* 5.204 # 5.204 is the gear ratio for turntable
         publisher = robotPublishers['arm_turntable_motor']
         strMsg = Float32()
         strMsg.data = revolutionsOutput
