@@ -21,7 +21,7 @@ class Heartbeat(Node):
 
         # check connection every 1 second
         self.timer = self.create_timer(1.0, self.check_connection) 
-
+# assume that there's no connection until there is
     def check_connection(self):
         if self.connection_lost:
             self.get_logger().warning("Connection lost")
@@ -32,12 +32,12 @@ class Heartbeat(Node):
         # update the flag based on the message received
         self.connection_lost = msg.data 
 
-    def main(args=None):
-        rclpy.init(args=args)
-        heartbeat_node = Heartbeat()
-        rclpy.spin(heartbeat_node)
-        heartbeat_node.destroy_node()
-        rclpy.shutdown()
+def main(args=None):
+    rclpy.init(args=args)
+    heartbeat_node = Heartbeat()
+    rclpy.spin(heartbeat_node)
+    heartbeat_node.destroy_node()
+    rclpy.shutdown()
 
 if __name__ == '__main__':
     Heartbeat.main()
