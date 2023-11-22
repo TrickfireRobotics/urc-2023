@@ -1,5 +1,5 @@
 import math
-from typing import get_args, Literal, TYPE_CHECKING
+from typing import Any, Callable, get_args, Literal, TYPE_CHECKING
 
 from rclpy.node import Node
 from std_msgs.msg import Float32
@@ -101,16 +101,20 @@ class RobotInfo:
     Any attribute that hasn't been assigned a value by an event yet will have a
     value of `None`.
     """
-    def __init__(self, node: Node):
+    def __init__(self, node: Node, callback: Callable[[str, Any], Any] = None):
         """Creates a RobotInfo instance.
 
         Args:
             node (Node): The node RobotInfo uses to subscribe.
+            callback (Callable[[str, Any], Any]): A callback invoked whenever a
+            subscription was received.
         """
+        self.callback = callback
+
         # Create subscriptions
         zipped = zip(get_args(ATTRIBUTES), TYPES, CONVERTERS)
         for topic, type, converter in zipped:
-            callback = self._create_callback(converter)
+            callback = self._create_callback(converter, topic)
             node.create_subscription(type, topic, callback, 10)
 
             # Initialize attribute
@@ -126,7 +130,7 @@ class RobotInfo:
         def __getattr__(self, _: ATTRIBUTES):
             pass
 
-    def _create_callback(self, converter):
+    def _create_callback(self, converter, topic):
         def wrapper(msg):
             # setattr(self, "name", "example value") is equivalent to
             # self.name = "example value"
@@ -134,6 +138,9 @@ class RobotInfo:
             data = msg.data
             if converter is not None:
                 data = converter(data)
-            setattr(self, msg.get_topic_name(), data)
+            setattr(self, topic, data)
+
+            if self.callback is not None:
+                self.callback(topic, data)
 
         return wrapper
