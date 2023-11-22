@@ -20,6 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            "talker = robot_info.test_publisher:main",
+            "listener = robot_info.test_subscriber:main"
         ],
     },
 )
