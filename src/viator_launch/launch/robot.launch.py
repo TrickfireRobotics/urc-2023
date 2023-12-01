@@ -15,6 +15,13 @@ can_moteus_node = Node(
     name='can_moteus_node'
 )
 
+
+testing_node = Node(
+    package='testingInterface',
+    executable='testingInterface',
+    name='testing_node'
+)
+
 # -----------------------
 heartbeat_node = Node(
     package='heartbeat',
@@ -51,5 +58,6 @@ def generate_launch_description():
         robot_container,
         can_moteus_node,
         heartbeat_node,
-        dummy_node
+        dummy_node,
+        testing_node
     ])

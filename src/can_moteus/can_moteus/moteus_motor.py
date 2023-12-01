@@ -113,7 +113,8 @@ class MoteusMotor:
             dataName = "velocity"
             callbackFunction = self._velocityCallback
 
-        topicName = self._name + "_" + dataName + "_from_robot_interface"
+        topicName = self._name + "_" + dataName + "_from_interface"
+
 
         self._rosNode.subscription = self._rosNode.create_subscription(
             std_msgs.msg.Float32,
@@ -141,6 +142,8 @@ class MoteusMotor:
         msg : Float32
             This is sent from from the subscriber.
         """
+
+        self._rosNode.get_logger().info("I AM CALLED")
 
         if self._queueToMoteus != None:
             # [0] can ID
