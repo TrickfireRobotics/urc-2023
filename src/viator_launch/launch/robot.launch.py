@@ -15,6 +15,7 @@ can_moteus_node = Node(
     name='can_moteus_node'
 )
 
+<<<<<<< HEAD
 robot_info_node = Node(
     package='robot_info',
     executable='listener',
@@ -34,6 +35,15 @@ drivebase_node = Node(
 )
 
 
+=======
+
+testing_node = Node(
+    package='testingInterface',
+    executable='testingInterface',
+    name='testing_node'
+)
+
+>>>>>>> ebe69cb (Robot Interface Merge (#24))
 # -----------------------
 heartbeat_node = Node(
     package='heartbeat',

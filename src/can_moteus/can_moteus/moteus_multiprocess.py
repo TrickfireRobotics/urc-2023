@@ -118,6 +118,7 @@ class MoteusMultiprocess:
         """
 
         await self._connectToMoteusControllers()
+        self._rosNode.get_logger().info("GOODBYE WORLD :(")
 
         while True:
             self._readqueueToMoteus(queueToMoteus)
@@ -207,7 +208,9 @@ class MoteusMultiprocess:
 
             try:
                 # Reset the controller
+                self._rosNode.get_logger().info("HELLO WORLD SET STOP")
                 await moteusMotorController.set_stop()
+                self._rosNode.get_logger().info("GOODBYE WORLD SET STOP :(")
                 motorData.moteusController = moteusMotorController
 
             except RuntimeError as error:
