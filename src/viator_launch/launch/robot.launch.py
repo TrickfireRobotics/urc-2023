@@ -15,6 +15,12 @@ can_moteus_node = Node(
     name='can_moteus_node'
 )
 
+testing_node = Node(
+    package='testingInterface',
+    executable='testingInterface',
+    name='testing_node'
+)
+
 drivebase_node = Node(
     package='drivebase',
     executable='drivebase',
@@ -43,5 +49,6 @@ def generate_launch_description():
     return launch.LaunchDescription([
         robot_container,
         can_moteus_node,
+        testing_node,
         drivebase_node
     ])

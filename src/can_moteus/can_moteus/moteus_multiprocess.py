@@ -56,6 +56,8 @@ class MoteusMultiprocess:
         """
         toPublisherQueue = Queue()
 
+        self._rosNode.get_logger().info("ADDING MOTOR")
+
         # Create motor
         motor = moteus_motor.MoteusMotor(
             canID,
@@ -115,8 +117,9 @@ class MoteusMultiprocess:
                 its internal data for each motor
         """
 
-
+        self._rosNode.get_logger().info("HELLO WORLD")
         await self._connectToMoteusControllers()
+        self._rosNode.get_logger().info("GOODBYE WORLD :(")
 
         while True:
             self._readqueueToMoteus(queueToMoteus)
@@ -125,7 +128,10 @@ class MoteusMultiprocess:
                 motorData = self._canIDToMotorData[canID]
 
                 if (motorData.mode == moteus_motor.Mode.POSITION):
-                    resultFromMoteus = await motorData.moteusController.set_position(position=motorData.data, query=True)
+                    self._rosNode.get_logger().info(str(motorData.data))
+                    resultFromMoteus = await motorData.moteusController.set_position(position=motorData.data, velocity=0, query=True)
+                    
+
                 elif (motorData.mode == moteus_motor.Mode.VELOCITY):
                     # moteus controllers will only go a velocity only if it
                     # has reached its given position OR we give it math.nan
@@ -197,7 +203,9 @@ class MoteusMultiprocess:
 
             try:
                 # Reset the controller
+                self._rosNode.get_logger().info("HELLO WORLD SET STOP")
                 await moteusMotorController.set_stop()
+                self._rosNode.get_logger().info("GOODBYE WORLD SET STOP :(")
                 motorData.moteusController = moteusMotorController
 
             except RuntimeError as error:
