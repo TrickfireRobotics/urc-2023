@@ -18,7 +18,7 @@ class Drivebase(Node):
     def __init__(self):
         super().__init__('drivebase')
 
-        #global botInterface
+        global botInterface
         botInterface = RobotInterface(self)
 
         self.left_subscription = self.create_subscription(
@@ -27,24 +27,28 @@ class Drivebase(Node):
             Float32, "move_right_drivebase_side_message", self.moveRightSide, 10)
 
     def moveLeftSide(self, msg):
+        global botInterface
         vel = msg * SPEED
         botInterface.leftFrontWheel(vel)
         botInterface.leftMiddleWheel(vel)
         botInterface.leftBackWheel(vel)
 
     def moveRightSide(self, msg):
+        global botInterface
         vel = msg * SPEED
         botInterface.rightFrontWheel(vel)
         botInterface.rightMiddleWheel(vel)
         botInterface.rightBackWheel(vel)
 
-    def turnRight(self, msg):
-        self.moveLeftSide(self, msg)
-        self.moveRightSide(self, -msg)
+    def turnLeft(self, msg):
+        global botInterface
+        self.moveLeftSide(msg)
+        self.moveRightSide(-msg)
 
     def turnRight(self, msg):
-        self.moveLeftSide(self, -msg)
-        self.moveRightSide(self, msg)
+        global botInterface
+        self.moveLeftSide(-msg)
+        self.moveRightSide(msg)
 
 
 def main(args=None):
@@ -53,6 +57,9 @@ def main(args=None):
     drivebase = Drivebase()
 
     print("drivebase main")
+
+    while True:
+        drivebase.turnRight(0.5)
 
     rclpy.spin(drivebase)  # prints callbacks
 
