@@ -6,38 +6,37 @@ sys.path.append("/home/trickfire/urc-2023/src")
 
 from interface.robot_interface import RobotInterface
 
-from std_msgs.msg import String
+from std_msgs.msg import String, Float32
 
 
 class Drivebase(Node):
 
     global botInterface
+    global SPEED
     SPEED = 1
 
     def __init__(self):
         super().__init__('drivebase')
 
-        global botInterface
+        #global botInterface
         botInterface = RobotInterface(self)
 
         self.left_subscription = self.create_subscription(
-            float, 'move_left_drivebase_side_message', self.moveLeftSide)
+            Float32, "move_left_drivebase_side_message", self.moveLeftSide, 10)
         self.right_subscription = self.create_subscription(
-            float, 'move_right_drivebase_side_message', self.moveRightSide)
+            Float32, "move_right_drivebase_side_message", self.moveRightSide, 10)
 
     def moveLeftSide(self, msg):
-        global SPEED
-        msg = msg * SPEED
-        botInterface.leftFrontWheel(msg)
-        botInterface.leftMiddleWheel(msg)
-        botInterface.leftBackWheel(msg)
+        vel = msg * SPEED
+        botInterface.leftFrontWheel(vel)
+        botInterface.leftMiddleWheel(vel)
+        botInterface.leftBackWheel(vel)
 
     def moveRightSide(self, msg):
-        global SPEED
-        msg = msg * SPEED
-        botInterface.rightFrontWheel(msg)
-        botInterface.rightMiddleWheel(msg)
-        botInterface.rightBackWheel(msg)
+        vel = msg * SPEED
+        botInterface.rightFrontWheel(vel)
+        botInterface.rightMiddleWheel(vel)
+        botInterface.rightBackWheel(vel)
 
     def turnRight(self, msg):
         self.moveLeftSide(self, msg)
