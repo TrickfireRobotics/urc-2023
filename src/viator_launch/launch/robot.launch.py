@@ -15,6 +15,18 @@ can_moteus_node = Node(
     name='can_moteus_node'
 )
 
+robot_info_node = Node(
+    package='robot_info',
+    executable='listener',
+    name='TestSubscriber'
+)
+
+robot_info_node_talker = Node(
+    package='robot_info',
+    executable='talker',
+    name='TestPublisher'
+)
+
 
 # Composable Nodes launched in a Composable Node container will share a process
 # and can use very fast inter-process communication instead of publishing
@@ -36,5 +48,7 @@ robot_container = ComposableNodeContainer(
 def generate_launch_description():
     return launch.LaunchDescription([
         robot_container,
-        can_moteus_node
+        can_moteus_node,
+        robot_info_node,
+        robot_info_node_talker
     ])

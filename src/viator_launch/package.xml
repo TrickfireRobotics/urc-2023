@@ -10,6 +10,7 @@
   <exec_depend>hello_world</exec_depend>
   <exec_depend>can_moteus</exec_depend>
   <exec_depend>ros2launch</exec_depend>
+  <exec_depend>robot_info</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
