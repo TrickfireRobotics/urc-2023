@@ -12,24 +12,24 @@ from std_msgs.msg import Float32
 
 # Anything in this literal will be picked up as a valid attribute.
 ATTRIBUTES = Literal[
-    "front_left_drive_motor_velocity",
-    "mid_left_drive_motor_velocity",
-    "back_left_drive_motor_velocity",
-    "front_right_drive_motor_velocity",
-    "mid_right_drive_motor_velocity",
-    "back_right_drive_motor_velocity",
-    "front_left_drive_motor_torque",
-    "mid_left_drive_motor_torque",
-    "back_left_drive_motor_torque",
-    "front_right_drive_motor_torque",
-    "mid_right_drive_motor_torque",
-    "back_right_drive_motor_torque",
-    "front_left_drive_motor_temperature",
-    "mid_left_drive_motor_temperature",
-    "back_left_drive_motor_temperature",
-    "front_right_drive_motor_temperature",
-    "mid_right_drive_motor_temperature",
-    "back_right_drive_motor_temperature"
+    "front_left_drive_motor_velocity_from_can",
+    # "mid_left_drive_motor_velocity",
+    # "back_left_drive_motor_velocity",
+    # "front_right_drive_motor_velocity",
+    # "mid_right_drive_motor_velocity",
+    # "back_right_drive_motor_velocity",
+    # "front_left_drive_motor_torque",
+    # "mid_left_drive_motor_torque",
+    # "back_left_drive_motor_torque",
+    # "front_right_drive_motor_torque",
+    # "mid_right_drive_motor_torque",
+    # "back_right_drive_motor_torque",
+    # "front_left_drive_motor_temperature",
+    # "mid_left_drive_motor_temperature",
+    # "back_left_drive_motor_temperature",
+    # "front_right_drive_motor_temperature",
+    # "mid_right_drive_motor_temperature",
+    # "back_right_drive_motor_temperature"
 ]
 
 # Every type in this tuple is the type used for the topic at the same index in
