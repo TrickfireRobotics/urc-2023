@@ -128,7 +128,7 @@ class MoteusMultiprocess:
                 motorData = self._canIDToMotorData[canID]
 
                 if (motorData.mode == moteus_motor.Mode.POSITION):
-                    self._rosNode.get_logger().info(str(motorData.data))
+                    #self._rosNode.get_logger().info(str(motorData.data))
                     resultFromMoteus = await motorData.moteusController.set_position(position=motorData.data, velocity=0, query=True)
                     
 

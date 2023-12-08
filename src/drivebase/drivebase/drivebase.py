@@ -6,46 +6,41 @@ sys.path.append("/home/trickfire/urc-2023/src")
 
 from interface.robot_interface import RobotInterface
 
-from std_msgs.msg import String
+from std_msgs.msg import String, Float32
 
 
 class Drivebase(Node):
 
-    global botInterface
-    SPEED = 1
-
     def __init__(self):
         super().__init__('drivebase')
 
-        global botInterface
-        botInterface = RobotInterface(self)
+        self.botInterface = RobotInterface(self)
+        self.SPEED = 1
 
         self.left_subscription = self.create_subscription(
-            float, 'move_left_drivebase_side_message', self.moveLeftSide)
+            Float32, "move_left_drivebase_side_message", self.moveLeftSide, 10)
         self.right_subscription = self.create_subscription(
-            float, 'move_right_drivebase_side_message', self.moveRightSide)
+            Float32, "move_right_drivebase_side_message", self.moveRightSide, 10)
 
     def moveLeftSide(self, msg):
-        global SPEED
-        msg = msg * SPEED
-        botInterface.leftFrontWheel(msg)
-        botInterface.leftMiddleWheel(msg)
-        botInterface.leftBackWheel(msg)
+        vel = msg * self.SPEED
+        self.botInterface.front_left_drive_motor(vel)
+        self.botInterface.mid_left_drive_motor(vel)
+        self.botInterface.rear_left_drive_motor(vel)
 
     def moveRightSide(self, msg):
-        global SPEED
-        msg = msg * SPEED
-        botInterface.rightFrontWheel(msg)
-        botInterface.rightMiddleWheel(msg)
-        botInterface.rightBackWheel(msg)
+        vel = msg * self.SPEED
+        self.botInterface.front_right_drive_motor(vel)
+        self.botInterface.mid_right_drive_motor(vel)
+        self.botInterface.rear_right_drive_motor(vel)
+
+    def turnLeft(self, msg):
+        self.moveLeftSide(msg)
+        self.moveRightSide(-msg)
 
     def turnRight(self, msg):
-        self.moveLeftSide(self, msg)
-        self.moveRightSide(self, -msg)
-
-    def turnRight(self, msg):
-        self.moveLeftSide(self, -msg)
-        self.moveRightSide(self, msg)
+        self.moveLeftSide(-msg)
+        self.moveRightSide(msg)
 
 
 def main(args=None):
@@ -54,6 +49,9 @@ def main(args=None):
     drivebase = Drivebase()
 
     print("drivebase main")
+
+    while True:
+        drivebase.turnRight(3)
 
     rclpy.spin(drivebase)  # prints callbacks
 
