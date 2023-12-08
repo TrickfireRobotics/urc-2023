@@ -1,7 +1,10 @@
 import rclpy
 from rclpy.node import Node
 
-from robot_interface import RobotInterface
+import sys
+sys.path.append("/home/trickfire/urc-2023/src")
+
+from interface.robot_interface import RobotInterface
 
 from std_msgs.msg import String
 
