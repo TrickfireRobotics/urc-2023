@@ -11,15 +11,11 @@ from std_msgs.msg import String, Float32
 
 class Drivebase(Node):
 
-    global botInterface
-    global SPEED
-    SPEED = 1
-
     def __init__(self):
         super().__init__('drivebase')
 
-        global botInterface
-        botInterface = RobotInterface(self)
+        self.botInterface = RobotInterface(self)
+        self.SPEED = 1
 
         self.left_subscription = self.create_subscription(
             Float32, "move_left_drivebase_side_message", self.moveLeftSide, 10)
@@ -27,26 +23,22 @@ class Drivebase(Node):
             Float32, "move_right_drivebase_side_message", self.moveRightSide, 10)
 
     def moveLeftSide(self, msg):
-        global botInterface
-        vel = msg * SPEED
-        botInterface.leftFrontWheel(vel)
-        botInterface.leftMiddleWheel(vel)
-        botInterface.leftBackWheel(vel)
+        vel = msg * self.SPEED
+        self.botInterface.front_left_drive_motor(vel)
+        self.botInterface.mid_left_drive_motor(vel)
+        self.botInterface.rear_left_drive_motor(vel)
 
     def moveRightSide(self, msg):
-        global botInterface
-        vel = msg * SPEED
-        botInterface.rightFrontWheel(vel)
-        botInterface.rightMiddleWheel(vel)
-        botInterface.rightBackWheel(vel)
+        vel = msg * self.SPEED
+        self.botInterface.front_right_drive_motor(vel)
+        self.botInterface.mid_right_drive_motor(vel)
+        self.botInterface.rear_right_drive_motor(vel)
 
     def turnLeft(self, msg):
-        global botInterface
         self.moveLeftSide(msg)
         self.moveRightSide(-msg)
 
     def turnRight(self, msg):
-        global botInterface
         self.moveLeftSide(-msg)
         self.moveRightSide(msg)
 
