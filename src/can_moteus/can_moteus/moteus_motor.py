@@ -143,7 +143,7 @@ class MoteusMotor:
             This is sent from from the subscriber.
         """
 
-        self._rosNode.get_logger().info("I AM CALLED")
+        #self._rosNode.get_logger().info("I AM CALLED")
 
         if self._queueToMoteus != None:
             # [0] can ID

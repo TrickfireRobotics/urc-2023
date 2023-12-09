@@ -51,7 +51,7 @@ def main(args=None):
     print("drivebase main")
 
     while True:
-        drivebase.turnRight(0.5)
+        drivebase.turnRight(3)
 
     rclpy.spin(drivebase)  # prints callbacks
 
