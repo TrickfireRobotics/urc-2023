@@ -33,7 +33,9 @@ class MoteusMultiprocess:
 
         self._queueToMoteus = Queue()
         self._canIDToMotorData = {}
+        self._shutdownQueue = Queue()
         self._rosNode = rosNode
+        self.moteusAsyncProcess = None
         
 
 
@@ -86,8 +88,8 @@ class MoteusMultiprocess:
         """
             Starts the multiprocess. Call this after you added all the motors
         """
-        moteusAsyncProcess = Process(target=self._startLoop, args=(self._queueToMoteus,))
-        moteusAsyncProcess.start()
+        self.moteusAsyncProcess = Process(target=self._startLoop, args=(self._queueToMoteus,))
+        self.moteusAsyncProcess.start()
 
 
     def _startLoop(self,queueToMoteus):
@@ -117,21 +119,19 @@ class MoteusMultiprocess:
                 its internal data for each motor
         """
 
-        self._rosNode.get_logger().info("HELLO WORLD")
+        
         await self._connectToMoteusControllers()
-        self._rosNode.get_logger().info("GOODBYE WORLD :(")
+        
 
         while True:
+            await self._shouldShutDown()
             self._readqueueToMoteus(queueToMoteus)
 
             for canID in self._canIDToMotorData:
                 motorData = self._canIDToMotorData[canID]
 
                 if (motorData.mode == moteus_motor.Mode.POSITION):
-                    self._rosNode.get_logger().info(str(motorData.data))
                     resultFromMoteus = await motorData.moteusController.set_position(position=motorData.data, velocity=0, query=True)
-                    
-
                 elif (motorData.mode == moteus_motor.Mode.VELOCITY):
                     # moteus controllers will only go a velocity only if it
                     # has reached its given position OR we give it math.nan
@@ -143,6 +143,15 @@ class MoteusMultiprocess:
 
             await asyncio.sleep(0.02)
 
+    async def _shouldShutDown(self):
+        
+        # If we are not empty, we should shutdown
+        if not self._shutdownQueue.empty():
+            for canID in self._canIDToMotorData:
+                motorData = self._canIDToMotorData[canID]
+            
+                self._rosNode.get_logger().info("Shutting down motor with CAN ID " + str(motorData.canID))
+                await motorData.moteusController.set_stop()
 
 
     def _sendDataToMotor(self, canID, moteusResult):
@@ -203,9 +212,7 @@ class MoteusMultiprocess:
 
             try:
                 # Reset the controller
-                self._rosNode.get_logger().info("HELLO WORLD SET STOP")
                 await moteusMotorController.set_stop()
-                self._rosNode.get_logger().info("GOODBYE WORLD SET STOP :(")
                 motorData.moteusController = moteusMotorController
 
             except RuntimeError as error:
@@ -214,3 +221,8 @@ class MoteusMultiprocess:
                 self._rosNode.get_logger().error(error.__str__())
 
                 del self._canIDToMotorData[canID]
+                
+    def shutdown(self): 
+        self._rosNode.get_logger().info("Shutting Down CANFD")
+        self._shutdownQueue.put(1)
+        self.moteusAsyncProcess.shutdown()

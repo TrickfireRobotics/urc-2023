@@ -12,11 +12,11 @@ class RosMotuesBridge(Node):
         super().__init__("can_motues_node")
         self.get_logger().info("Launching can_motues node")
         self.createMoteusMotors()
+        self.moteusMultiprocess = None
 
     def createMoteusMotors(self):
         self.get_logger().info("Creating motors")
-
-        
+                
         moteusMultiprocess = moteus_multiprocess.MoteusMultiprocess(self)
 
 
@@ -57,6 +57,8 @@ def main(args=None):
     rclpy.init(args=args)
     node = RosMotuesBridge()
     rclpy.spin(node)
+    
+    node.moteusMultiprocess.shutdown()
     node.destroy_node()
     rclpy.shutdown()
 
