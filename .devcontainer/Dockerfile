@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
   python3-pip \
   # To let us sync with GitHub over SSH
   ssh-client \
+  ros-humble-rosbridge-server \
   # Install usb utilities
   usbutils \ 
   can-utils \
