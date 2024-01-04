@@ -1,0 +1,37 @@
+Expected value format from the mission control:
+
+Topics:
+1. "enable_status_from_mission_control": 
+    - Value in true/false format
+    - Enable when pressing B -> True
+    - Disable when pressing A - False
+
+2. "reset_status_from_mission_control":
+    - Reset when pressing X
+    - Expected return value as true/false
+    - True when press, false otherwise
+
+3. "pitch_action_from_mission_control":
+    - Pitch: right thumb stick moves up, down
+    - Return the coordinate of the right thumbstick (x, y)
+    - Example: something like: listen for XInput.RIGHT
+        r_coordinate = (int(round(event.x, 0)), int(round(event.y, 0)))
+
+4. "yaw_action_from_mission_control"
+    - Yaw: right thumb stick moves left, right
+    - Return the coordinate of the right thumbstick (x, y)
+    - Example: something like: listen for XInput.RIGHT
+        r_coordinate = (int(round(event.x, 0)), int(round(event.y, 0)))
+
+5. "move_on_xy_action_from_mission_control":
+    - The left thumb stick moves
+    - Return in coordinate (x, y) format of the stick
+    Example: something like: listen for XInput.LEFT
+        l_coordinate = (int(round(event.x, 0)), int(round(event.y, 0)))
+
+6. "move_on_z_action_from_mission_control":
+    - The left & right triggers are pressed. 
+    - Expected return in (left event value, right event value)
+    - Example: listen to XInput.EVENT_TRIGGER_MOVED
+      Then get the event.value, if both pressed, get both values.
+      If either left or right pressed, return the other value as 0.
