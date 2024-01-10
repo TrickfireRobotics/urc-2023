@@ -58,6 +58,8 @@ def main(args=None):
     node = RosMotuesBridge()
     rclpy.spin(node)
     
+    node.get_logger().info("asdasdasdasdjlkasdklasjldkajldkasjldajsldjaskldjaskldAJDKSLAJDKLSAJDKLSJKLSAJDLKA")
+    
     node.moteusMultiprocess.shutdown()
     node.destroy_node()
     rclpy.shutdown()
