@@ -59,6 +59,12 @@ heartbeat_node = Node(
     executable='heartbeat',
     name='heartbeat_node'
 )
+
+dummy_node = Node(
+    package='dummy_node',
+    executable='dummy_node',
+    name='dummy_node'
+)
 # ------------------------
 
 # Composable Nodes launched in a Composable Node container will share a process
@@ -82,6 +88,7 @@ def generate_launch_description():
     return launch.LaunchDescription([
         robot_container,
         can_moteus_node,
+        dummy_node,
         robot_info_node,
         robot_info_node_talker
     ])
