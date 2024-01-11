@@ -15,6 +15,12 @@ can_moteus_node = Node(
     name='can_moteus_node'
 )
 
+mission_control_updater = Node(
+    package='mission_control_data',
+    executable='mission_control_updater',
+    name='mission_control_data_node'
+)
+
 robot_info_node = Node(
     package='robot_info',
     executable='listener',
@@ -49,6 +55,7 @@ def generate_launch_description():
     return launch.LaunchDescription([
         robot_container,
         can_moteus_node,
+        mission_control_updater ,
         robot_info_node,
         robot_info_node_talker
     ])
