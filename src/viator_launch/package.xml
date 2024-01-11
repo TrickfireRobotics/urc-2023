@@ -16,6 +16,9 @@
   <exec_depend>heartbeat</exec_depend>
   <exec_depend>dummy_node</exec_depend>
   <!-- ************************************** -->
+    <!-- ************************************** -->
+  <exec_depend>heartbeat</exec_depend>
+  <!-- ************************************** -->
     <exec_depend>robot_info</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
