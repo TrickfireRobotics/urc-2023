@@ -15,18 +15,19 @@ class MissionControlData(Node):
         super().__init__('mission_control_data_node')
         self.get_logger().info("Creating mission control data node")
 
-        # robot_info 
+        # robot_info object to get data about motors
         self.robot_info = RobotInfo(self, self.robot_info_callback)
 
-        # robot_JSON 
+        # robot_JSON to store data
         self.robot_json= RobotJSON([])
         
-        # publisher
+        # publisher 
         self.time_stamp = None
         self.publisher = self.create_publisher(String, 'ROBOT_INFO_JSON', 10)
         self.timer = self.create_timer(0.5, self.publisher_timer_callback)
 
     def robot_info_callback(self, topic, data):
+        # callback to recieve data from robot info
         self.get_logger().info(f"received topic: {topic}; data: {data}")
         self.robot_json.update(topic, data)
         self.time_stamp = time.time()
@@ -42,6 +43,7 @@ class MissionControlData(Node):
           self.get_logger().info(f"publishing: {json_data}")
     
 class RobotMotor(object):
+    # represents a robot motor by storing the velocity, torque and temperature
     def __init__(self, name:str):
         self.name = name
         self.velocity = None
@@ -57,6 +59,7 @@ class RobotMotor(object):
             self.temperature = data
         
 class RobotJSON(object):
+    # class containing data about motors to be serialized or deserialized as JSON
     def __init__(self, motors:[]):
         self.motors = [
             RobotMotor("front_left"),
@@ -68,21 +71,39 @@ class RobotJSON(object):
         ]
 
     def update(self, topic:str, data:str):
-        self.motors[0].update(topic, data)
-        # index = self.getMotorIndex()
+        # update JSON data with motor information
+        index = self.getMotorIndex(topic)
+        self.motors[index].update(topic, data)
         # motor = self.motors[index]
         # motor.update(motor, topic, data)
 
     def serialize(self):
+        # serialize data
         json_data = json.dumps(self, default=lambda o: o.__dict__, indent=4)
         return json_data
     
     def deSerialize(self, json_data: str):
+        # deserialize data
         json_obj = RobotJSON(**json.loads(json_data))
+        self.get_logger().info(json_obj)
         return json_obj
     
     def getMotorIndex(topic: str):
-        return 0
+        # assigns motor index based on topic name
+        if "front_left" in topic:
+            return 0
+        elif "front_right" in topic:
+            return 1
+        elif "mid_left" in topic:
+            return 2
+        elif "mid_right" in topic:
+            return 3
+        elif "back_left" in topic:
+            return 4
+        elif "back_right" in topic:
+            return 5
+        else:
+            return -1
 
 def main(args=None):
     rclpy.init(args=args)
