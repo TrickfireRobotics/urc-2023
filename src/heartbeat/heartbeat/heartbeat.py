@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, String
 
 class Heartbeat(Node):
     def __init__(self):
@@ -13,8 +13,8 @@ class Heartbeat(Node):
 
         # subscriber for the dummy node status topic
         self.subscription = self.create_subscription(
-            Bool, # message type
-            'dummy_node_status', # topic name
+            String, # message type
+            '/heartbeat', # topic name
             self.dummy_status_callback, # callback function
             10  # Quality of Service (QoS) profile
         )
@@ -30,7 +30,8 @@ class Heartbeat(Node):
 
     def dummy_status_callback(self, msg):
         # update the flag based on the message received
-        self.connection_lost = msg.data 
+        self.connection_lost = msg.data
+        self.get_logger().info(msg.data)
 
 def main(args=None):
     rclpy.init(args=args)
