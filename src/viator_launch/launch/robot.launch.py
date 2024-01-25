@@ -35,37 +35,12 @@ heartbeat_node = Node(
     name='heartbeat_node'
 )
 
-dummy_node = Node(
-    package='dummy_node',
-    executable='dummy_node',
-    name='dummy_node'
-)
-# ------------------------
-robot_info_node = Node(
-    package='robot_info',
-    executable='listener',
-    name='TestSubscriber'
-)
+# dummy_node = Node(
+#     package='dummy_node',
+#     executable='dummy_node',
+#     name='dummy_node'
+# )
 
-robot_info_node_talker = Node(
-    package='robot_info',
-    executable='talker',
-    name='TestPublisher'
-)
-
-# -----------------------
-heartbeat_node = Node(
-    package='heartbeat',
-    executable='heartbeat',
-    name='heartbeat_node'
-)
-
-dummy_node = Node(
-    package='dummy_node',
-    executable='dummy_node',
-    name='dummy_node'
-)
-# ------------------------
 
 # Composable Nodes launched in a Composable Node container will share a process
 # and can use very fast inter-process communication instead of publishing
@@ -88,7 +63,7 @@ def generate_launch_description():
     return launch.LaunchDescription([
         robot_container,
         can_moteus_node,
-        dummy_node,
+        # dummy_node,
         robot_info_node,
         robot_info_node_talker
     ])
