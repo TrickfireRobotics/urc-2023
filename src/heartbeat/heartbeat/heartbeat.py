@@ -15,7 +15,7 @@ class Heartbeat(Node):
         self.subscription = self.create_subscription(
             String, # message type
             '/heartbeat', # topic name
-            self.dummy_status_callback, # callback function
+            self.heartbeat_callback, # callback function
             10  # Quality of Service (QoS) profile
         )
 
@@ -28,10 +28,12 @@ class Heartbeat(Node):
         else:
             self.get_logger().info("Connection active")
 
-    def dummy_status_callback(self, msg):
+    def heartbeat_callback(self, msg):
         # update the flag based on the message received
-        self.connection_lost = msg.data
-        self.get_logger().info(msg.data)
+        if msg.data == '1':
+            self.get_logger().info("Connection active")
+        else:
+            self.get_logger().warning("Connection lost")
 
 def main(args=None):
     rclpy.init(args=args)
