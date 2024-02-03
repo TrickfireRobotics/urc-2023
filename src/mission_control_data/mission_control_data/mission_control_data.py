@@ -11,6 +11,9 @@ sys.path.append("/home/trickfire/urc-2023/src")
 
 class MissionControlData(Node):
 
+    #topic name
+    TOPIC_ROBOT_INFO_JSON = "ROBOT_INFO_JSON"
+
     def __init__(self):
         super().__init__('mission_control_data_node')
         self.get_logger().info("Creating mission control data node")
@@ -19,19 +22,19 @@ class MissionControlData(Node):
         self.robot_info = RobotInfo(self, self.robot_info_callback)
 
         # robot_JSON to store data
-        self.robot_json= RobotJSON([])
+        self.robot_json= RobotJSON()
         
         # publisher 
         self.time_stamp = None
-        self.publisher = self.create_publisher(String, 'ROBOT_INFO_JSON', 10)
+        self.publisher = self.create_publisher(String, MissionControlData.TOPIC_ROBOT_INFO_JSON, 10)
         self.timer = self.create_timer(0.5, self.publisher_timer_callback)
 
     def robot_info_callback(self, topic, data):
         # callback to recieve data from robot info
-        self.get_logger().info(f"received topic: {topic}; data: {data}")
+        self.get_logger().info(f"robot info callback received topic: {topic}; data: {data}")
         self.robot_json.update(topic, data)
+        # self.get_logger().info(self.robot_json.serialize())
         self.time_stamp = time.time()
-
 
     def publisher_timer_callback(self):
         if self.time_stamp is not None:
@@ -42,40 +45,32 @@ class MissionControlData(Node):
           self.time_stamp = None
           self.get_logger().info(f"publishing: {json_data}")
     
-class RobotMotor(object):
-    # represents a robot motor by storing the velocity, torque and temperature
-    def __init__(self, name:str):
-        self.name = name
-        self.velocity = None
-        self.torque = None
-        self.temperature = None
+class RobotJSON:
+    
+    MOTORS = ["front_left",
+              "front_right",
+              "mid_left",
+              "mid_right",
+              "back_left",
+              "back_right"]
+    
+    MOTOR_VELOCITY = "velocity"
+    MOTOR_TORQUE = "torque"
+    MOTOR_TEMPERATURE = "temperature"
+    
 
-    def update(self, topic:str, data:str):
-        if "velocity" in topic:
-            self.velocity = data
-        elif "torque" in topic:
-            self.torque = data
-        elif "temperature" in topic:
-            self.temperature = data
-        
-class RobotJSON(object):
     # class containing data about motors to be serialized or deserialized as JSON
-    def __init__(self, motors:[]):
-        self.motors = [
-            RobotMotor("front_left"),
-            RobotMotor("front_right"),
-            RobotMotor("mid_left"),
-            RobotMotor("mid_right"),
-            RobotMotor("back_left"),
-            RobotMotor("back_right")
-        ]
+    def __init__(self, motors=[]):
+        self.motors = motors
+        for m in RobotJSON.MOTORS:
+            motor = RobotMotor(m)
+            self.motors.append(motor)
 
     def update(self, topic:str, data:str):
-        # update JSON data with motor information
-        index = self.getMotorIndex(topic)
-        self.motors[index].update(topic, data)
-        # motor = self.motors[index]
-        # motor.update(motor, topic, data)
+        for i in range(len(RobotJSON.MOTORS)): 
+            if RobotJSON.MOTORS[i] in topic:
+                self.motors[i].update(topic, data)
+                break
 
     def serialize(self):
         # serialize data
@@ -85,25 +80,24 @@ class RobotJSON(object):
     def deSerialize(self, json_data: str):
         # deserialize data
         json_obj = RobotJSON(**json.loads(json_data))
-        self.get_logger().info(json_obj)
         return json_obj
     
-    def getMotorIndex(topic: str):
-        # assigns motor index based on topic name
-        if "front_left" in topic:
-            return 0
-        elif "front_right" in topic:
-            return 1
-        elif "mid_left" in topic:
-            return 2
-        elif "mid_right" in topic:
-            return 3
-        elif "back_left" in topic:
-            return 4
-        elif "back_right" in topic:
-            return 5
-        else:
-            return -1
+class RobotMotor:
+    # represents a robot motor by storing the velocity, torque and temperature
+    def __init__(self, name:str):
+        self.name = name
+        self.velocity = None
+        self.torque = None
+        self.temperature = None
+
+    def update(self, topic:str, data:str):
+        if RobotJSON.MOTOR_VELOCITY in topic:
+            self.velocity = data
+        elif RobotJSON.MOTOR_TORQUE in topic:
+            self.torque = data
+        elif RobotJSON.MOTOR_TEMPERATURE in topic:
+            self.temperature = data
+
 
 def main(args=None):
     rclpy.init(args=args)
