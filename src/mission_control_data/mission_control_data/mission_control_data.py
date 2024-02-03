@@ -77,7 +77,7 @@ class RobotJSON:
         json_data = json.dumps(self, default=lambda o: o.__dict__, indent=4)
         return json_data
     
-    def deSerialize(self, json_data: str):
+    def deSerialize(json_data: str):
         # deserialize data
         json_obj = RobotJSON(**json.loads(json_data))
         return json_obj
