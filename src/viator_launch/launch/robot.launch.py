@@ -65,5 +65,6 @@ def generate_launch_description():
         can_moteus_node,
         # dummy_node,
         robot_info_node,
-        robot_info_node_talker
+        robot_info_node_talker,
+        heartbeat_node
     ])
