@@ -49,6 +49,6 @@ def generate_launch_description():
     return launch.LaunchDescription([
         robot_container,
         can_moteus_node,
-        testing_node,
+        #testing_node,
         drivebase_node
     ])
