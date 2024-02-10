@@ -8,8 +8,8 @@ import std_msgs.msg
 from std_msgs.msg import String
 from std_msgs.msg import Float32
 
-VELOCITY_CONVERSION = 1.76838724851
-POSITION_CONVERSION = 33 / (6.28) #Radians to position ticks
+VELOCITY_CONVERSION = 1
+POSITION_CONVERSION = 1 / (6.28) #Radians to position ticks
 
 robotPublishers = dict()
 
