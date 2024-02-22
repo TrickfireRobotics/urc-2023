@@ -146,7 +146,7 @@ class MoteusMultiprocess:
 
 
             #self._rosNode.get_logger().info("After FOR")
-            await asyncio.sleep(0.02)
+            await asyncio.sleep(0.002)
 
 
 

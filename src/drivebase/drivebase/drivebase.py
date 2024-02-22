@@ -15,7 +15,7 @@ class Drivebase(Node):
         super().__init__('drivebase')
 
         self.botInterface = RobotInterface(self)
-        self.SPEED = 3.0
+        self.SPEED = 0.5
 
         self.left_subscription = self.create_subscription(
             Float32, "move_left_drivebase_side_message", self.moveLeftSide, 10)
@@ -24,9 +24,9 @@ class Drivebase(Node):
 
     def moveLeftSide(self, msg):
         vel = msg.data * self.SPEED
-        self.botInterface.front_left_drive_motor(vel)
-        self.botInterface.mid_left_drive_motor(vel)
-        self.botInterface.rear_left_drive_motor(vel)
+        self.botInterface.front_left_drive_motor(-vel)
+        self.botInterface.mid_left_drive_motor(-vel)
+        self.botInterface.rear_left_drive_motor(-vel)
 
     def moveRightSide(self, msg):
         vel = msg.data * self.SPEED
