@@ -58,9 +58,7 @@ class Arm(Node):
         self._reset_status_subscriber = self.create_subscription(
             bool, "reset_status_from_mission_control", self.need_reset, 10)
         self._pitch_action_subscriber = self.create_subscription(
-            Point, "pitch_action_from_mission_control", self.perform_pitch_action, 10)
-        self._yaw_action_subscriber = self.create_subscription(
-            Point, "yaw_action_from_mission_control", self.perform_yaw_action, 10)
+            Point, "yaw_pitch_action_from_mission_control", self.perform_yaw_pitch_action, 10)
         self._move_on_xy_subscriber = self.create_subscription(
             Point, "move_on_xy_action_from_mission_control", self.move_to_xy_action, 10)
         self._move_on_z_subscriber = self.create_subscription(
@@ -80,7 +78,7 @@ class Arm(Node):
     # ***************
     # Register movements and process calculations
     # ***************
-    def perform_pitch_action(self, right_thumb_stick_coordinate: Point):
+    def perform_yaw_pitch_action(self, right_thumb_stick_coordinate: Point):
         # if the arm is not enable
         if (not self._curr_enable_status):
             return
@@ -105,25 +103,6 @@ class Arm(Node):
         self._send_command_to_robot_interface(target_motor_positions)
 
         # fix later: do I need to check if the movement is successful (?)
-
-        # update current position
-        self._current_position = target_motor_positions
-
-    def perform_yaw_action(self, right_thumb_stick_coordinate: Point):
-        # if the arm is not enable
-        if (not self._curr_enable_status):
-            return
-
-        # -----------------
-
-        target_position_orientation = self._calculate_new_position_and_orientation(
-            (0, 0), right_thumb_stick_coordinate, (0, 0))
-
-        target_motor_positions = self._arm_chain.inverse_kinematics(
-            target_position_orientation[0], target_position_orientation[1], orientation_mode="all", initial_position=self._current_position)
-
-        # send command to robot interface
-        self._send_command_to_robot_interface(target_motor_positions)
 
         # update current position
         self._current_position = target_motor_positions
@@ -246,10 +225,14 @@ class Arm(Node):
             self._robot_info.get_arm_forearm_motor_position())
         current_motor_positions.append(
             self._robot_info.get_arm_wrist_motor_position())
-        current_motor_positions.append(
-            self._robot_info.get_arm_hand_motor_position())
-        current_motor_positions.append(
-            self._robot_info.get_arm_fingers_motor_position())
+
+        # might not need these for the hand
+        # current_motor_positions.append(
+        #     self._robot_info.get_arm_hand_motor_position())
+        # current_motor_positions.append(
+        #     self._robot_info.get_arm_fingers_motor_position())
+
+        # -------------
 
         # update current position
         self._current_position = current_motor_positions
@@ -264,8 +247,8 @@ class Arm(Node):
         self._robot_interface.arm_elbow_motor(target_motor_positions[2])
         self._robot_interface.arm_forearm_motor(target_motor_positions[3])
         self._robot_interface.arm_wrist_motor(target_motor_positions[4])
-        self._robot_interface.arm_turntable_motor(target_motor_positions[5])
-        self._robot_interface.arm_fingers_motor(target_motor_positions[6])
+        # self._robot_interface.arm_turntable_motor(target_motor_positions[5])
+        # self._robot_interface.arm_fingers_motor(target_motor_positions[6])
 
 
 # fix these args later
