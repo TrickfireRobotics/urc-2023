@@ -15,10 +15,16 @@ can_moteus_node = Node(
     name='can_moteus_node'
 )
 
-testing_node = Node(
-    package='testingInterface',
-    executable='testingInterface',
-    name='testing_node'
+robot_info_node = Node(
+    package='robot_info',
+    executable='listener',
+    name='TestSubscriber'
+)
+
+robot_info_node_talker = Node(
+    package='robot_info',
+    executable='talker',
+    name='TestPublisher'
 )
 
 drivebase_node = Node(
@@ -26,6 +32,7 @@ drivebase_node = Node(
     executable='drivebase',
     name='drivebase_node'
 )
+
 
 
 # Composable Nodes launched in a Composable Node container will share a process

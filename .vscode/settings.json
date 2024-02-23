@@ -8,6 +8,7 @@
     ],
     "cmake.configureOnOpen": false,
     "python.linting.enabled": false,
+    "python.linting.enabled": false,
     "python.linting.flake8Enabled": true,
     "cmake.sourceDirectory": "${workspaceFolder}/src/hello_world",
     "files.associations": {
