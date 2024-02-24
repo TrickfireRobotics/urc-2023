@@ -34,5 +34,8 @@ RUN useradd trickfire \
   # Don't make a giant log file for login data, we don't care about it
   --no-log-init
 
+# Expose port for websocket. This is for the docker-compose to map it to the host computer's port 9090 for outside connection
+EXPOSE 9090
+
 # Copy all the bash customizations over to the user.
 COPY .devcontainer/trickfire.bashrc /home/trickfire/.bashrc

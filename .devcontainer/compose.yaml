@@ -1,0 +1,5 @@
+services:
+  ros:
+    build: .
+    ports:
+      - "9090:9090"
