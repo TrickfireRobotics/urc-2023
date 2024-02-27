@@ -2,12 +2,21 @@ import rclpy
 import time
 from rclpy.node import Node
 from std_msgs.msg import Bool, String
+import sys
+sys.path.append("/home/trickfire/urc-2023/src")
+
+from interface.robot_interface import RobotInterface
+
 
 class Heartbeat(Node):
     def __init__(self):
         # initialize heartbeat node
         super().__init__("heartbeat_node")
         self.get_logger().info("Hi from heartbeat!")
+        robotInterface = RobotInterface(self)
+        time.sleep(3)
+
+        robotInterface.front_left_drive_motor(0.5)
 #------------------------------------------------------------   
         # publisher for emergency stop
         self.emergency_publisher = self.create_publisher(String, 'stop_motors', 10)

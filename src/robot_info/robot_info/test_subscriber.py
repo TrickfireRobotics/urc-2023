@@ -11,9 +11,10 @@ class TestSubscriber(Node):
         self.info = RobotInfo(self, self.callback)
 
     def callback(self, topic, data):
-        self.get_logger().info(f"received topic: {topic}; data: {data}")
-        self.get_logger().info("info.front_left_drive_motor_velocity_from_can: "
-                               + str(self.info.front_left_drive_motor_velocity_from_can))
+        pass
+        # self.get_logger().info(f"received topic: {topic}; data: {data}")
+        # self.get_logger().info("info.front_left_drive_motor_velocity_from_can: "
+        #                        + str(self.info.front_left_drive_motor_velocity_from_can))
 
 
 
