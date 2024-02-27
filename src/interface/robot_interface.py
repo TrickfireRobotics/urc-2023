@@ -57,7 +57,10 @@ class RobotInterface(Node):
         robotPublishers['antenna_motor'] = publisher
         publisher = self._rosNode.create_publisher(Float32, 'antenna_turntable_motor_position_from_interface', 10)
         robotPublishers['antenna_turntable_motor'] = publisher
-    
+#--------------------------------------------------------------
+        self.create_subscription(String, 'stop_motors', self.stop_motors_callback, 10)
+#---------------------------------------------------------------   
+
     def __del__(self):
         print()
     
@@ -224,7 +227,22 @@ class RobotInterface(Node):
         strMsg = Float32()
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
+#----------------------------------
+    def stop_all_motors(self):
+        # Setting the velocity of drive motors to 0
+        for motor in ['front_left_drive_motor', 'front_right_drive_motor', 'mid_left_drive_motor', 'mid_right_drive_motor', 'rear_left_drive_motor', 'rear_right_drive_motor']:
+            self.set_motor_velocity(motor, 0)
 
+    def set_motor_velocity(self, motor_name, velocity):
+        if motor_name in robotPublishers:
+            strMsg = Float32()
+            strMsg.data = velocity
+            robotPublishers[motor_name].publish(strMsg)
+
+    def stop_motors_callback(self, msg):
+        if msg.data == 'stop':
+            self.stop_all_motors()
+#--------------------------------------
 
 class MyTestingNode(Node):
     def __init__(self):

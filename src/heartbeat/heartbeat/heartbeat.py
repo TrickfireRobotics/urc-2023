@@ -8,7 +8,10 @@ class Heartbeat(Node):
         # initialize heartbeat node
         super().__init__("heartbeat_node")
         self.get_logger().info("Hi from heartbeat!")
-
+#------------------------------------------------------------   
+        # publisher for emergency stop
+        self.emergency_publisher = self.create_publisher(String, 'stop_motors', 10)
+#------------------------------------------------------------
         # flag to store connection status
         self.connection_lost = False
 
@@ -23,18 +26,18 @@ class Heartbeat(Node):
 
         # check connection every 1 second
         self.timer = self.create_timer(1.0, self.check_connection) 
-# assume that there's no connection until there is
-    # def check_connection(self):
-    #     if self.connection_lost:
-    #         self.get_logger().warning("Connection lost")
-    #     else:
-    #         self.get_logger().info("Connection active")
 
     def check_connection(self):
         # Check if the last heartbeat was received more than a threshold ago
-        if time.time() - self.last_heartbeat_time > 2:  # Example threshold: 2 seconds
+        if time.time() - self.last_heartbeat_time > 2:  # threshold = 2 seconds
             self.get_logger().warning("Connection lost")
             self.connection_lost = True
+#-----------------------------------------------
+            # Publishing a stop signal
+            stop_msg = String()
+            stop_msg.data = 'stop'
+            self.stop_publisher.publish(stop_msg)
+#-------------------------------------------------
         else:
             self.connection_lost = False  # Reset flag if connection is okay
 
