@@ -117,35 +117,27 @@ class MoteusMultiprocess:
                 its internal data for each motor
         """
 
-        self._rosNode.get_logger().info("HELLO WORLD")
         await self._connectToMoteusControllers()
-        self._rosNode.get_logger().info("GOODBYE WORLD :(")
 
         while True:
             self._readqueueToMoteus(queueToMoteus)
 
-            #self._rosNode.get_logger().info("Before FOR")
 
             for canID in self._canIDToMotorData:
                 motorData = self._canIDToMotorData[canID]
 
                 if (motorData.mode == moteus_motor.Mode.POSITION):
-                    #self._rosNode.get_logger().info(str(motorData.data))
                     resultFromMoteus = await motorData.moteusController.set_position(position=motorData.data, velocity=0, query=True)
                     
 
                 elif (motorData.mode == moteus_motor.Mode.VELOCITY):
                     # moteus controllers will only go a velocity only if it
                     # has reached its given position OR we give it math.nan
-                    #self._rosNode.get_logger().info("canID: " + str(canID) + "    " + str(motorData.data))
                     resultFromMoteus = await motorData.moteusController.set_position(position=math.nan, velocity=motorData.data, query=True)
-                    #self._rosNode.get_logger().info("awaiting the data from moteus")
 
                 
                 self._sendDataToMotor(canID, resultFromMoteus)
 
-
-            #self._rosNode.get_logger().info("After FOR")
             await asyncio.sleep(0.002)
 
 
@@ -164,7 +156,6 @@ class MoteusMultiprocess:
 
         # Get the motor from the can ID
         motorData = self._canIDToMotorData[canID]
-        self._rosNode.get_logger().info("CANID: " + str(canID) + "MODE: " + str(moteusResult.values[0]))
 
         # Goe through all the registers we want to publish
         for register in motorData.moteusPubList:
@@ -184,11 +175,12 @@ class MoteusMultiprocess:
 
         """
         
-        numberOfTimesToRead = 10
+        # This is janky piece of code that should not exist
+        # Just leave this at 1 please
+        numberOfTimesToRead = 1
         
         for number in range(numberOfTimesToRead):
             if not queueToMoteus.empty():
-                self._rosNode.get_logger().info("I am reading data")
                 dataRecieved = queueToMoteus.get()
                 canID = dataRecieved[0]  # is the canID of the motor
                 data = dataRecieved[1]  # is a floating point data
@@ -215,9 +207,7 @@ class MoteusMultiprocess:
 
             try:
                 # Reset the controller
-                self._rosNode.get_logger().info("HELLO WORLD SET STOP")
                 await moteusMotorController.set_stop()
-                self._rosNode.get_logger().info("GOODBYE WORLD SET STOP :(")
                 motorData.moteusController = moteusMotorController
 
             except RuntimeError as error:
