@@ -41,10 +41,7 @@ class RosCamera(Node):
             
         if ret == True:
             # Publish the image.
-            # The 'cv2_to_imgmsg' method converts an OpenCV
-            # image to a ROS 2 image message
-            msg = self.br.cv2_to_imgmsg(frame)
-            self.publisher_.publish(self.br.cv2_to_compressed_imgmsg(msg))
+            self.publisher_.publish(self.br.cv2_to_compressed_imgmsg(frame))
     
         # Display the message on the console
         self.get_logger().info('Publishing compressed video frame')
