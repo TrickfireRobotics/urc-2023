@@ -3,7 +3,7 @@
 <package format="3">
   <name>drivebase</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Connects the controller to the wheel motors</description>
   <maintainer email="cklay@uw.edu">trickfire</maintainer>
   <license>TODO: License declaration</license>
 

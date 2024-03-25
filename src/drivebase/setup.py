@@ -15,7 +15,7 @@ setup(
     zip_safe=True,
     maintainer='trickfire',
     maintainer_email='cklay@uw.edu',
-    description='Connects controller to wheel motors',
+    description='Connects the controller to the wheel motors',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
