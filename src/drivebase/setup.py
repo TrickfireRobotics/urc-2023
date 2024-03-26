@@ -14,8 +14,8 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='trickfire',
-    maintainer_email='aimeilicke@gmail.com',
-    description='TODO: Package description',
+    maintainer_email='cklay@uw.edu',
+    description='Connects the controller to the wheel motors',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={

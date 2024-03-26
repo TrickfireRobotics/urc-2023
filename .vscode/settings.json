@@ -3,7 +3,8 @@
         "/opt/ros/galactic/lib/python3.8/site-packages"
     ],
     "python.analysis.extraPaths": [
-        "/opt/ros/galactic/lib/python3.8/site-packages"
+        "/opt/ros/galactic/lib/python3.8/site-packages",
+        "./src/interface"
     ],
     "cmake.configureOnOpen": false,
     "python.linting.enabled": false,

@@ -23,7 +23,77 @@ class RosMotuesBridge(Node):
         #EXAMPLES
         moteusPubList = [moteus.Register.VELOCITY]
         moteusMultiprocess.addMotor(
-            1,
+            20,
+            "rear_right_drive_motor",
+            moteus_motor.Mode.VELOCITY,
+            moteusPubList,
+        )
+        
+        moteusMultiprocess.addMotor(
+            21,
+            "mid_right_drive_motor",
+            moteus_motor.Mode.VELOCITY,
+            moteusPubList,
+        )
+        
+        moteusMultiprocess.addMotor(
+            22,
+            "front_right_drive_motor",
+            moteus_motor.Mode.VELOCITY,
+            moteusPubList,
+        )
+        
+        moteusMultiprocess.addMotor(
+            23,
+            "rear_left_drive_motor",
+            moteus_motor.Mode.VELOCITY,
+            moteusPubList,
+        )
+
+        moteusMultiprocess.addMotor(
+            24,
+            "mid_left_drive_motor",
+            moteus_motor.Mode.VELOCITY,
+            moteusPubList,
+        )
+        
+        moteusMultiprocess.addMotor(
+            25,
+            "front_left_drive_motor",
+            moteus_motor.Mode.VELOCITY,
+            moteusPubList,
+        )
+        
+        moteusMultiprocess.addMotor(
+            21,
+            "mid_right_drive_motor",
+            moteus_motor.Mode.VELOCITY,
+            moteusPubList,
+        )
+        
+        moteusMultiprocess.addMotor(
+            22,
+            "front_right_drive_motor",
+            moteus_motor.Mode.VELOCITY,
+            moteusPubList,
+        )
+        
+        moteusMultiprocess.addMotor(
+            23,
+            "rear_left_drive_motor",
+            moteus_motor.Mode.VELOCITY,
+            moteusPubList,
+        )
+
+        moteusMultiprocess.addMotor(
+            24,
+            "mid_left_drive_motor",
+            moteus_motor.Mode.VELOCITY,
+            moteusPubList,
+        )
+        
+        moteusMultiprocess.addMotor(
+            25,
             "front_left_drive_motor",
             moteus_motor.Mode.VELOCITY,
             moteusPubList,
