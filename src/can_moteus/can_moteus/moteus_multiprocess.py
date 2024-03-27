@@ -1,6 +1,6 @@
 import moteus
 import asyncio
-from multiprocessing import Queue, Process
+from multiprocessing import Queue, Process, Event
 import math
 from . import moteus_motor
 
@@ -101,10 +101,11 @@ class MoteusMultiprocess:
                 This queue is what the multiprocess will read from to update
                 its internal data for each motor
         """
-        asyncio.run(self._loop(queueToMoteus))
+        self.shutdownEvent = Event()
+        asyncio.run(self._loop(queueToMoteus, self.shutdownEvent))
 
 
-    async def _loop(self,queueToMoteus):
+    async def _loop(self, queueToMoteus, shutdownEvent):
         """
             Connect to the motors and start the loop. For each
             motor, call the correct moteus method and send 
@@ -120,6 +121,10 @@ class MoteusMultiprocess:
         await self._connectToMoteusControllers()
 
         while True:
+            if shutdownEvent.is_set():
+                print("shutdownEvent read, breaking loop")
+                break
+
             self._readqueueToMoteus(queueToMoteus)
 
 
@@ -216,3 +221,7 @@ class MoteusMultiprocess:
                 self._rosNode.get_logger().error(error.__str__())
 
                 del self._canIDToMotorData[canID]
+
+
+    def shutdown(self):
+        self.shutdownEvent.set()
