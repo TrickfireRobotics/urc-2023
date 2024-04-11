@@ -16,7 +16,8 @@ class RosCamera(Node):
         self.publisher_ = self.create_publisher(CompressedImage, 'video_frames', 10)
 
         # We will publish a message every 0.1 seconds
-        timer_period = 0.1  # seconds
+        # timer_period = 0.1  # seconds
+        timer_period = 2  # seconds
         
         # Create the timer
         self.timer = self.create_timer(timer_period, self.timer_callback)
@@ -44,7 +45,7 @@ class RosCamera(Node):
             self.publisher_.publish(self.br.cv2_to_compressed_imgmsg(frame))
     
         # Display the message on the console
-        self.get_logger().info('Publishing compressed video frame')
+        #self.get_logger().info('Publishing compressed video frame')
         
 
 
