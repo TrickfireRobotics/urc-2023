@@ -3,11 +3,11 @@ from rclpy.node import Node  # Handles the creation of nodes
 from sensor_msgs.msg import CompressedImage # Image is the message type
 from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
 import cv2 # OpenCV library
-
+from pathlib import Path
 
 class RosCamera(Node):
 
-    def __init__(self):
+    def __init__(self, camera: int):
         super().__init__("ros_camera")
         self.get_logger().info("Launching ros_camera node")
 
@@ -24,7 +24,7 @@ class RosCamera(Node):
             
         # Create a VideoCapture object
         # The argument '0' gets the default webcam.
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(camera)
             
         # Used to convert between ROS and OpenCV images
         self.br = CvBridge()
@@ -54,8 +54,16 @@ class RosCamera(Node):
 
 
 def main(args=None):
+    pathlist = Path('/dev/').glob('video*')
+    videoId = 0
+
     rclpy.init(args=args)
-    node = RosCamera()
-    rclpy.spin(node)
-    node.destroy_node()
+
+    for _ in pathlist: # loop through every camera device in dev directory
+        node = RosCamera(videoId)
+        videoId = videoId + 1
+
+        rclpy.spin(node)
+        node.destroy_node()
+    
     rclpy.shutdown()
