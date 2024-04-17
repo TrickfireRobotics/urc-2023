@@ -25,6 +25,7 @@ class RosCamera(Node):
         # Create a VideoCapture object
         # The argument '0' gets the default webcam.
         self.cap = cv2.VideoCapture(camera)
+        self.get_logger().info("Using video ID: " + str(camera) + ", ON: " + str(self.cap.isOpened()))
             
         # Used to convert between ROS and OpenCV images
         self.br = CvBridge()
@@ -49,21 +50,18 @@ class RosCamera(Node):
         
 
 
-
-    
-
-
 def main(args=None):
-    pathlist = Path('/dev/').glob('video*')
-    videoId = 0
-
     rclpy.init(args=args)
 
-    for _ in pathlist: # loop through every camera device in dev directory
-        node = RosCamera(videoId)
-        videoId = videoId + 1
+    node = RosCamera(0)
+    rclpy.spin(node)
+    node.destroy_node()
 
-        rclpy.spin(node)
-        node.destroy_node()
-    
+    node2 = RosCamera(2)
+    rclpy.spin(node2)
+    node2.destroy_node()
+
+
+    node.destroy_node()
+    node2.destroy_node()
     rclpy.shutdown()
