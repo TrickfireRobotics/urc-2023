@@ -88,6 +88,7 @@ def main(args=None):
             node = RosCamera("video_frames" + str(cameraNum), cameraID)
             nodes.append(node)
             executor.add_node(node)
+            cameraNum += 1
         
         try:
             executor.spin()
