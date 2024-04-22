@@ -29,13 +29,14 @@ def get_cameras() -> list[int]:
 
 class RosCamera(Node):
 
-    def __init__(self, camera: int):
+    def __init__(self, topicName: str, camera: int):
         super().__init__("ros_camera")
         self.get_logger().info("Launching ros_camera node")
 
         # Create the publisher. This publisher will publish an Image
         # to the video_frames topic. The queue size is 10 messages.
-        self._publisher = self.create_publisher(CompressedImage, 'video_frames', 10)
+        self._publisher = self.create_publisher(CompressedImage, topicName, 10)
+        self.get_logger().info("Created Publisher " + topicName)
 
         # We will publish a message every 0.1 seconds
         # timer_period = 0.1  # seconds
@@ -77,13 +78,14 @@ def main(args=None):
     try:
         """
         we need an executor because running .spin() is a blocking function.
-        using the MultiThreadedExecutor, we can run multiple nodes on the same topic
+        using the MultiThreadedExecutor, we can control multiple nodes
         """
         executor = MultiThreadedExecutor()
         nodes = []
+        cameraNum = 0
 
         for cameraID in get_cameras():
-            node = RosCamera(cameraID)
+            node = RosCamera("video_frames" + cameraNum, cameraID)
             nodes.append(node)
             executor.add_node(node)
         
