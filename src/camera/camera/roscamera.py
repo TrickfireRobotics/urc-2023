@@ -85,7 +85,7 @@ def main(args=None):
         cameraNum = 0
 
         for cameraID in get_cameras():
-            node = RosCamera("video_frames" + cameraNum, cameraID)
+            node = RosCamera("video_frames" + str(cameraNum), cameraID)
             nodes.append(node)
             executor.add_node(node)
         
