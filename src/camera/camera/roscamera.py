@@ -2,8 +2,30 @@ import rclpy  # Python Client Library for ROS 2
 from rclpy.node import Node  # Handles the creation of nodes
 from sensor_msgs.msg import CompressedImage # Image is the message type
 from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
+from rclpy.executors import MultiThreadedExecutor
 import cv2 # OpenCV library
 from pathlib import Path
+
+# returns a list of working camera ids to capture every camera connected to the robot
+def get_cameras() -> list[int]:
+    nonWorkingPorts = 0
+    devPort = 0
+    workingPorts = []
+
+    while nonWorkingPorts < 6:
+        camera = cv2.VideoCapture(devPort)
+        if not camera.isOpened():
+            nonWorkingPorts += 1
+        else:
+            isReading, img = camera.read()
+            _ = camera.get(3)
+            _ = camera.get(4)
+            if isReading:
+                workingPorts.append(devPort)
+        
+        devPort += 1
+    
+    return workingPorts
 
 class RosCamera(Node):
 
@@ -13,7 +35,7 @@ class RosCamera(Node):
 
         # Create the publisher. This publisher will publish an Image
         # to the video_frames topic. The queue size is 10 messages.
-        self.publisher_ = self.create_publisher(CompressedImage, 'video_frames', 10)
+        self._publisher = self.create_publisher(CompressedImage, 'video_frames', 10)
 
         # We will publish a message every 0.1 seconds
         # timer_period = 0.1  # seconds
@@ -43,25 +65,37 @@ class RosCamera(Node):
             
         if ret == True:
             # Publish the image.
-            self.publisher_.publish(self.br.cv2_to_compressed_imgmsg(frame))
+            self._publisher.publish(self.br.cv2_to_compressed_imgmsg(frame))
     
         # Display the message on the console
-        #self.get_logger().info('Publishing compressed video frame')
+        # self.get_logger().info('Publishing compressed video frame')
         
 
 
 def main(args=None):
     rclpy.init(args=args)
+    try:
+        """
+        we need an executor because running .spin() is a blocking function.
+        using the MultiThreadedExecutor, we can run multiple nodes on the same topic
+        """
+        executor = MultiThreadedExecutor()
+        nodes = []
 
-    node = RosCamera(0)
-    rclpy.spin(node)
-    node.destroy_node()
+        for cameraID in get_cameras():
+            node = RosCamera(cameraID)
+            nodes.append(node)
+            executor.add_node(node)
+        
+        try:
+            executor.spin()
+        finally:
+            executor.shutdown()
+            for node in nodes:
+                node.destroy_node()
+        
+    finally:
+        rclpy.shutdown()
 
-    node2 = RosCamera(2)
-    rclpy.spin(node2)
-    node2.destroy_node()
-
-
-    node.destroy_node()
-    node2.destroy_node()
-    rclpy.shutdown()
+if __name__ == '__main__':
+    main()
