@@ -2,7 +2,7 @@
 
 The "motherboard" is the PCB (circuit board) that allows our codebase to communicate between 6 PWM-compatible devices (such as servo motors), 6 stepper motors, control the rover status-lights, and communicate with the GPS module. 
 
-Since these things do not have a convient USB port sticking out of them to connect to our main computer for us to use, we use the Raspberry Pi Pico microcontroller to act as the middle-man between these low level devices and our codebase. All communications are made through the USB port on the Pi Pico. 
+Since these things do not have a convenient USB port sticking out of them to connect to our main computer for us to use, we use the Raspberry Pi Pico microcontroller to act as the middle-man between these low level devices and our codebase. All communications are made through the USB port on the Pi Pico. 
 
 
 ## Initial Setup
@@ -11,7 +11,7 @@ When working on the code for the Pi Pico, you must have the pic-sdk downloaded i
 
 In the root directory, `./urc-2023`, run the following commands to download the pico-sdk. 
 
-`git submodule init` -> This initlaizes your local configration file
+`git submodule init` -> This initializes your local configuration file
 
 `git submodule update` -> Fetches all the data from the pico-sdk repo
 
