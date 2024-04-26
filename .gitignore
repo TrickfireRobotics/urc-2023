@@ -2,6 +2,7 @@
 /build/
 /install/
 /log/
+/motherboard/build
 
 # Python scripts compiled as bytecode.
 __pycache__/
