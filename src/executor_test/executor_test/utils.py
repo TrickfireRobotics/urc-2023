@@ -40,7 +40,7 @@ class CameraNode(Node):
         super().__init_("executor_camera_test_node")
 
         self.i = 0
-        self.pub = self.create_publisher(String, '/video_frames' + str(topic_id) + 10)
+        self.pub = self.create_publisher(String, '/exec_frames' + str(topic_id) + 10)
 
         self.timer = self.create_timer(2, self.timer_callback)
     
