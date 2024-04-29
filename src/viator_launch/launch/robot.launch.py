@@ -27,6 +27,12 @@ ros_camera_test_node = Node(
     name='ros_camera_sub'
 )
 
+ros_executor_test_node = Node(
+    package='executor_test',
+    executable='executor_test',
+    name='executor_camera_test_node'
+)
+
 # Composable Nodes launched in a Composable Node container will share a process
 # and can use very fast inter-process communication instead of publishing
 # messages over a network socket.
@@ -49,5 +55,6 @@ def generate_launch_description():
         robot_container,
         can_moteus_node,
         ros_camera_node,
+        ros_executor_test_node,
         #ros_camera_test_node
     ])
