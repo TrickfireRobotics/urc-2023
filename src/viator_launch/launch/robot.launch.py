@@ -55,6 +55,6 @@ def generate_launch_description():
         robot_container,
         can_moteus_node,
         ros_camera_node,
-        ros_executor_test_node,
+        #ros_executor_test_node,
         #ros_camera_test_node
     ])
