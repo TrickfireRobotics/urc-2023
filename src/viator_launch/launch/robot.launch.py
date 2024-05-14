@@ -33,6 +33,12 @@ drivebase_node = Node(
     name='drivebase_node'
 )
 
+unveil_arm_node = Node(
+    package='unveil_arm',
+    executable='unveil_arm',
+    name='unveil_arm_node'
+)
+
 
 
 # Composable Nodes launched in a Composable Node container will share a process
@@ -57,5 +63,6 @@ def generate_launch_description():
         robot_container,
         can_moteus_node,
         #testing_node,
-        drivebase_node
+        drivebase_node,
+        unveil_arm_node
     ])
