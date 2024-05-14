@@ -37,20 +37,29 @@ class RobotInterface(Node):
         robotPublishers['rear_right_drive_motor'] = publisher
         
         # Arm
-        publisher = self._rosNode.create_publisher(Float32, 'arm_turntable_motor_position_from_interface', 10)
-        robotPublishers['arm_turntable_motor'] = publisher
-        publisher = self._rosNode.create_publisher(Float32, 'arm_shoulder_motor_position_from_interface', 10)
-        robotPublishers['arm_shoulder_motor'] = publisher
-        publisher = self._rosNode.create_publisher(Float32, 'arm_elbow_motor_position_from_interface', 10)
-        robotPublishers['arm_elbow_motor'] = publisher
-        publisher = self._rosNode.create_publisher(Float32, 'arm_forearm_motor_position_from_interface', 10)
-        robotPublishers['arm_forearm_motor'] = publisher
-        publisher = self._rosNode.create_publisher(Float32, 'arm_wrist_motor_position_from_interface', 10)
-        robotPublishers['arm_wrist_motor'] = publisher
-        publisher = self._rosNode.create_publisher(Float32, 'arm_hand_motor_position_from_interface', 10)
-        robotPublishers['arm_hand_motor'] = publisher
-        publisher = self._rosNode.create_publisher(Float32, 'arm_fingers_motor_position_from_interface', 10)
-        robotPublishers['arm_fingers_motor'] = publisher
+        publisher = self._rosNode.create_publisher(Float32, "shoulder_motor_velocity_from_interface", 10)
+        robotPublishers['shoulder_motor'] = publisher
+        publisher = self._rosNode.create_publisher(Float32, "elbow_motor_velocity_from_interface", 10)
+        robotPublishers['elbow_motor'] = publisher
+        publisher = self._rosNode.create_publisher(Float32, "left_wrist_motor_velocity_from_interface", 10)
+        robotPublishers['left_wrist_motor'] = publisher
+        publisher = self._rosNode.create_publisher(Float32, "right_wrist_motor_velocity_from_interface", 10)
+        robotPublishers['right_wrist_motor'] = publisher                        
+
+        # publisher = self._rosNode.create_publisher(Float32, 'arm_turntable_motor_position_from_interface', 10)
+        # robotPublishers['arm_turntable_motor'] = publisher
+        # publisher = self._rosNode.create_publisher(Float32, 'arm_shoulder_motor_position_from_interface', 10)
+        # robotPublishers['arm_shoulder_motor'] = publisher
+        # publisher = self._rosNode.create_publisher(Float32, 'arm_elbow_motor_position_from_interface', 10)
+        # robotPublishers['arm_elbow_motor'] = publisher
+        # publisher = self._rosNode.create_publisher(Float32, 'arm_forearm_motor_position_from_interface', 10)
+        # robotPublishers['arm_forearm_motor'] = publisher
+        # publisher = self._rosNode.create_publisher(Float32, 'arm_wrist_motor_position_from_interface', 10)
+        # robotPublishers['arm_wrist_motor'] = publisher
+        # publisher = self._rosNode.create_publisher(Float32, 'arm_hand_motor_position_from_interface', 10)
+        # robotPublishers['arm_hand_motor'] = publisher
+        # publisher = self._rosNode.create_publisher(Float32, 'arm_fingers_motor_position_from_interface', 10)
+        # robotPublishers['arm_fingers_motor'] = publisher
 
         # Antenna
         publisher = self._rosNode.create_publisher(Float32, 'antenna_motor_position_from_interface', 10)
@@ -137,69 +146,100 @@ class RobotInterface(Node):
         strMsg.data = revolutionsOutput
         publisher.publish(strMsg)
 
-    # Arm turntable
-    def arm_turntable_motor(self, amount):
-        revolutionsOutput = self.positionConversion(amount) #* 5.204 # 5.204 is the gear ratio for turntable
-        publisher = robotPublishers['arm_turntable_motor']
+
+    # Shoulder Motor
+    # For the unveiling, just use the revolutions per second
+    def arm_shoulder_motor(self, speed):
+        publisher = robotPublishers['shoulder_motor']
         strMsg = Float32()
-        strMsg.data = revolutionsOutput
+        strMsg.data = speed
         publisher.publish(strMsg)
 
-    # Arm Shoulder movement
-    def arm_shoulder_motor(self, amount):
-        revolutionsOutput = self.positionConversion(amount) * 3.979 # 3.979 is gear ratio for shoulder
-        publisher = robotPublishers['arm_shoulder_motor']
+    def arm_elbow_motor(self, speed):
+        publisher = robotPublishers['elbow_motor']
         strMsg = Float32()
-        strMsg.data = revolutionsOutput
+        strMsg.data = speed
         publisher.publish(strMsg)
 
-    # Arm Elbow movement
-    def arm_elbow_motor(self, amount):
-        revolutionsOutput = self.positionConversion(amount) * 5.204 # 5.204 is gear ratio for elbow
-        publisher = robotPublishers['arm_elbow_motor']
-        strMsg = Float32()
-        strMsg.data = revolutionsOutput
-        publisher.publish(strMsg)
-
-    # Arm Forearm movement
-    def arm_forearm_motor(self, amount):
-        revolutionsOutput = self.positionConversion(amount) * 3.820 # 3.820 is gear ratio for forearm
-        publisher = robotPublishers['arm_forearm_motor']
-        strMsg = Float32()
-        strMsg.data = revolutionsOutput
-        publisher.publish(strMsg)
     
-    # Arm Up Down Wrist movement
-    def arm_wrist_updown_motor(self, amount):
-        revolutionsOutput = self.positionConversion(amount) * 3.820 # 3.820 is gear ratio for wrist up down
-        publisher = robotPublishers['arm_wrist_updown_motor']
+    def arm_left_wrist_motor(self, speed):
+        publisher = robotPublishers['left_wrist_motor']
         strMsg = Float32()
-        strMsg.data = revolutionsOutput
+        strMsg.data = speed
         publisher.publish(strMsg)
 
-    # Arm Wrist rotation movement
-    def arm_wrist_rotation_motor(self, amount):
-        revolutionsOutput = self.positionConversion(amount) / 6.283 # 6.283 is gear ratio for wrist rotation
-        publisher = robotPublishers['arm_wrist_rotation_motor']
+    def arm_right_wrist_motor(self, speed):
+        publisher = robotPublishers['right_wrist_motor']
         strMsg = Float32()
-        strMsg.data = revolutionsOutput
+        strMsg.data = speed
         publisher.publish(strMsg)
 
-    # Arm Hand movement
-    def arm_hand_motor(self, amount):
-        revolutionsOutput = self.positionConversion(amount)
-        publisher = robotPublishers['arm_hand_motor']
-        strMsg = Float32()
-        strMsg.data = revolutionsOutput
-        publisher.publish(strMsg)
+
+
+
+    # # Arm turntable
+    # def arm_turntable_motor(self, amount):
+    #     revolutionsOutput = self.positionConversion(amount) #* 5.204 # 5.204 is the gear ratio for turntable
+    #     publisher = robotPublishers['arm_turntable_motor']
+    #     strMsg = Float32()
+    #     strMsg.data = revolutionsOutput
+    #     publisher.publish(strMsg)
+
+    # # Arm Shoulder movement
+    # def arm_shoulder_motor(self, amount):
+    #     revolutionsOutput = self.positionConversion(amount) * 3.979 # 3.979 is gear ratio for shoulder
+    #     publisher = robotPublishers['arm_shoulder_motor']
+    #     strMsg = Float32()
+    #     strMsg.data = revolutionsOutput
+    #     publisher.publish(strMsg)
+
+    # # Arm Elbow movement
+    # def arm_elbow_motor(self, amount):
+    #     revolutionsOutput = self.positionConversion(amount) * 5.204 # 5.204 is gear ratio for elbow
+    #     publisher = robotPublishers['arm_elbow_motor']
+    #     strMsg = Float32()
+    #     strMsg.data = revolutionsOutput
+    #     publisher.publish(strMsg)
+
+    # # Arm Forearm movement
+    # def arm_forearm_motor(self, amount):
+    #     revolutionsOutput = self.positionConversion(amount) * 3.820 # 3.820 is gear ratio for forearm
+    #     publisher = robotPublishers['arm_forearm_motor']
+    #     strMsg = Float32()
+    #     strMsg.data = revolutionsOutput
+    #     publisher.publish(strMsg)
     
-    # Arm Finger movement
-    def arm_fingers_motor(self, amount):
-        revolutionsOutput = self.positionConversion(amount)
-        publisher = robotPublishers['arm_fingers_motor']
-        strMsg = Float32()
-        strMsg.data = revolutionsOutput
-        publisher.publish(strMsg)
+    # # Arm Up Down Wrist movement
+    # def arm_wrist_updown_motor(self, amount):
+    #     revolutionsOutput = self.positionConversion(amount) * 3.820 # 3.820 is gear ratio for wrist up down
+    #     publisher = robotPublishers['arm_wrist_updown_motor']
+    #     strMsg = Float32()
+    #     strMsg.data = revolutionsOutput
+    #     publisher.publish(strMsg)
+
+    # # Arm Wrist rotation movement
+    # def arm_wrist_rotation_motor(self, amount):
+    #     revolutionsOutput = self.positionConversion(amount) / 6.283 # 6.283 is gear ratio for wrist rotation
+    #     publisher = robotPublishers['arm_wrist_rotation_motor']
+    #     strMsg = Float32()
+    #     strMsg.data = revolutionsOutput
+    #     publisher.publish(strMsg)
+
+    # # Arm Hand movement
+    # def arm_hand_motor(self, amount):
+    #     revolutionsOutput = self.positionConversion(amount)
+    #     publisher = robotPublishers['arm_hand_motor']
+    #     strMsg = Float32()
+    #     strMsg.data = revolutionsOutput
+    #     publisher.publish(strMsg)
+    
+    # # Arm Finger movement
+    # def arm_fingers_motor(self, amount):
+    #     revolutionsOutput = self.positionConversion(amount)
+    #     publisher = robotPublishers['arm_fingers_motor']
+    #     strMsg = Float32()
+    #     strMsg.data = revolutionsOutput
+    #     publisher.publish(strMsg)
 
     # Antenna movement
     def antenna_motor_extend(self):
