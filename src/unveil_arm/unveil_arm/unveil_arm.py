@@ -16,6 +16,12 @@ class UnveilArm(Node):
 
         self.botInterface = RobotInterface(self)
         self.SPEED = 0.05
+        self.WRIST_SPEED = 0.3
+        
+        # self.botInterface.arm_left_wrist_motor(0.0)
+        # self.botInterface.arm_right_wrist_motor(0.0)
+        # self.botInterface.arm_shoulder_motor(0.0)
+        # self.botInterface.arm_elbow_motor(0.0)
 
         # Left wrist motor
         self.left_wrist_motor_sub = self.create_subscription(
@@ -50,8 +56,9 @@ class UnveilArm(Node):
 
         if joystick > 0:
             self.get_logger().info("Left Wrist CW" + str(joystick))
-            self.botInterface.arm_left_wrist_motor(self.SPEED)
+            self.botInterface.arm_left_wrist_motor(self.WRIST_SPEED)
         else:
+            self.get_logger().info("Left Wrist STOP")
             self.botInterface.arm_left_wrist_motor(0.0)
 
     def left_wrist_ccw(self, msg):
@@ -59,8 +66,9 @@ class UnveilArm(Node):
 
         if joystick > 0:
             self.get_logger().info("Left Wrist CCW" + str(joystick))
-            self.botInterface.arm_left_wrist_motor(-self.SPEED)
+            self.botInterface.arm_left_wrist_motor(-self.WRIST_SPEED)
         else:
+            self.get_logger().info("Left Wrist STOP")
             self.botInterface.arm_left_wrist_motor(0.0)
 
     def right_wrist_cw(self, msg):
@@ -68,8 +76,9 @@ class UnveilArm(Node):
 
         if joystick > 0:
             self.get_logger().info("Right Wrist CW" + str(joystick))
-            self.botInterface.arm_right_wrist_motor(self.SPEED)
+            self.botInterface.arm_right_wrist_motor(self.WRIST_SPEED)
         else:
+            self.get_logger().info("Right Wrist STOP")
             self.botInterface.arm_right_wrist_motor(0.0)
 
     def right_wrist_ccw(self, msg):
@@ -77,8 +86,9 @@ class UnveilArm(Node):
 
         if joystick > 0:
             self.get_logger().info("Right Wrist CCW" + str(joystick))
-            self.botInterface.arm_right_wrist_motor(-self.SPEED)
+            self.botInterface.arm_right_wrist_motor(-self.WRIST_SPEED)
         else:
+            self.get_logger().info("Right Wrist STOP")
             self.botInterface.arm_right_wrist_motor(0.0)
 
     def elbow_up(self, msg):
@@ -86,8 +96,9 @@ class UnveilArm(Node):
 
         if data > 0:
             self.get_logger().info("Elbow up" + str(data))
-            self.botInterface.arm_elbow_motor(self.SPEED)
+            self.botInterface.arm_elbow_motor(-self.SPEED)
         else: 
+            self.get_logger().info("Elbow down STOP")
             self.botInterface.arm_elbow_motor(0.0)
 
     def elbow_down(self, msg):
@@ -95,8 +106,9 @@ class UnveilArm(Node):
 
         if data > 0:
             self.get_logger().info("Elbow down" + str(data))
-            self.botInterface.arm_elbow_motor(-self.SPEED)
+            self.botInterface.arm_elbow_motor(self.SPEED)
         else:
+            self.get_logger().info("Elbow down STOP")
             self.botInterface.arm_elbow_motor(0.0)
 
 
@@ -105,8 +117,9 @@ class UnveilArm(Node):
 
         if data > 0:
             self.get_logger().info("Shoulder up" + str(data))
-            self.botInterface.arm_shoulder_motor(self.SPEED)
+            self.botInterface.arm_shoulder_motor(-self.SPEED)
         else:
+            self.get_logger().info("Shoulder STOP")
             self.botInterface.arm_shoulder_motor(0.0)
 
 
@@ -115,8 +128,9 @@ class UnveilArm(Node):
 
         if data > 0:
             self.get_logger().info("Shoulder down" + str(data))
-            self.botInterface.arm_shoulder_motor(-self.SPEED)
+            self.botInterface.arm_shoulder_motor(self.SPEED)
         else:
+            self.get_logger().info("Shoulder STOP")
             self.botInterface.arm_shoulder_motor(0.0)
     
 

@@ -151,6 +151,7 @@ class RobotInterface(Node):
     # For the unveiling, just use the revolutions per second
     def arm_shoulder_motor(self, speed):
         publisher = robotPublishers['shoulder_motor']
+        
         strMsg = Float32()
         strMsg.data = speed
         publisher.publish(strMsg)
@@ -173,6 +174,7 @@ class RobotInterface(Node):
         strMsg = Float32()
         strMsg.data = speed
         publisher.publish(strMsg)
+        self._rosNode.get_logger().info("I am trying to send")
 
 
 

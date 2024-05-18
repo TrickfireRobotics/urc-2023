@@ -121,18 +121,32 @@ class MoteusMultiprocess:
 
         while True:
             self._readqueueToMoteus(queueToMoteus)
-
+            
 
             for canID in self._canIDToMotorData:
+                self._rosNode.get_logger().info("Loop still alove" + " Motor ID: " + str(canID))
                 motorData = self._canIDToMotorData[canID]
+                
+                result = await motorData.moteusController.query()
+                
+                if result.values[15] != 0:
+                    self._rosNode.get_logger().info("Fault Code:" + str(result.values[15]) + " Motor ID: " + str(canID))
+                    
+                
+                
 
                 if (motorData.mode == moteus_motor.Mode.POSITION):
                     resultFromMoteus = await motorData.moteusController.set_position(position=motorData.data, velocity=0, query=True)
+                    await motorData.moteusController.set_stop()
                     
 
                 elif (motorData.mode == moteus_motor.Mode.VELOCITY):
                     # moteus controllers will only go a velocity only if it
                     # has reached its given position OR we give it math.nan
+                    #if canID == 4:
+                        #self._rosNode.get_logger().info("Sending data: " + str(motorData.data))
+                    if motorData.data != 0:
+                        self._rosNode.get_logger().info("Velocity Sent:" + str(motorData.data) + " Motor ID: " + str(canID))
                     resultFromMoteus = await motorData.moteusController.set_position(position=math.nan, velocity=motorData.data, query=True)
 
                 
@@ -175,18 +189,14 @@ class MoteusMultiprocess:
 
         """
         
-        # This is janky piece of code that should not exist
-        # Just leave this at 1 please
-        numberOfTimesToRead = 1
         
-        for number in range(numberOfTimesToRead):
-            if not queueToMoteus.empty():
-                dataRecieved = queueToMoteus.get()
-                canID = dataRecieved[0]  # is the canID of the motor
-                data = dataRecieved[1]  # is a floating point data
+        if not queueToMoteus.empty():
+            dataRecieved = queueToMoteus.get()
+            canID = dataRecieved[0]  # is the canID of the motor
+            data = dataRecieved[1]  # is a floating point data
 
-                motorData = self._canIDToMotorData[canID]
-                motorData.data = data
+            motorData = self._canIDToMotorData[canID]
+            motorData.data = data
 
 
 
@@ -207,6 +217,7 @@ class MoteusMultiprocess:
 
             try:
                 # Reset the controller
+                self._rosNode.get_logger().info("Trying to set_stop() on motor with CAN ID " + str(canID))
                 await moteusMotorController.set_stop()
                 motorData.moteusController = moteusMotorController
 
