@@ -48,7 +48,13 @@ class UnveilArm(Node):
         
         self.elboshoulder_down_sub = self.create_subscription(
             Float32, "shoulder_down", self.shoulder_down, 10)
+        
+        #Turn table
+        self.turntable_clockwise_sub = self.create_subscription(
+            Float32, "turntable_cw", self.turntable_cw, 10)
 
+        self.turntable_counter_clockwise_sub = self.create_subscription(
+            Float32, "turntable_ccw", self.turntable_ccw, 10)
 
 
     def left_wrist_cw(self, msg):
@@ -132,8 +138,26 @@ class UnveilArm(Node):
         else:
             self.get_logger().info("Shoulder STOP")
             self.botInterface.arm_shoulder_motor(0.0)
-    
+            
+    def turntable_cw(self, msg):
+        data = msg.data
+        
+        if  data > 0:
+            self.get_logger().info("Turntable clock wise")
+            self.botInterface.arm_turntable(self.SPEED)
+        else:
+            self.get_logger().info("Turntable STOP")
+            self.botInterface.arm_turntable(0.0)
 
+    def turntable_ccw(self, msg):
+        data = msg.data
+        
+        if  data > 0:
+            self.get_logger().info("Turntable counter clock wise")
+            self.botInterface.arm_turntable(-self.SPEED)
+        else:
+            self.get_logger().info("Turntable STOP")
+            self.botInterface.arm_turntable(0.0)
 
 
 def main(args=None):

@@ -98,7 +98,12 @@ class RosMotuesBridge(Node):
             moteusPubList,
         )
 
-
+        moteusMultiprocess.addMotor(
+            5,
+            "arm_turntable_motor",
+            moteus_motor.Mode.VELOCITY,
+            moteusPubList,
+        )
 
 
 

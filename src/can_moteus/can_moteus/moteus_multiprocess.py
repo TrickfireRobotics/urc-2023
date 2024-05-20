@@ -124,7 +124,7 @@ class MoteusMultiprocess:
             
 
             for canID in self._canIDToMotorData:
-                self._rosNode.get_logger().info("Loop still alove" + " Motor ID: " + str(canID))
+                #self._rosNode.get_logger().info("Loop still alove" + " Motor ID: " + str(canID))
                 motorData = self._canIDToMotorData[canID]
                 
                 result = await motorData.moteusController.query()

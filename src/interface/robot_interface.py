@@ -45,6 +45,8 @@ class RobotInterface(Node):
         robotPublishers['left_wrist_motor'] = publisher
         publisher = self._rosNode.create_publisher(Float32, "right_wrist_motor_velocity_from_interface", 10)
         robotPublishers['right_wrist_motor'] = publisher                        
+        publisher = self._rosNode.create_publisher(Float32, "arm_turntable_motor_velocity_from_interface", 10)
+        robotPublishers['arm_turntable'] = publisher  
 
         # publisher = self._rosNode.create_publisher(Float32, 'arm_turntable_motor_position_from_interface', 10)
         # robotPublishers['arm_turntable_motor'] = publisher
@@ -174,7 +176,12 @@ class RobotInterface(Node):
         strMsg = Float32()
         strMsg.data = speed
         publisher.publish(strMsg)
-        self._rosNode.get_logger().info("I am trying to send")
+
+    def arm_turntable(self, speed):
+        publisher = robotPublishers['arm_turntable']
+        strMsg = Float32()
+        strMsg.data = speed
+        publisher.publish(strMsg)
 
 
 
