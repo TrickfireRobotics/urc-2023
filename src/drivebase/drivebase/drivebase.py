@@ -15,7 +15,7 @@ class Drivebase(Node):
         super().__init__('drivebase')
 
         self.botInterface = RobotInterface(self)
-        self.SPEED = 0.5
+        self.SPEED = 1.0
 
         self.left_subscription = self.create_subscription(
             Float32, "move_left_drivebase_side_message", self.moveLeftSide, 10)
