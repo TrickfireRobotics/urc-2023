@@ -33,14 +33,13 @@ class MissionControlData(Node):
         # callback to recieve data from robot info
         self.get_logger().info(f"robot info callback received topic: {topic}; data: {data}")
         self.robot_json.update(topic, data)
-        # self.get_logger().info(self.robot_json.serialize())
         self.time_stamp = time.time()
 
     def publisher_timer_callback(self):
         if self.time_stamp is not None:
           json_data = self.robot_json.serialize()
           msg = String()
-          msg.data = json_data;
+          msg.data = json_data
           self.publisher.publish(msg)
           self.time_stamp = None
           self.get_logger().info(f"publishing: {json_data}")
