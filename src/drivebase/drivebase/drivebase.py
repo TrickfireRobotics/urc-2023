@@ -8,11 +8,17 @@ from interface.robot_interface import RobotInterface
 
 from std_msgs.msg import String, Float32
 
+from rclpy.executors import ExternalShutdownException
+
+from utility.color_text import ColorCodes
+
+
 
 class Drivebase(Node):
 
     def __init__(self):
         super().__init__('drivebase')
+        self.get_logger().info(ColorCodes.BLUE_OK + "Launching drivebase node" + ColorCodes.ENDC)
 
         self.botInterface = RobotInterface(self)
         self.SPEED = 0.5
@@ -45,18 +51,18 @@ class Drivebase(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-
-    drivebase = Drivebase()
-
-    print("drivebase main")
-
-    rclpy.spin(drivebase)  # prints callbacks
-
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
-    drivebase.destroy_node()
-    rclpy.shutdown()
+    try:
+        drivebase = Drivebase()
+        rclpy.spin(drivebase)  # prints callbacks
+    except KeyboardInterrupt:
+        pass
+    except ExternalShutdownException:
+        # Destroy the node explicitly
+        # (optional - otherwise it will be done automatically
+        # when the garbage collector destroys the node object)
+        drivebase.get_logger().info(ColorCodes.BLUE_OK + "Shutting down drivebase" + ColorCodes.ENDC)
+        drivebase.destroy_node()
+        sys.exit(0)
 
 
 if __name__ == '__main__':
