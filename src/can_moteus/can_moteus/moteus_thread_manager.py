@@ -75,6 +75,9 @@ class MoteusThreadManager():
                     moteusMotor.publishData(resultFromMoteus)
                 
             await asyncio.sleep(0.02)
+            
+        for name, controller in self._nameToMoteusController.items():
+            await controller.set_stop()
         
     async def connectToMoteusControllers(self):
         for key, moteusMotor in self._nameToMoteusMotor.items():
