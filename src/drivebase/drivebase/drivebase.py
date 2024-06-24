@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+import time
 
 import sys
 sys.path.append("/home/trickfire/urc-2023/src")
@@ -27,6 +28,9 @@ class Drivebase(Node):
             Float32, "move_left_drivebase_side_message", self.moveLeftSide, 10)
         self.right_subscription = self.create_subscription(
             Float32, "move_right_drivebase_side_message", self.moveRightSide, 10)
+        
+        time.sleep(7)
+        self.botInterface.test(1)
 
     def moveLeftSide(self, msg):
         vel = msg.data * self.SPEED

@@ -66,10 +66,10 @@ class MoteusThreadManager():
                         maximum_torque = moteusMotor.max_torque,
                         watchdog_timeout = moteusMotor.watchdog_timeout,
                         velocity_limit = moteusMotor.velocity_limit,
-                        accell_limit = moteusMotor.accell_limit,
+                        accel_limit = moteusMotor.accel_limit,
                         fixed_voltage_override = moteusMotor.fixed_voltage_override,
-                        ilimit_scale = moteusMotor.ilimit_scale,
-                        query = True,
+                        #ilimit_scale = moteusMotor.ilimit_scale,
+                        query = True
                     )
                     
                     moteusMotor.publishData(resultFromMoteus)

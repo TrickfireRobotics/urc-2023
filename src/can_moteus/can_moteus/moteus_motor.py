@@ -30,14 +30,14 @@ class MoteusMotor():
         # using the make_position() method
         self.position = None
         self.velocity = None
-        self.feedfoward_torque = None
+        self.feedforward_torque = None
         self.kp_scale = None
         self.kd_scale = None
         self.max_torque = None
         self.watchdog_timeout = None
         self.velocity_limit = None
         self.accel_limit = None
-        self.fixed_votlage_override = None
+        self.fixed_voltage_override = None
         self.ilimit_scale = None
         
         self.setStop = True
@@ -80,15 +80,15 @@ class MoteusMotor():
         jsonHelper = MoteusDataInJsonHelper()
         jsonHelper.buildHelper(rawJSONString)
         
-        self.position = jsonHelper.position
-        self.velocity = jsonHelper.position
-        self.feedfoward_torque = jsonHelper.feedfoward_torque
+        self.position = jsonHelper.getPosition()
+        self.velocity = jsonHelper.getVelocity()
+        self.feedforward_torque = jsonHelper.feedforward_torque
         self.kp_scale = jsonHelper.kp_scale
         self.kd_scale = jsonHelper.kd_scale
         self.max_torque = jsonHelper.max_torque
         self.watchdog_timeout = jsonHelper.watchdog_timeout
         self.accel_limit = jsonHelper.accel_limit
-        self.fixed_votlage_override = jsonHelper.fixed_votlage_override
+        self.fixed_voltage_override = jsonHelper.fixed_voltage_override
         self.ilimit_scale = jsonHelper.ilimit_scale
         self.setStop = jsonHelper.setStop
 
@@ -97,17 +97,17 @@ class MoteusMotor():
         self.mutex_lock.acquire()
         try:
             jsonHelper = MoteusDataOutJsonHelper()
-            jsonHelper.position = moteusData[moteus.Register.POSITION]
-            jsonHelper.velocity = moteusData[moteus.Register.VELOCITY]
-            jsonHelper.torque = moteusData[moteus.Register.TORQUE]
-            jsonHelper.temperature = moteusData[moteus.Register.TEMPERATURE]
-            jsonHelper.power = moteusData[moteus.Register.POWER]
-            jsonHelper.qCurrent = moteusData[moteus.Register.Q_CURRENT]
-            jsonHelper.dCurrent = moteusData[moteus.Register.D_CURRENT]
-            jsonHelper.inputVoltage = moteusData[moteus.Register.VOLTAGE]
-            jsonHelper.voltagePhaseA = moteusData[moteus.Register.VOLTAGE_PHASE_A]
-            jsonHelper.voltagePhaseB = moteusData[moteus.Register.VOLTAGE_PHASE_B]
-            jsonHelper.voltagePhaseC = moteusData[moteus.Register.VOLTAGE_PHASE_C]
+            jsonHelper.position = moteusData.values[moteus.Register.POSITION]
+            jsonHelper.velocity = moteusData.values[moteus.Register.VELOCITY]
+            jsonHelper.torque = moteusData.values[moteus.Register.TORQUE]
+            jsonHelper.temperature = moteusData.values[moteus.Register.TEMPERATURE]
+            #jsonHelper.power = moteusData.values[moteus.Register.POWER]
+            #jsonHelper.qCurrent = moteusData.values[moteus.Register.Q_CURRENT]
+            #jsonHelper.dCurrent = moteusData.values[moteus.Register.D_CURRENT]
+            jsonHelper.inputVoltage = moteusData.values[moteus.Register.VOLTAGE]
+            #jsonHelper.voltagePhaseA = moteusData.values[moteus.Register.VOLTAGE_PHASE_A]
+            #jsonHelper.voltagePhaseB = moteusData.values[moteus.Register.VOLTAGE_PHASE_B]
+            #jsonHelper.voltagePhaseC = moteusData.values[moteus.Register.VOLTAGE_PHASE_C]
             
             jsonString = jsonHelper.buildJSONString()
             

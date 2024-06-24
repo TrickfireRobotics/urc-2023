@@ -11,6 +11,8 @@ from std_msgs.msg import Float32
 VELOCITY_CONVERSION = 1
 POSITION_CONVERSION = 1 / (6.28) #Radians to position ticks
 
+from utility.moteus_data_in_json_helper import MoteusDataInJsonHelper
+
 robotPublishers = dict()
 
 class RobotInterface(Node):
@@ -21,6 +23,8 @@ class RobotInterface(Node):
     def __init__(self, rosNode):
         self._rosNode = rosNode
         print("GOT TO __init__")
+        
+        self.myPubTest = self._rosNode.create_publisher(String, "rear_right_drive_motor_from_interface", 10)
 
         # Drive base
         publisher = self._rosNode.create_publisher(Float32, 'front_left_drive_motor_velocity_from_interface', 10)
@@ -87,6 +91,16 @@ class RobotInterface(Node):
         print()
     def turnRight(self, amount):
         print()
+        
+    def test(self, speed):
+        strMsg = String()
+        jsonHelper = MoteusDataInJsonHelper()
+        jsonHelper.velocity = speed
+        jsonHelper.setStop = False
+        
+        strMsg.data = jsonHelper.buildJSONString()
+        
+        self.myPubTest.publish(strMsg)
 
     # Left front wheel
     def front_left_drive_motor(self, amount):
