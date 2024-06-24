@@ -10,6 +10,7 @@ import sys
 sys.path.append("/home/trickfire/urc-2023/src")
 
 from utility.color_text import ColorCodes
+from utility.canbus_mappings import CanBusMappings
 
 class RosMotuesBridge(Node):
 
@@ -18,13 +19,21 @@ class RosMotuesBridge(Node):
         self.get_logger().info(ColorCodes.BLUE_OK + "Launching can_moteus node" + ColorCodes.ENDC)
 
         self.threadManager = moteus_thread_manager.MoteusThreadManager(self)
+        self.canbusMappings = CanBusMappings()
         
         self.createMoteusMotors()
+        
 
 
 
     def createMoteusMotors(self):
-        self.threadManager.addMotor(20, "rear_right_drive_motor")
+        self.threadManager.addMotor(self.canbusMappings.CANID_REAR_RIGHT_DRIVE_MOTOR, "rear_right_drive_motor")
+        self.threadManager.addMotor(self.canbusMappings.CANID_MID_RIGHT_DRIVE_MOTOR, "mid_right_drive_motor")
+        self.threadManager.addMotor(self.canbusMappings.CANID_FRONT_RIGHT_DRIVE_MOTOR, "front_right_drive_motor")
+        
+        self.threadManager.addMotor(self.canbusMappings.CANID_FRONT_LEFT_DRIVE_MOTOR, "rear_left_drive_motor")
+        self.threadManager.addMotor(self.canbusMappings.CANID_FRONT_LEFT_DRIVE_MOTOR, "mid_left_drive_motor")
+        self.threadManager.addMotor(self.canbusMappings.CANID_FRONT_LEFT_DRIVE_MOTOR, "front_left_drive_motor")
 
         self.threadManager.start()
         
