@@ -100,7 +100,9 @@ class MoteusThreadManager():
                 self._rosNode.get_logger().info("Connecting to motor with name: " + str(moteusMotor.name))
                 await asyncio.wait_for(controller.query(), timeout = 1)
                 self._nameToMoteusController[key] = controller
-                controller.set_stop()
+                await controller.set_stop()
+                self._rosNode.get_logger().info(ColorCodes.GREEN_OK + "Motor connected: " + str(moteusMotor.name) + " (CANID " + str(moteusMotor.canID) + ")" + ColorCodes.ENDC)
+                
             except asyncio.TimeoutError:
                 self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAILED TO CONNECT TO MOTEUS CONTROLLER WITH CANID " + str(moteusMotor.canID) + ColorCodes.ENDC)
             except RuntimeError as error:

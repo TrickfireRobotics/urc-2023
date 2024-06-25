@@ -22,7 +22,7 @@ class Drivebase(Node):
         self.get_logger().info(ColorCodes.BLUE_OK + "Launching drivebase node" + ColorCodes.ENDC)
 
         self.botInterface = RobotInterface(self)
-        self.SPEED = 0.5
+        self.SPEED = 3.14 / 15
 
         self.left_subscription = self.create_subscription(
             Float32, "move_left_drivebase_side_message", self.moveLeftSide, 10)
