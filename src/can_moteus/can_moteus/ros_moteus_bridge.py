@@ -23,6 +23,7 @@ class RosMotuesBridge(Node):
         
         self.createMoteusMotors()
         
+        
 
 
 
