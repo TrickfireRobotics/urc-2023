@@ -10,6 +10,7 @@ from std_msgs.msg import Float32
 
 VELOCITY_CONVERSION = 1
 POSITION_CONVERSION = 1 / (6.28) #Radians to position ticks
+REV_TO_RADIANS = 6.28 # One Revolution = 2pi
 
 from utility.moteus_data_in_json_helper import MoteusDataInJsonHelper
 
@@ -102,75 +103,94 @@ class RobotInterface(Node):
 
     # Left front wheel - MEASURED IN REVOLUTIONS PER SECOND
     def front_left_drive_motor(self, amount):        
-        publisher = robotPublishers['front_left_drive_motor']
+        self._send_drive_motor("front_left_drive_motor", radiansPerSecond = (amount * REV_TO_RADIANS))
+        # publisher = robotPublishers['front_left_drive_motor']
         
-        strMsg = String()
-        jsonHelper = MoteusDataInJsonHelper()
-        jsonHelper.velocity = amount
-        jsonHelper.setStop = False
+        # strMsg = String()
+        # jsonHelper = MoteusDataInJsonHelper()
+        # jsonHelper.velocity = amount
+        # jsonHelper.setStop = False
         
-        strMsg.data = jsonHelper.buildJSONString()
-        publisher.publish(strMsg)
+        # strMsg.data = jsonHelper.buildJSONString()
+        # publisher.publish(strMsg)
 
     # Right front wheel
     def front_right_drive_motor(self, amount):
-        publisher = robotPublishers['front_right_drive_motor']
+        self._send_drive_motor("front_right_drive_motor", radiansPerSecond = (amount * REV_TO_RADIANS))
+        # publisher = robotPublishers['front_right_drive_motor']
         
-        strMsg = String()
-        jsonHelper = MoteusDataInJsonHelper()
-        jsonHelper.velocity = amount
-        jsonHelper.setStop = False
+        # strMsg = String()
+        # jsonHelper = MoteusDataInJsonHelper()
+        # jsonHelper.velocity = amount
+        # jsonHelper.setStop = False
         
-        strMsg.data = jsonHelper.buildJSONString()
-        publisher.publish(strMsg)
+        # strMsg.data = jsonHelper.buildJSONString()
+        # publisher.publish(strMsg)
 
     # Left middle wheel
     def mid_left_drive_motor(self, amount):
-        publisher = robotPublishers['mid_left_drive_motor']
+        self._send_drive_motor("mid_left_drive_motor", radiansPerSecond = (amount * REV_TO_RADIANS))
+        # publisher = robotPublishers['mid_left_drive_motor']
         
-        strMsg = String()
-        jsonHelper = MoteusDataInJsonHelper()
-        jsonHelper.velocity = amount
-        jsonHelper.setStop = False
+        # strMsg = String()
+        # jsonHelper = MoteusDataInJsonHelper()
+        # jsonHelper.velocity = amount
+        # jsonHelper.setStop = False
         
-        strMsg.data = jsonHelper.buildJSONString()
-        publisher.publish(strMsg)
+        # strMsg.data = jsonHelper.buildJSONString()
+        # publisher.publish(strMsg)
 
     # Right middle wheel
     def mid_right_drive_motor(self, amount):
-        publisher = robotPublishers['mid_right_drive_motor']
+        self._send_drive_motor("mid_right_drive_motor", radiansPerSecond = (amount * REV_TO_RADIANS))
+        #publisher = robotPublishers['mid_right_drive_motor']
         
-        strMsg = String()
-        jsonHelper = MoteusDataInJsonHelper()
-        jsonHelper.velocity = amount
-        jsonHelper.setStop = False
+        # strMsg = String()
+        # jsonHelper = MoteusDataInJsonHelper()
+        # jsonHelper.velocity = amount
+        # jsonHelper.setStop = False
         
-        strMsg.data = jsonHelper.buildJSONString()
-        publisher.publish(strMsg)
+        # strMsg.data = jsonHelper.buildJSONString()
+        # publisher.publish(strMsg)
 
     # Left back wheel
     def rear_left_drive_motor(self, amount):
-        publisher = robotPublishers['rear_left_drive_motor']
+        self._send_drive_motor("rear_left_drive_motor", radiansPerSecond = (amount * REV_TO_RADIANS))
+        # publisher = robotPublishers['rear_left_drive_motor']
         
-        strMsg = String()
-        jsonHelper = MoteusDataInJsonHelper()
-        jsonHelper.velocity = amount
-        jsonHelper.setStop = False
+        # strMsg = String()
+        # jsonHelper = MoteusDataInJsonHelper()
+        # jsonHelper.velocity = amount
+        # jsonHelper.setStop = False
         
-        strMsg.data = jsonHelper.buildJSONString()
-        publisher.publish(strMsg)
+        # strMsg.data = jsonHelper.buildJSONString()
+        # publisher.publish(strMsg)
 
     # Right back wheel
     def rear_right_drive_motor(self, amount):
-        publisher = robotPublishers['rear_right_drive_motor']
+        self._send_drive_motor("rear_right_drive_motor", radiansPerSecond = (amount * REV_TO_RADIANS))
+        # publisher = robotPublishers['rear_right_drive_motor']
+        
+        # strMsg = String()
+        # jsonHelper = MoteusDataInJsonHelper()
+        # jsonHelper.velocity = amount
+        # jsonHelper.setStop = False
+        
+        # strMsg.data = jsonHelper.buildJSONString()
+        # publisher.publish(strMsg)
+
+    def _send_drive_motor(self, pubName, radiansPerSecond = 0):
+        publisher = robotPublishers[pubName]
         
         strMsg = String()
         jsonHelper = MoteusDataInJsonHelper()
-        jsonHelper.velocity = amount
+        jsonHelper.velocity = radiansPerSecond
         jsonHelper.setStop = False
         
-        strMsg.data = jsonHelper.buildJSONString()
+        strMsg.data = jsonHelper.buildJSONString
         publisher.publish(strMsg)
+
+
 
     # Arm turntable
     def arm_turntable_motor(self, amount):
