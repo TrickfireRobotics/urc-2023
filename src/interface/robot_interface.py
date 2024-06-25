@@ -70,17 +70,7 @@ class RobotInterface(Node):
     # Converting from input "radians" to output "revolutions"
     def positionConversion(self, amount):
         return amount * POSITION_CONVERSION
-
-    # RobotInterface(const RobotInterface&) = delete;
-    # RobotInterface& operator=(const RobotInterface&) = delete;
-    # RobotInterface(RobotInterface&&) = delete;
-    # RobotInterface& operator=(RobotInterface&&) = delete;
-
-
-    #
-    # Movement
-    #
-
+    
     # General movement including all wheels
     def moveForward():
         print()
