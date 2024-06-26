@@ -69,22 +69,33 @@ class MoteusThreadManager():
                 if moteusMotor.setStop is True:
                     await controller.set_stop()
                 else:
-                    resultFromMoteus = await controller.set_position(
-                        position = moteusMotor.position,
-                        velocity = moteusMotor.velocity,
-                        feedforward_torque = moteusMotor.feedforward_torque,
-                        kp_scale = moteusMotor.kp_scale,
-                        kd_scale = moteusMotor.kd_scale,
-                        maximum_torque = moteusMotor.max_torque,
-                        watchdog_timeout = moteusMotor.watchdog_timeout,
-                        velocity_limit = moteusMotor.velocity_limit,
-                        accel_limit = moteusMotor.accel_limit,
-                        fixed_voltage_override = moteusMotor.fixed_voltage_override,
-                        #ilimit_scale = moteusMotor.ilimit_scale,
-                        query = True
-                    )
+                    try:
+                        self._rosNode.get_logger().info("before")
+                        await asyncio.wait_for(controller.query(), timeout = 0.1)
+                        self._rosNode.get_logger().info("after")
+                        
+                        resultFromMoteus = await controller.set_position(
+                            position = moteusMotor.position,
+                            velocity = moteusMotor.velocity,
+                            feedforward_torque = moteusMotor.feedforward_torque,
+                            kp_scale = moteusMotor.kp_scale,
+                            kd_scale = moteusMotor.kd_scale,
+                            maximum_torque = moteusMotor.max_torque,
+                            watchdog_timeout = moteusMotor.watchdog_timeout,
+                            velocity_limit = moteusMotor.velocity_limit,
+                            accel_limit = moteusMotor.accel_limit,
+                            fixed_voltage_override = moteusMotor.fixed_voltage_override,
+                            #ilimit_scale = moteusMotor.ilimit_scale,
+                            query = True
+                        )
+                        
+                        moteusMotor.publishData(resultFromMoteus)
+                        
+                    except asyncio.TimeoutError:
+                        self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAILED TO SEND/READ DATA TO MOTEUS CONTROLLER WITH CANID " + str(moteusMotor.canID) + ColorCodes.ENDC)
+                        
                     
-                    moteusMotor.publishData(resultFromMoteus)
+                    
                 
             await asyncio.sleep(0.02)
             
