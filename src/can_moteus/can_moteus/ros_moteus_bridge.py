@@ -5,6 +5,8 @@ import moteus
 import threading
 from . import moteus_thread_manager
 from rclpy.executors import ExternalShutdownException
+from std_msgs.msg import String, Float32
+from usb.core import find as finddev
 
 import sys
 sys.path.append("/home/trickfire/urc-2023/src")
@@ -18,16 +20,24 @@ class RosMotuesBridge(Node):
         super().__init__("can_moteus_node")
         self.get_logger().info(ColorCodes.BLUE_OK + "Launching can_moteus node" + ColorCodes.ENDC)
 
-        self.threadManager = moteus_thread_manager.MoteusThreadManager(self)
+        self.threadManager = None
         self.canbusMappings = CanBusMappings()
+        
+        self.reconnectToMoteusSub = self.create_subscription(Float32, "reconnectMoteusControllers", self.reconnect, 1)
         
         self.createMoteusMotors()
         
-        
-
-
+    def reconnect(self, msg):
+        self.get_logger().info("Reconnecting")
+        self.threadManager.terminateAllThreads()
+        self.createMoteusMotors()
 
     def createMoteusMotors(self):
+        dev = finddev(idVendor=0x0483, idProduct=0x5740)
+        dev.reset()
+        
+        self.threadManager = moteus_thread_manager.MoteusThreadManager(self)
+        
         self.threadManager.addMotor(self.canbusMappings.CANID_REAR_RIGHT_DRIVE_MOTOR, "rear_right_drive_motor")
         self.threadManager.addMotor(self.canbusMappings.CANID_MID_RIGHT_DRIVE_MOTOR, "mid_right_drive_motor")
         self.threadManager.addMotor(self.canbusMappings.CANID_FRONT_RIGHT_DRIVE_MOTOR, "front_right_drive_motor")
