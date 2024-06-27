@@ -12,10 +12,6 @@
   <exec_depend>ros2launch</exec_depend>
   <exec_depend>robot_info</exec_depend>
 
-  <!-- ************************************** -->
-  <exec_depend>heartbeat</exec_depend>
-  <exec_depend>dummy_node</exec_depend>
-  <!-- ************************************** -->
     <!-- ************************************** -->
   <exec_depend>heartbeat</exec_depend>
   <exec_depend>dummy_node</exec_depend>
