@@ -56,47 +56,50 @@ class MoteusThreadManager():
 
         
         while self._shouldMoteusThreadLoop:
-            for name, controller in self._nameToMoteusController.items():
+            for name, controller in self._nameToMoteusController.copy().items():
                 moteusMotor = self._nameToMoteusMotor[name]
                 
                 
                 # Check for faults
-                resultFromMoteus = await controller.query()
-                if resultFromMoteus.values[moteus.Register.FAULT] != 0:
-                    self._rosNode.get_logger().info("FAULT CODE: " + str(resultFromMoteus.values[moteus.Register.FAULT]) + " FOR " + name + "(CANID: " + str(moteusMotor.canID) + ")")
-                    self.tryToShutdownMotor(name)
+                try:
+                    resultFromMoteus = await asyncio.wait_for(controller.query(), 0.1)
                     
-                if moteusMotor.setStop is True:
-                    await controller.set_stop()
-                else:
-                    try:
-                        self._rosNode.get_logger().info("before")
-                        await asyncio.wait_for(controller.query(), timeout = 0.1)
-                        self._rosNode.get_logger().info("after")
+                    if resultFromMoteus.values[moteus.Register.FAULT] != 0:
+                        self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAULT CODE: " + str(resultFromMoteus.values[moteus.Register.FAULT]) + " FOR " + name + "(CANID: " + str(moteusMotor.canID) + ")" + ColorCodes.ENDC)
+                        del self._nameToMoteusController[name]
+                        continue
+                        #self.tryToShutdownMotor(name)
+                    
+                    if moteusMotor.setStop is True:
                         
-                        resultFromMoteus = await controller.set_position(
-                            position = moteusMotor.position,
-                            velocity = moteusMotor.velocity,
-                            feedforward_torque = moteusMotor.feedforward_torque,
-                            kp_scale = moteusMotor.kp_scale,
-                            kd_scale = moteusMotor.kd_scale,
-                            maximum_torque = moteusMotor.max_torque,
-                            watchdog_timeout = moteusMotor.watchdog_timeout,
-                            velocity_limit = moteusMotor.velocity_limit,
-                            accel_limit = moteusMotor.accel_limit,
-                            fixed_voltage_override = moteusMotor.fixed_voltage_override,
-                            #ilimit_scale = moteusMotor.ilimit_scale,
-                            query = True
-                        )
+                        await asyncio.wait_for(controller.set_stop(),0.1)
                         
-                        moteusMotor.publishData(resultFromMoteus)
+                    else:
+                            
+                            resultFromMoteus = await asyncio.wait_for(controller.set_position(
+                                position = moteusMotor.position,
+                                velocity = moteusMotor.velocity,
+                                feedforward_torque = moteusMotor.feedforward_torque,
+                                kp_scale = moteusMotor.kp_scale,
+                                kd_scale = moteusMotor.kd_scale,
+                                maximum_torque = moteusMotor.max_torque,
+                                watchdog_timeout = moteusMotor.watchdog_timeout,
+                                velocity_limit = moteusMotor.velocity_limit,
+                                accel_limit = moteusMotor.accel_limit,
+                                fixed_voltage_override = moteusMotor.fixed_voltage_override,
+                                #ilimit_scale = moteusMotor.ilimit_scale,
+                                query = True
+                            ),0.1)
+                            
+                            moteusMotor.publishData(resultFromMoteus)
+                            
+                            
                         
-                    except asyncio.TimeoutError:
-                        self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAILED TO SEND/READ DATA TO MOTEUS CONTROLLER WITH CANID " + str(moteusMotor.canID) + ColorCodes.ENDC)
-                        
+                except asyncio.TimeoutError:
+                    self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAILED TO SEND/READ DATA TO MOTEUS CONTROLLER WITH CANID " + str(moteusMotor.canID) + ColorCodes.ENDC)
+                    del self._nameToMoteusController[name]
                     
                     
-                
             await asyncio.sleep(0.02)
             
         for name, controller in self._nameToMoteusController.items():
@@ -105,6 +108,7 @@ class MoteusThreadManager():
     async def connectToMoteusControllers(self):
         for key, moteusMotor in self._nameToMoteusMotor.items():
             controller = moteus.Controller(moteusMotor.canID)
+            
             
             try:
                 # Reset the controller
