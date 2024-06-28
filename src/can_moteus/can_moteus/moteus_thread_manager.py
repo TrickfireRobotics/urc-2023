@@ -10,6 +10,10 @@ sys.path.append("/home/trickfire/urc-2023/src")
 from utility.color_text import ColorCodes
 
 class MoteusThreadManager():
+    """
+        This creates a new thread called "moteus_thread" to run all
+        of the asyncio methods required by the Moteus library
+    """
 
     def __init__(self, rosNode: Node):
         self._nameToMoteusMotor = {}
@@ -21,20 +25,34 @@ class MoteusThreadManager():
 
 
     def addMotor(self, canID, motorName):
+        """
+            Adds a motor to the list to attempt to connect to
+        """
         #Create motor
         motor = moteus_motor.MoteusMotor(canID, motorName, self._rosNode)
 
         self._nameToMoteusMotor[motorName] = motor
 
     def start(self):
+        """
+            Starts a new thread. New motors cannot be added after this is called
+        """
         self._moteusThread = threading.Thread(target = self.threadEntry, name = "moteus_thread", daemon = True)
         self._moteusThread.start()
 
     def terminateAllThreads(self):
+        """
+            Gracefully shuts down the motors by calling set_stop().
+            Terminates the thread.
+            Does not clean up this class
+        """
         self._shouldMoteusThreadLoop = False
         self._moteusThread.join()
     
     def threadEntry(self):
+        """
+            The entry of the thread that launches the asyncio loop
+        """
         self._rosNode.get_logger().info("Moteus Thread Launched")
         asyncio.run(self.startLoop())
         

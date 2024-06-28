@@ -15,7 +15,15 @@ from utility.color_text import ColorCodes
 from utility.canbus_mappings import CanBusMappings
 
 class RosMotuesBridge(Node):
-
+    """
+        This is the node that connects the Moteus Motor Controllers
+        with the rest of the ROS codebase. You can easily add new
+        motors using the addMotor() function from the self.threadManager.
+        
+        You can attempt to reconnect to the Moteus Controllers during runtime.
+        The CANFD-USB is reset every time the code is execute from the ./launch.sh
+    """
+    
     def __init__(self):
         super().__init__("can_moteus_node")
         self.get_logger().info(ColorCodes.BLUE_OK + "Launching can_moteus node" + ColorCodes.ENDC)
@@ -28,11 +36,23 @@ class RosMotuesBridge(Node):
         self.createMoteusMotors()
         
     def reconnect(self, msg):
+        """
+            Gracefully shuts down the threadManager and creates a new instance of 
+            the threadManager object.
+        
+        """
         self.get_logger().info("Reconnecting")
         self.threadManager.terminateAllThreads()
         self.createMoteusMotors()
 
     def createMoteusMotors(self):
+        """
+            Creates the threadManager and adds all the moteus motors
+        """
+        
+        # Reset the CANFD-USB
+        # run "lsusb" in cmd with the CANFD-USB connected
+        # to find the idVendor and the idProduct
         dev = finddev(idVendor=0x0483, idProduct=0x5740)
         dev.reset()
         
@@ -52,6 +72,10 @@ class RosMotuesBridge(Node):
         
 
 def main(args=None):
+    """
+        The entry point of the node.
+    """
+    
     rclpy.init(args=args)
     try:
         node = RosMotuesBridge()
@@ -60,6 +84,7 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     except ExternalShutdownException:
+        # This is done when we ctrl-c the progam to shut it down
         node.get_logger().info(ColorCodes.BLUE_OK + "Shutting down can_moteus" + ColorCodes.ENDC)
         node.threadManager.terminateAllThreads()
         node.destroy_node()
