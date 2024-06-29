@@ -96,26 +96,28 @@ class MoteusMotor():
     def publishData(self, moteusData):
         self.mutex_lock.acquire()
         try:
-            jsonHelper = MoteusDataOutJsonHelper()
-            jsonHelper.position = moteusData.values[moteus.Register.POSITION]
-            jsonHelper.velocity = moteusData.values[moteus.Register.VELOCITY]
-            jsonHelper.torque = moteusData.values[moteus.Register.TORQUE]
-            jsonHelper.temperature = moteusData.values[moteus.Register.TEMPERATURE]
-            #jsonHelper.power = moteusData.values[moteus.Register.POWER]
-            #jsonHelper.qCurrent = moteusData.values[moteus.Register.Q_CURRENT]
-            #jsonHelper.dCurrent = moteusData.values[moteus.Register.D_CURRENT]
-            jsonHelper.inputVoltage = moteusData.values[moteus.Register.VOLTAGE]
-            #jsonHelper.voltagePhaseA = moteusData.values[moteus.Register.VOLTAGE_PHASE_A]
-            #jsonHelper.voltagePhaseB = moteusData.values[moteus.Register.VOLTAGE_PHASE_B]
-            #jsonHelper.voltagePhaseC = moteusData.values[moteus.Register.VOLTAGE_PHASE_C]
-            
-            jsonString = jsonHelper.buildJSONString()
-            
-            msg = String()
-            msg.data = jsonString
-            
-            self._publisher.publish(msg)
-            
+            if self._rosNode.context.ok:
+                jsonHelper = MoteusDataOutJsonHelper()
+                jsonHelper.position = moteusData.values[moteus.Register.POSITION]
+                jsonHelper.velocity = moteusData.values[moteus.Register.VELOCITY]
+                jsonHelper.torque = moteusData.values[moteus.Register.TORQUE]
+                jsonHelper.temperature = moteusData.values[moteus.Register.TEMPERATURE]
+                #jsonHelper.power = moteusData.values[moteus.Register.POWER]
+                #jsonHelper.qCurrent = moteusData.values[moteus.Register.Q_CURRENT]
+                #jsonHelper.dCurrent = moteusData.values[moteus.Register.D_CURRENT]
+                jsonHelper.inputVoltage = moteusData.values[moteus.Register.VOLTAGE]
+                #jsonHelper.voltagePhaseA = moteusData.values[moteus.Register.VOLTAGE_PHASE_A]
+                #jsonHelper.voltagePhaseB = moteusData.values[moteus.Register.VOLTAGE_PHASE_B]
+                #jsonHelper.voltagePhaseC = moteusData.values[moteus.Register.VOLTAGE_PHASE_C]
+                
+                jsonString = jsonHelper.buildJSONString()
+                
+                msg = String()
+                msg.data = jsonString
+                
+                self._publisher.publish(msg)
+        except Exception as error:
+            self._rosNode.get_logger().info("Failed to publish motor data")
         finally:
             self.mutex_lock.release()
 

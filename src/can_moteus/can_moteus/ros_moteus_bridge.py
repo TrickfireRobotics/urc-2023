@@ -34,6 +34,7 @@ class RosMotuesBridge(Node):
         # to find the idVendor and the idProduct
         dev = finddev(idVendor=0x0483, idProduct=0x5740)
         dev.reset()
+        
 
         self.threadManager = None
         self.canbusMappings = CanBusMappings()
