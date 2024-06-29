@@ -6,12 +6,14 @@ import sys
 sys.path.append("/home/trickfire/urc-2023/src")
 
 from interface.robot_interface import RobotInterface
+from interface.robot_info import RobotInfo
 
 from std_msgs.msg import String, Float32
 
 from rclpy.executors import ExternalShutdownException
 
 from utility.color_text import ColorCodes
+from utility.canbus_mappings import CanBusMappings
 
 
 

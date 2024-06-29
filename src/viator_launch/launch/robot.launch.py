@@ -33,6 +33,12 @@ drivebase_node = Node(
     name='drivebase_node'
 )
 
+testing_node = Node(
+    package='testingInterface',
+    executable='testingNode',
+    name='testing_node'
+)
+
 
 
 # # Composable Nodes launched in a Composable Node container will share a process
@@ -55,6 +61,5 @@ drivebase_node = Node(
 def generate_launch_description():
     return launch.LaunchDescription([
         can_moteus_node,
-        #testing_node,
         drivebase_node
     ])

@@ -98,6 +98,7 @@ class MoteusMotor():
         try:
             if self._rosNode.context.ok:
                 jsonHelper = MoteusDataOutJsonHelper()
+                jsonHelper.canID = self.canID
                 jsonHelper.position = moteusData.values[moteus.Register.POSITION]
                 jsonHelper.velocity = moteusData.values[moteus.Register.VELOCITY]
                 jsonHelper.torque = moteusData.values[moteus.Register.TORQUE]
