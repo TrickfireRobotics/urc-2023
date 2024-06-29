@@ -21,6 +21,7 @@ class MoteusThreadManager():
         self._rosNode = rosNode
         self._moteusThread = None
         self._shouldMoteusThreadLoop = True
+        self._shouldReconnect = True
 
 
 
@@ -30,15 +31,18 @@ class MoteusThreadManager():
         """
         #Create motor
         motor = moteus_motor.MoteusMotor(canID, motorName, self._rosNode)
-
         self._nameToMoteusMotor[motorName] = motor
 
     def start(self):
         """
             Starts a new thread. New motors cannot be added after this is called
         """
+        
         self._moteusThread = threading.Thread(target = self.threadEntry, name = "moteus_thread", daemon = True)
         self._moteusThread.start()
+        
+    def reconnectMotors(self):
+        self._shouldReconnect = True
 
     def terminateAllThreads(self):
         """
@@ -47,7 +51,8 @@ class MoteusThreadManager():
             Does not clean up this class
         """
         self._shouldMoteusThreadLoop = False
-        self._moteusThread.join()
+        self._moteusThread.join()   
+        
     
     def threadEntry(self):
         """
@@ -74,6 +79,9 @@ class MoteusThreadManager():
 
         
         while self._shouldMoteusThreadLoop:
+            if self._shouldReconnect:
+                await self.connectToMoteusControllers()
+            
             for name, controller in self._nameToMoteusController.copy().items():
                 moteusMotor = self._nameToMoteusMotor[name]
                 
@@ -123,8 +131,12 @@ class MoteusThreadManager():
         for name, controller in self._nameToMoteusController.items():
             await controller.set_stop()
         
+        
     async def connectToMoteusControllers(self):
-        await asyncio.sleep(1)
+        self._nameToMoteusController = {}
+        #self._nameToMoteusMotor = {}
+        self._shouldReconnect = False
+        
         for key, moteusMotor in self._nameToMoteusMotor.items():
             controller = moteus.Controller(moteusMotor.canID)
             
@@ -141,5 +153,6 @@ class MoteusThreadManager():
                 self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAILED TO CONNECT TO MOTEUS CONTROLLER WITH CANID " + str(moteusMotor.canID) + ColorCodes.ENDC)
             except RuntimeError as error:
                 self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "ERROR WHEN set_stop() IS CALLED. MOST LIKELY CANNOT FIND CANBUS" + ColorCodes.ENDC)
-                self._rosNode.get_logger().info(ColorCodes.FAIL_RED + error.__str__() + ColorCodes.ENDC)
+                self._rosNode.get_logger().info(ColorCodes.FAIL_RED + error.with_traceback() + ColorCodes.ENDC)
+                
 

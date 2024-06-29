@@ -27,6 +27,13 @@ class RosMotuesBridge(Node):
     def __init__(self):
         super().__init__("can_moteus_node")
         self.get_logger().info(ColorCodes.BLUE_OK + "Launching can_moteus node" + ColorCodes.ENDC)
+        
+        
+        # Reset the CANFD-USB
+        # run "lsusb" in cmd with the CANFD-USB connected
+        # to find the idVendor and the idProduct
+        dev = finddev(idVendor=0x0483, idProduct=0x5740)
+        dev.reset()
 
         self.threadManager = None
         self.canbusMappings = CanBusMappings()
@@ -42,19 +49,13 @@ class RosMotuesBridge(Node):
         
         """
         self.get_logger().info("Reconnecting")
-        self.threadManager.terminateAllThreads()
-        self.createMoteusMotors()
+        self.threadManager.reconnectMotors()
 
     def createMoteusMotors(self):
         """
             Creates the threadManager and adds all the moteus motors
         """
         
-        # Reset the CANFD-USB
-        # run "lsusb" in cmd with the CANFD-USB connected
-        # to find the idVendor and the idProduct
-        dev = finddev(idVendor=0x0483, idProduct=0x5740)
-        dev.reset()
         
         self.threadManager = moteus_thread_manager.MoteusThreadManager(self)
         
