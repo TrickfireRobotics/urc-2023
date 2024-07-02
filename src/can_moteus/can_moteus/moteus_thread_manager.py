@@ -94,8 +94,7 @@ class MoteusThreadManager():
                     
                     if resultFromMoteus.values[moteus.Register.FAULT] != 0:
                         self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAULT CODE: " + str(resultFromMoteus.values[moteus.Register.FAULT]) + " FOR " + name + "(CANID: " + str(moteusMotor.canID) + ")" + ColorCodes.ENDC)
-                        await self.tryToShutdownMotor(name) # untested code
-                        #del self._nameToMoteusController[name]
+                        await self.tryToShutdownMotor(name)
                         continue
                     
                     if moteusMotor.setStop is True:
@@ -115,7 +114,6 @@ class MoteusThreadManager():
                                 velocity_limit = moteusMotor.velocity_limit,
                                 accel_limit = moteusMotor.accel_limit,
                                 fixed_voltage_override = moteusMotor.fixed_voltage_override,
-                                #ilimit_scale = moteusMotor.ilimit_scale,
                                 query = True
                             ),0.1)
                             

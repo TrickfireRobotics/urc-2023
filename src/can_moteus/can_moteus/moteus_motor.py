@@ -38,7 +38,6 @@ class MoteusMotor():
         self.velocity_limit = None
         self.accel_limit = None
         self.fixed_voltage_override = None
-        self.ilimit_scale = None
         
         self.setStop = True
 
@@ -89,7 +88,6 @@ class MoteusMotor():
         self.watchdog_timeout = jsonHelper.watchdog_timeout
         self.accel_limit = jsonHelper.accel_limit
         self.fixed_voltage_override = jsonHelper.fixed_voltage_override
-        self.ilimit_scale = jsonHelper.ilimit_scale
         self.setStop = jsonHelper.setStop
 
 
@@ -104,12 +102,12 @@ class MoteusMotor():
                 jsonHelper.torque = moteusData.values[moteus.Register.TORQUE]
                 jsonHelper.temperature = moteusData.values[moteus.Register.TEMPERATURE]
                 #jsonHelper.power = moteusData.values[moteus.Register.POWER]
-                #jsonHelper.qCurrent = moteusData.values[moteus.Register.Q_CURRENT]
-                #jsonHelper.dCurrent = moteusData.values[moteus.Register.D_CURRENT]
                 jsonHelper.inputVoltage = moteusData.values[moteus.Register.VOLTAGE]
-                #jsonHelper.voltagePhaseA = moteusData.values[moteus.Register.VOLTAGE_PHASE_A]
-                #jsonHelper.voltagePhaseB = moteusData.values[moteus.Register.VOLTAGE_PHASE_B]
-                #jsonHelper.voltagePhaseC = moteusData.values[moteus.Register.VOLTAGE_PHASE_C]
+                
+                # TODO: We need to update firmware to get POWER
+                # https://github.com/mjbots/moteus/releases
+                # https://discord.com/channels/633996205759791104/722434939676786688/1252380387783610428
+                #self._rosNode.get_logger().info(str(moteusData.values.keys()))
                 
                 jsonString = jsonHelper.buildJSONString()
                 
@@ -119,6 +117,7 @@ class MoteusMotor():
                 self._publisher.publish(msg)
         except Exception as error:
             self._rosNode.get_logger().info("Failed to publish motor data")
+            self._rosNode.get_logger().info(str(error))
         finally:
             self.mutex_lock.release()
 

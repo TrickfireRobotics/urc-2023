@@ -15,7 +15,6 @@ class MoteusDataInJsonHelper():
         self.velocity_limit = None
         self.accel_limit = None
         self.fixed_voltage_override = None
-        self.ilimit_scale = None
         
         self.setStop = True
         
@@ -44,7 +43,6 @@ class MoteusDataInJsonHelper():
             "velocity_limit": self.velocity_limit,
             "accel_limit": self.accel_limit,
             "fixed_voltage_override": self.fixed_voltage_override,
-            "ilimit_scale": self.ilimit_scale,
             "set_stop": self.setStop
         }
         
@@ -64,7 +62,6 @@ class MoteusDataInJsonHelper():
         self.velocity_limit = pythonDict["velocity_limit"]
         self.accel_limit = pythonDict["accel_limit"]
         self.fixed_voltage_override = pythonDict["fixed_voltage_override"]
-        self.ilimit_scale = pythonDict["ilimit_scale"]
         self.setStop = pythonDict["set_stop"]
         
         
