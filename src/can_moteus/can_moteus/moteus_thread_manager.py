@@ -66,13 +66,13 @@ class MoteusThreadManager():
         
     async def tryToShutdownMotor(self, motorName):
         
-        self._rosNode.get_logger().info(ColorCodes.WARNING_YELLOW + "Unexpectedly trying to turn off motor \"" + str(motorName) + "\" (CANID " + self._nameToMoteusMotor[motorName].canID + ")" + ColorCodes.ENDC)
+        self._rosNode.get_logger().info(ColorCodes.WARNING_YELLOW + "Unexpectedly trying to turn off motor \"" + str(motorName) + "\" (CANID " + str(self._nameToMoteusMotor[motorName].canID) + ")" + ColorCodes.ENDC)
         
         try:
             await asyncio.wait_for(self._nameToMoteusController[motorName].set_stop(), timeout = self._GENERAL_TIMEOUT)
-            self._rosNode.get_logger().info(ColorCodes.GREEN_OK + "Stopped motor")
+            self._rosNode.get_logger().info(ColorCodes.GREEN_OK + "Stopped motor \"" + motorName + "\" (CANID " + str(self._nameToMoteusMotor[motorName].canID) + ")" + ColorCodes.ENDC)
         except asyncio.TimeoutError:
-            self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAILED TO \"set_stop\" MOTOR. TIMED OUT " + str(self._nameToMoteusMotor[motorName].canID) + ColorCodes.ENDC)
+            self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAILED TO \"set_stop\" MOTOR. TIMED OUT \"" + motorName + "\"(CANID " + str(self._nameToMoteusMotor[motorName].canID) + ")" + ColorCodes.ENDC)
             del self._nameToMoteusController[motorName]
             del self._nameToMoteusMotor[motorName]
         except RuntimeError as error:
@@ -115,7 +115,7 @@ class MoteusThreadManager():
                     resultFromMoteus = await asyncio.wait_for(controller.query(), self._GENERAL_TIMEOUT)
                     
                     if resultFromMoteus.values[moteus.Register.FAULT] != 0:
-                        self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAULT CODE: " + str(resultFromMoteus.values[moteus.Register.FAULT]) + " FOR " + name + "(CANID: " + str(moteusMotor.canID) + ")" + ColorCodes.ENDC)
+                        self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAULT CODE: " + str(resultFromMoteus.values[moteus.Register.FAULT]) + " FOR\"" + name + "\"(CANID " + str(moteusMotor.canID) + ")" + ColorCodes.ENDC)
                         await self.tryToShutdownMotor(name)
                         continue
                     
@@ -144,7 +144,7 @@ class MoteusThreadManager():
                             
                         
                 except asyncio.TimeoutError:
-                    self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAILED TO SEND/READ DATA TO MOTEUS CONTROLLER WITH CANID " + str(moteusMotor.canID) + ColorCodes.ENDC)
+                    self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAILED TO SEND/READ DATA TO MOTEUS MOTOR: \"" + name + "\"(CANID " + str(moteusMotor.canID) + ") CAN-FD bus discconected?" + ColorCodes.ENDC)
                     del self._nameToMoteusController[name]
                     del self._nameToMoteusMotor[name]
                     
@@ -175,7 +175,7 @@ class MoteusThreadManager():
                 await asyncio.wait_for(controller.query(), timeout = self._CONNECTION_TIMEOUT_IN_SECONDS) # idk why, but wait_for(set_stop()) always works,
                 self._nameToMoteusController[key] = controller
                 await controller.set_stop()
-                self._rosNode.get_logger().info(ColorCodes.GREEN_OK + "Motor connected: " + str(moteusMotor.name) + " (CANID " + str(moteusMotor.canID) + ")" + ColorCodes.ENDC)
+                self._rosNode.get_logger().info(ColorCodes.GREEN_OK + "Moteus motor controller connected: \"" + str(moteusMotor.name) + "\"(CANID " + str(moteusMotor.canID) + ")" + ColorCodes.ENDC)
                 
             except asyncio.TimeoutError:
                 self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAILED TO CONNECT TO MOTEUS CONTROLLER WITH CANID " + str(moteusMotor.canID) + ColorCodes.ENDC)
