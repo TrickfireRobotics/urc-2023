@@ -14,15 +14,29 @@ from utility.moteus_data_out_json_helper import MoteusDataOutJsonHelper
 class MoteusMotor():
 
     def __init__(self, canID, name, rosNode):
+        """
+            Create a logical representation of a motor that is using
+            a Moteus controller. Contains a list of variables that should be
+            sent to the Moteus controller. Subscribes to input and publishes output
+            
+            Paramaters
+            -------
+            canID : int
+                The canID of the Moteus Controller
+            name : string
+                The name of the motor. This is used in the topic names
+            rosNode : Node
+                The ROS node used to create the ros_moteus_bridge.py
+        """
+        
         self.canID = canID
         self.name = name
-        self.hasDataEverBeenSent = False
         self._rosNode = rosNode
 
         self._subscriber = self._createSubscriber()
         self._publisher = self._createPublisher()
         
-        #Mutex
+        #Mutex - used to protect writing/reading the state of the motor
         self.mutex_lock = Lock()
 
 
@@ -39,33 +53,47 @@ class MoteusMotor():
         self.accel_limit = None
         self.fixed_voltage_override = None
         
+        #By default, the motor is shutoff
         self.setStop = True
 
     
     def _createSubscriber(self):
+        """
+            The subscriber to get data from.
+            The format of the topic is the following: <motor name>_from_interface
+        """
         topicName = self.name + "_from_interface"
         subscriber = self._rosNode.create_subscription(
             std_msgs.msg.String, 
             topicName, 
             self.dataInCallback,
-            1
+            1 # Size of queue is 1. All additional ones are dropped
         )
         
         return subscriber
 
 
     def _createPublisher(self):
+        """
+            The publisher to send data to.
+            The format of the topic is the following: <motor name>_from_can
+        """
         topicName = self.name + "_from_can"
         publisher = self._rosNode.create_publisher(
             std_msgs.msg.String,
             topicName,
-            1
+            1 # Size of queue is 1. All additional ones are dropped
         )
 
         return publisher
 
 
     def dataInCallback(self, msg):
+        """
+            Update the motor state. Mutex protected,
+            meaning that no one can go into any other "critical section"
+            of code that also has a mutex protecting it. 
+        """
         self.mutex_lock.acquire()
         try:
             jsonString = msg.data
@@ -76,6 +104,11 @@ class MoteusMotor():
 
 
     def updateMotorState(self, rawJSONString):
+        """
+            Update the motor's variables from
+            the input JSON string
+        """
+        
         jsonHelper = MoteusDataInJsonHelper()
         jsonHelper.buildHelper(rawJSONString)
         
@@ -92,6 +125,9 @@ class MoteusMotor():
 
 
     def publishData(self, moteusData):
+        """
+            Publishes the data from the moteus controller
+        """
         self.mutex_lock.acquire()
         try:
             if self._rosNode.context.ok:
@@ -104,7 +140,7 @@ class MoteusMotor():
                 #jsonHelper.power = moteusData.values[moteus.Register.POWER]
                 jsonHelper.inputVoltage = moteusData.values[moteus.Register.VOLTAGE]
                 
-                # TODO: We need to update firmware to get POWER
+                # TODO: We need to update firmware to get POWER information (7/1/2024)
                 # https://github.com/mjbots/moteus/releases
                 # https://discord.com/channels/633996205759791104/722434939676786688/1252380387783610428
                 #self._rosNode.get_logger().info(str(moteusData.values.keys()))
@@ -116,6 +152,9 @@ class MoteusMotor():
                 
                 self._publisher.publish(msg)
         except Exception as error:
+            # This is used to handle any errors in order to prevent the thread from dying
+            # Specifically, when we crtl-c we want the motors to be set_stop(), but if this thread
+            # crashes we cannot do that. So we catch any errors
             self._rosNode.get_logger().info("Failed to publish motor data")
             self._rosNode.get_logger().info(str(error))
         finally:
