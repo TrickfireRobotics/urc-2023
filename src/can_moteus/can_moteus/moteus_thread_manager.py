@@ -144,7 +144,7 @@ class MoteusThreadManager():
                             
                         
                 except asyncio.TimeoutError:
-                    self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAILED TO SEND/READ DATA TO MOTEUS MOTOR: \"" + name + "\"(CANID " + str(moteusMotor.canID) + ") CAN-FD bus discconected?" + ColorCodes.ENDC)
+                    self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAILED TO SEND/READ DATA TO MOTEUS MOTOR: \"" + name + "\"(CANID " + str(moteusMotor.canID) + ") CAN-FD bus disconnected?" + ColorCodes.ENDC)
                     del self._nameToMoteusController[name]
                     del self._nameToMoteusMotor[name]
                     
@@ -172,7 +172,7 @@ class MoteusThreadManager():
             try:
                 # Reset the controller
                 self._rosNode.get_logger().info("Connecting to motor with name: " + str(moteusMotor.name))
-                await asyncio.wait_for(controller.query(), timeout = self._CONNECTION_TIMEOUT_IN_SECONDS) # idk why, but wait_for(set_stop()) always works,
+                await asyncio.wait_for(controller.query(), timeout = self._CONNECTION_TIMEOUT_IN_SECONDS) # Try to get data, if timeout then cannot connect
                 self._nameToMoteusController[key] = controller
                 await controller.set_stop()
                 self._rosNode.get_logger().info(ColorCodes.GREEN_OK + "Moteus motor controller connected: \"" + str(moteusMotor.name) + "\"(CANID " + str(moteusMotor.canID) + ")" + ColorCodes.ENDC)
