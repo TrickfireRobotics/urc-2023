@@ -54,13 +54,14 @@ class RobotInfo():
     def subCallback(self, msg):
         jsonHelper = MoteusDataOutJsonHelper()
         jsonHelper.buildHelper(msg.data)
-        moteusName = canBusMappings[jsonHelper.canID]
+        moteusName = canIDToMotorName[jsonHelper.canID]
         self.moteusNameToJSON[moteusName] = jsonHelper
         
         
         
     def getMoteusMotorData(self, canID):
-        return self.moteusNameToJSON[canBusMappings[canID]]
+        topicName = canIDToMotorName[canID]
+        return self.moteusNameToJSON[topicName]
         
         
         
