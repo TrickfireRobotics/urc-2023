@@ -1,152 +1,162 @@
-import moteus
+import json
 import std_msgs.msg
-import asyncio
-from multiprocessing import Queue, Process, Pipe
-from std_msgs.msg import Float32
-import math
+from std_msgs.msg import String
+from threading import Thread
+from threading import Lock
+import moteus
 
+import sys
+sys.path.append("/home/trickfire/urc-2023/src")
 
-class Mode:
-    POSITION = 0  # Asks for float. Measured in revolutions
-    VELOCITY = 1  # Asks float. Measured in revolutions per second
+from utility.moteus_data_in_json_helper import MoteusDataInJsonHelper
+from utility.moteus_data_out_json_helper import MoteusDataOutJsonHelper
 
+class MoteusMotor():
 
-class MoteusMotor:
-    """Connects to a moteus controller. Publishes desired register's values from controller"""
-
-    def __init__(self, canID, name, motorMode, moteusPubList, queueToMoteus, toPublisherQueue, rosNode):
-        """    
-        Parameters
-        ----------
-        canID : int 
-            Can ID of the moteus controller you are trying to connect to
-        name : str
-            The name of the controller. This string is used in the topic 
-            names of both subscribers and publishers
-        motorMode : Mode
-            The mode of this controller. This effects what kind of data 
-            the object expects and what data the object will send to the 
-            moteus controller
-        moteusPubList : moteus.Register[]
-            Determines what data from the motor will be published to ROS
+    def __init__(self, canID, name, rosNode):
         """
-
-        rosNode.get_logger().info("Creating motor with name: " + name)
-        self._canID = canID
-        self._name = name
-        self._moteusRegToPubObjHashmap = {}
+            Create a logical representation of a motor that is using
+            a Moteus controller. Contains a list of variables that should be
+            sent to the Moteus controller. Subscribes to input and publishes output
+            
+            Paramaters
+            -------
+            canID : int
+                The canID of the Moteus Controller
+            name : string
+                The name of the motor. This is used in the topic names
+            rosNode : Node
+                The ROS node used to create the ros_moteus_bridge.py
+        """
+        
+        self.canID = canID
+        self.name = name
         self._rosNode = rosNode
-        self._motorMode = motorMode
-        self._queueToMoteus = queueToMoteus
-        self._toPublisherQueue = toPublisherQueue
-        self._moteusPubList = moteusPubList
 
-        # Create subscribers and publishers
-        self._createPublishers(moteusPubList)
-        self._createSubscribers()
-
-        rosNode.create_timer(0.02, self._readFromMoteusQueue)
+        self._subscriber = self._createSubscriber()
+        self._publisher = self._createPublisher()
+        
+        #Mutex - used to protect writing/reading the state of the motor
+        self.mutex_lock = Lock()
 
 
-    def _readFromMoteusQueue(self):
-        """Recieve data from multiprocess and publish it to the corresponding register topic"""
+        # The settings we can send to the moteus controller
+        # using the make_position() method
+        self.position = None
+        self.velocity = None
+        self.feedforward_torque = None
+        self.kp_scale = None
+        self.kd_scale = None
+        self.max_torque = None
+        self.watchdog_timeout = None
+        self.velocity_limit = None
+        self.accel_limit = None
+        self.fixed_voltage_override = None
+        
+        #By default, the motor is shutoff
+        self.setStop = True
 
-        if (self._toPublisherQueue != None) and (not self._toPublisherQueue.empty()):
-            dataRecieved = self._toPublisherQueue.get()
-            register = dataRecieved[0]  # is a moteus.Register enum
-            data = dataRecieved[1]  # is a floating point number
-
-            publisher = self._moteusRegToPubObjHashmap[register]
-            msg = Float32()
-            msg.data = data
-
-            publisher.publish(msg)
-
-
-    def _createPublishers(self, moteusPubList):
-        """Create a publisher for data for each moteus register
-
-
-        For each register that we want to publish to ROS, create
-        a specific publisher topic for it.
-
-        The format of the publisher is:
-        <name of the motor>_<the data being sent via moteus.register>_from_can
-        Example:
-        /frontleftdrivemotor_velocity_from_can
-        or
-        /turntable_position_from_can
-
-
-        Parameters
-        ----------
-        moteusPubList : array of moteus.Register
-            Determines what data from the motor will be published to ROS
+    
+    def _createSubscriber(self):
         """
-
-        for register in moteusPubList:
-            topicName = self._name + "_" + \
-                str(register).replace("Register.", "").lower() + "_from_can"
-            publisher = self._rosNode.create_publisher(
-                std_msgs.msg.Float32, topicName, 10)
-
-            self._moteusRegToPubObjHashmap[register] = publisher
-
-    def _createSubscribers(self):
-        """Create subscriber for the corresponding mode
-
-            The format of the subscriber is:
-            <name of the motor>_<the data being recieved via moteus.register>_from_robot_interface
-            Example:
-            /frontleftdrivemotor_velocity_from_robot_interface
-            or
-            /turntable_position_from_robot_interface
+            The subscriber to get data from.
+            The format of the topic is the following: <motor name>_from_interface
         """
-
-        dataName = ""
-        callbackFunction = None
-
-        if (self._motorMode == Mode.POSITION):
-            dataName = "position"
-            callbackFunction = self._positionCallback
-        elif (self._motorMode == Mode.VELOCITY):
-            dataName = "velocity"
-            callbackFunction = self._velocityCallback
-
-        topicName = self._name + "_" + dataName + "_from_interface"
+        topicName = self.name + "_from_interface"
+        subscriber = self._rosNode.create_subscription(
+            std_msgs.msg.String, 
+            topicName, 
+            self.dataInCallback,
+            1 # Size of queue is 1. All additional ones are dropped
+        )
+        
+        return subscriber
 
 
-        self._rosNode.subscription = self._rosNode.create_subscription(
-            std_msgs.msg.Float32,
+    def _createPublisher(self):
+        """
+            The publisher to send data to.
+            The format of the topic is the following: <motor name>_from_can
+        """
+        topicName = self.name + "_from_can"
+        publisher = self._rosNode.create_publisher(
+            std_msgs.msg.String,
             topicName,
-            callbackFunction,
-            10
+            1 # Size of queue is 1. All additional ones are dropped
         )
 
-    def _positionCallback(self, msg):
-        """Send the data to the multiprocess for position
-        msg : Float32
-            This is sent from from the subscriber.
+        return publisher
+
+
+    def dataInCallback(self, msg):
         """
-
-        if self._queueToMoteus != None:
-            # [0] can ID
-            # [1] data value
-            toMultiprocess = [self._canID,msg.data]
-            self._queueToMoteus.put(toMultiprocess)
-
-        # self._ros_pipe_conn.send(self._modeData)
-
-    def _velocityCallback(self, msg):
-        """Send the data to the multiprocess for velocity
-        msg : Float32
-            This is sent from from the subscriber.
+            Update the motor state. Mutex protected,
+            meaning that no one can go into any other "critical section"
+            of code that also has a mutex protecting it. 
         """
+        self.mutex_lock.acquire()
+        try:
+            jsonString = msg.data
+            self.updateMotorState(jsonString)
+        finally:
+            self.mutex_lock.release()
+        
 
-        #self._rosNode.get_logger().info("I AM CALLED")
 
-        if self._queueToMoteus != None:
-            # [0] can ID
-            # [1] data value
-            toMultiprocess = [self._canID,msg.data]
-            self._queueToMoteus.put(toMultiprocess)
+    def updateMotorState(self, rawJSONString):
+        """
+            Update the motor's variables from
+            the input JSON string
+        """
+        
+        jsonHelper = MoteusDataInJsonHelper()
+        jsonHelper.buildHelper(rawJSONString)
+        
+        self.position = jsonHelper.getPosition()
+        self.velocity = jsonHelper.getVelocity()
+        self.feedforward_torque = jsonHelper.feedforward_torque
+        self.kp_scale = jsonHelper.kp_scale
+        self.kd_scale = jsonHelper.kd_scale
+        self.max_torque = jsonHelper.max_torque
+        self.watchdog_timeout = jsonHelper.watchdog_timeout
+        self.accel_limit = jsonHelper.accel_limit
+        self.fixed_voltage_override = jsonHelper.fixed_voltage_override
+        self.setStop = jsonHelper.setStop
+
+
+    def publishData(self, moteusData):
+        """
+            Publishes the data from the moteus controller
+        """
+        self.mutex_lock.acquire()
+        try:
+            if self._rosNode.context.ok:
+                jsonHelper = MoteusDataOutJsonHelper()
+                jsonHelper.canID = self.canID
+                jsonHelper.position = moteusData.values[moteus.Register.POSITION]
+                jsonHelper.velocity = moteusData.values[moteus.Register.VELOCITY]
+                jsonHelper.torque = moteusData.values[moteus.Register.TORQUE]
+                jsonHelper.temperature = moteusData.values[moteus.Register.TEMPERATURE]
+                #jsonHelper.power = moteusData.values[moteus.Register.POWER]
+                jsonHelper.inputVoltage = moteusData.values[moteus.Register.VOLTAGE]
+                
+                # TODO: We need to update firmware to get POWER information (7/1/2024)
+                # https://github.com/mjbots/moteus/releases
+                # https://discord.com/channels/633996205759791104/722434939676786688/1252380387783610428
+                #self._rosNode.get_logger().info(str(moteusData.values.keys()))
+                
+                jsonString = jsonHelper.buildJSONString()
+                
+                msg = String()
+                msg.data = jsonString
+                
+                self._publisher.publish(msg)
+        except Exception as error:
+            # This is used to handle any errors in order to prevent the thread from dying
+            # Specifically, when we crtl-c we want the motors to be set_stop(), but if this thread
+            # crashes we cannot do that. So we catch any errors
+            self._rosNode.get_logger().info("Failed to publish motor data")
+            self._rosNode.get_logger().info(str(error))
+        finally:
+            self.mutex_lock.release()
+

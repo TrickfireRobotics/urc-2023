@@ -22,6 +22,8 @@ RUN apt-get update && apt-get install -y \
 #Install moteus python library https://github.com/mjbots/moteus/tree/main/lib/python
 RUN pip3 install moteus
 
+RUN pip3 install pyusb
+
 # Update pydocstyle to remove a deprecation warning when testing for PEP257
 RUN pip install --upgrade pydocstyle
 
