@@ -17,7 +17,7 @@ class MoteusThreadManager():
 
     def __init__(self, rosNode: Node):
         self._nameToMoteusMotor = {}
-        self._nameToMoteusController = {} # Used by the thread
+        self._nameToMoteusController = {} # Used by the thread.
         self._rosNode = rosNode
         self._moteusThread = None
         self._shouldMoteusThreadLoop = True # No thread safety, but it works lololol
