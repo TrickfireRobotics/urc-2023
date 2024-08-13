@@ -1,8 +1,12 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import ExternalShutdownException
+from std_msgs.msg import String
 import sys
 sys.path.append("/home/trickfire/urc-2023/src")
+
+from . import infoToJSONHelper
+from interface.robot_info import RobotInfo
 
 from utility.color_text import ColorCodes
 
@@ -12,7 +16,28 @@ class MissionControlUpdater(Node):
         super().__init__("mission_control_updater_node")
         self.get_logger().info(ColorCodes.BLUE_OK + "Launching mission_control_updater_node" + ColorCodes.ENDC)
         
+        self.publisherToMC = self.create_publisher(
+            String,
+            "mission_control_updater",
+            10
+        )
         
+        self.timer = self.create_timer(0.01, self.sendData)
+        self.robotInfo = RobotInfo(self)
+        
+        
+    def sendData(self):
+        setOfCANID = {1,2,3,4,5,20,21,22,23,24,25}
+        
+        jsonBuilder = infoToJSONHelper.InfoToJSONHelper()
+        
+        for id in setOfCANID:
+            jsonBuilder.addMoteusEntry(self.robotInfo.getMoteusMotorData(id))
+            
+            
+        msg = String()
+        msg.data = jsonBuilder.buildJSONString()
+        self.publisherToMC.publish(msg)
         
 def main(args=None):
     """

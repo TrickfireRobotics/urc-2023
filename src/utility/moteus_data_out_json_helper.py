@@ -10,7 +10,6 @@ class MoteusDataOutJsonHelper():
         self.velocity = None
         self.torque = None
         self.temperature = None
-        
         self.power = None
         self.inputVoltage = None
         
