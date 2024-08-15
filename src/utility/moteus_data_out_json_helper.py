@@ -18,6 +18,11 @@ class MoteusDataOutJsonHelper():
         
         
     def buildJSONString(self):
+        pythonDict = self.buildPythonDict()
+        
+        return json.dumps(pythonDict)
+    
+    def buildPythonDict(self):
         pythonDict = {
             "canID": self.canID,
             "position": self.position,
@@ -28,8 +33,7 @@ class MoteusDataOutJsonHelper():
             "inputVoltage": self.inputVoltage,
         }
         
-        return json.dumps(pythonDict)
-    
+        return pythonDict
     
     def buildHelper(self, jsonString):
         pythonDict = json.loads(jsonString)

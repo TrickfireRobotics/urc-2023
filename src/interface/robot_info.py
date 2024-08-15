@@ -36,32 +36,55 @@ class RobotInfo():
     
     def __init__(self, rosNode : Node):
         self._rosNode = rosNode
-        self.moteusNameToJSON = {}
-        self.subList = []
-        self.createNameToJSONMapping()
+        self.subList = [] # empty array
+        self.canIDToJSON = {} #Dict
         self.createSubscribers()
         
+        self.canIDToJSON[20] = MoteusDataOutJsonHelper()
+        self.canIDToJSON[21] = MoteusDataOutJsonHelper()
+        self.canIDToJSON[22] = MoteusDataOutJsonHelper()
+        self.canIDToJSON[23] = MoteusDataOutJsonHelper()
+        self.canIDToJSON[24] = MoteusDataOutJsonHelper()
+        self.canIDToJSON[25] = MoteusDataOutJsonHelper()
         
-    def createNameToJSONMapping(self):
-        for name in moteusTopicList:
-            self.moteusNameToJSON[name] = MoteusDataOutJsonHelper()
-            
+        # self.moteusNameToJSON = {}
+        # self.subList = []
+        # self.createNameToJSONMapping()
+        # self.createSubscribers()
+        
     def createSubscribers(self):
-        for name in moteusTopicList:
-            sub = self._rosNode.create_subscription(String, name, self.subCallback, 1)
+        for topicName in moteusTopicList:
+            sub = self._rosNode.create_subscription(String, topicName, self.subCallback, 1)
             self.subList.append(sub)
-    
+            
     def subCallback(self, msg):
         jsonHelper = MoteusDataOutJsonHelper()
         jsonHelper.buildHelper(msg.data)
-        moteusName = canIDToMotorName[jsonHelper.canID]
-        self.moteusNameToJSON[moteusName] = jsonHelper
+        self.canIDToJSON[jsonHelper.canID] = jsonHelper
+        
+    def getDataFromCanID(self, canID):
+        return self.canIDToJSON[canID]
+        
+    # def createNameToJSONMapping(self):
+    #     for name in moteusTopicList:
+    #         self.moteusNameToJSON[name] = MoteusDataOutJsonHelper()
+            
+    # def createSubscribers(self):
+    #     for name in moteusTopicList:
+    #         sub = self._rosNode.create_subscription(String, name, self.subCallback, 1)
+    #         self.subList.append(sub)
+    
+    # def subCallback(self, msg):
+    #     jsonHelper = MoteusDataOutJsonHelper()
+    #     jsonHelper.buildHelper(msg.data)
+    #     moteusName = canIDToMotorName[jsonHelper.canID]
+    #     self.moteusNameToJSON[moteusName] = jsonHelper
         
         
         
-    def getMoteusMotorData(self, canID):
-        topicName = canIDToMotorName[canID]
-        return self.moteusNameToJSON[topicName]
+    # def getMoteusMotorData(self, canID):
+    #     topicName = canIDToMotorName[canID]        
+    #     return self.moteusNameToJSON[topicName]
         
         
         

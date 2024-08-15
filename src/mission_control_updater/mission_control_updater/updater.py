@@ -19,7 +19,7 @@ class MissionControlUpdater(Node):
         self.publisherToMC = self.create_publisher(
             String,
             "mission_control_updater",
-            10
+            1
         )
         
         self.timer = self.create_timer(0.01, self.sendData)
@@ -27,12 +27,12 @@ class MissionControlUpdater(Node):
         
         
     def sendData(self):
-        setOfCANID = {1,2,3,4,5,20,21,22,23,24,25}
+        setOfCANID = {20,21,22,23,24,25}
         
         jsonBuilder = infoToJSONHelper.InfoToJSONHelper()
         
         for id in setOfCANID:
-            jsonBuilder.addMoteusEntry(self.robotInfo.getMoteusMotorData(id))
+            jsonBuilder.addMoteusEntry(self.robotInfo.getDataFromCanID(id))
             
             
         msg = String()
