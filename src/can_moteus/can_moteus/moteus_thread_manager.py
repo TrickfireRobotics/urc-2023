@@ -166,7 +166,10 @@ class MoteusThreadManager():
         self._shouldReconnect = False
         
         for key, moteusMotor in self._nameToMoteusMotor.items():
-            controller = moteus.Controller(moteusMotor.canID)
+            qr = moteus.QueryResolution()
+            qr.power = moteus.F32
+            controller = moteus.Controller(moteusMotor.canID, query_resolution=qr)
+            #controller = moteus.Controller(moteusMotor.canID)
             
             
             try:
