@@ -139,7 +139,7 @@ class MoteusThreadManager():
                                 query = True
                             ), self._GENERAL_TIMEOUT)
                             
-                            moteusMotor.publishData(resultFromMoteus)
+                    moteusMotor.publishData(resultFromMoteus)
                             
                             
                         
@@ -169,7 +169,6 @@ class MoteusThreadManager():
             qr = moteus.QueryResolution()
             qr.power = moteus.F32
             controller = moteus.Controller(moteusMotor.canID, query_resolution=qr)
-            #controller = moteus.Controller(moteusMotor.canID)
             
             
             try:
