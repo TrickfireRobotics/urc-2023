@@ -39,6 +39,12 @@ testing_node = Node(
     name='testing_node'
 )
 
+mission_control_updater_node = Node(
+    package='mission_control_updater',
+    executable='mission_control_updater',
+    name='mission_control_updater_node'
+)
+
 
 
 # # Composable Nodes launched in a Composable Node container will share a process
@@ -61,5 +67,6 @@ testing_node = Node(
 def generate_launch_description():
     return launch.LaunchDescription([
         can_moteus_node,
-        drivebase_node
+        drivebase_node,
+        mission_control_updater_node
     ])

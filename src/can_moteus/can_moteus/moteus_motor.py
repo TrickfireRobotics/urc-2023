@@ -137,8 +137,10 @@ class MoteusMotor():
                 jsonHelper.velocity = moteusData.values[moteus.Register.VELOCITY]
                 jsonHelper.torque = moteusData.values[moteus.Register.TORQUE]
                 jsonHelper.temperature = moteusData.values[moteus.Register.TEMPERATURE]
-                #jsonHelper.power = moteusData.values[moteus.Register.POWER]
+                jsonHelper.power = moteusData.values[moteus.Register.POWER]
                 jsonHelper.inputVoltage = moteusData.values[moteus.Register.VOLTAGE]
+                
+                #self._rosNode.get_logger().info(str(moteusData.values))
                 
                 # TODO: We need to update firmware to get POWER information (7/1/2024)
                 # https://github.com/mjbots/moteus/releases
