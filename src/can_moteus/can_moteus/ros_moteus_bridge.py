@@ -33,15 +33,21 @@ class RosMotuesBridge(Node):
         # run "lsusb" in cmd with the CANFD-USB connected
         # to find the idVendor and the idProduct
         dev = finddev(idVendor=0x0483, idProduct=0x5740)
-        dev.reset()
+
+        if (dev is not None): 
+            dev.reset()
+            self.threadManager = None
+            self.canbusMappings = CanBusMappings()
+            
+            self.reconnectToMoteusSub = self.create_subscription(Float32, "reconnectMoteusControllers", self.reconnect, 1)
+            
+            self.createMoteusMotors()
+        else:
+            self.get_logger().info(ColorCodes.FAIL_RED + "Failed to find CANFD-USB usb device. Is it plugged in?" + ColorCodes.ENDC)
+        
+        
         
 
-        self.threadManager = None
-        self.canbusMappings = CanBusMappings()
-        
-        self.reconnectToMoteusSub = self.create_subscription(Float32, "reconnectMoteusControllers", self.reconnect, 1)
-        
-        self.createMoteusMotors()
         
     def reconnect(self, msg):
         """

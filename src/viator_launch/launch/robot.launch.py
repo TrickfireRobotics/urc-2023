@@ -45,6 +45,12 @@ mission_control_updater_node = Node(
     name='mission_control_updater_node'
 )
 
+arm_node = Node(
+    package='arm',
+    executable='arm',
+    name='arm_node'
+)
+
 
 
 # # Composable Nodes launched in a Composable Node container will share a process
@@ -68,5 +74,6 @@ def generate_launch_description():
     return launch.LaunchDescription([
         can_moteus_node,
         drivebase_node,
-        mission_control_updater_node
+        mission_control_updater_node,
+        arm_node
     ])
