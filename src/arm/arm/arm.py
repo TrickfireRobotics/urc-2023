@@ -77,7 +77,6 @@ def main(args=None):
     except ExternalShutdownException:
         # This is done when we ctrl-c the progam to shut it down
         node.get_logger().info(ColorCodes.BLUE_OK + "Shutting down arm_node node" + ColorCodes.ENDC)
-        node.threadManager.terminateAllThreads()
         node.destroy_node()
         sys.exit(0)
 
