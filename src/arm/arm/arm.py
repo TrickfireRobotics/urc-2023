@@ -1,13 +1,16 @@
+import sys
+sys.path.append("/home/trickfire/urc-2023/src")
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import ExternalShutdownException
 from enum import IntEnum
 from custom_interfaces.srv import ArmMode
 from std_msgs.msg import Int32
+from .individual_control_vel import IndividualControlVel
+from interface.robot_interface import RobotInterface
 
 
-import sys
-sys.path.append("/home/trickfire/urc-2023/src")
+
 from utility.color_text import ColorCodes
 
 
@@ -28,6 +31,10 @@ class Arm(Node):
         self.current_mode = ArmModeEnum.disabled
         
         self.mode_service = self.create_service(ArmMode, "get_arm_mode", self.mode_serviceHandler)
+        
+        self.botInterface = RobotInterface(self)
+        
+        self.individualControlVel = IndividualControlVel(self, self.botInterface)
         
     def mode_serviceHandler(self, request, response):
         response.current_mode = int(self.current_mode)        
