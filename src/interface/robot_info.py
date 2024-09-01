@@ -9,7 +9,7 @@ from utility.moteus_data_out_json_helper import MoteusDataOutJsonHelper
 from rclpy.node import Node
 from std_msgs.msg import String
 
-canBusMappings = CanBusMappings()
+
 
 moteusTopicList = {
     "front_left_drive_motor_from_can",
@@ -18,15 +18,25 @@ moteusTopicList = {
     "front_right_drive_motor_from_can"
     "mid_right_drive_motor_from_can",
     "rear_right_drive_motor_from_can",
+    "arm_turntable_motor_from_can",
+    "arm_shoulder_motor_from_can",
+    "arm_elbow_motor_from_can",
+    "arm_left_wrist_motor_from_can",
+    "arm_right_wrist_motor_from_can"
 }
 
 canIDToMotorName = {
-    canBusMappings.CANID_FRONT_LEFT_DRIVE_MOTOR: "front_left_drive_motor_from_can",
-    canBusMappings.CANID_MID_LEFT_DRIVE_MOTOR: "mid_left_drive_motor_from_can",
-    canBusMappings.CANID_REAR_LEFT_DRIVE_MOTOR: "rear_left_drive_motor_from_can",
-    canBusMappings.CANID_FRONT_RIGHT_DRIVE_MOTOR: "front_right_drive_motor_from_can",
-    canBusMappings.CANID_MID_RIGHT_DRIVE_MOTOR: "mid_right_drive_motor_from_can",
-    canBusMappings.CANID_REAR_RIGHT_DRIVE_MOTOR: "rear_right_drive_motor_from_can"
+    CanBusMappings.CANID_FRONT_LEFT_DRIVE_MOTOR: "front_left_drive_motor_from_can",
+    CanBusMappings.CANID_MID_LEFT_DRIVE_MOTOR: "mid_left_drive_motor_from_can",
+    CanBusMappings.CANID_REAR_LEFT_DRIVE_MOTOR: "rear_left_drive_motor_from_can",
+    CanBusMappings.CANID_FRONT_RIGHT_DRIVE_MOTOR: "front_right_drive_motor_from_can",
+    CanBusMappings.CANID_MID_RIGHT_DRIVE_MOTOR: "mid_right_drive_motor_from_can",
+    CanBusMappings.CANID_REAR_RIGHT_DRIVE_MOTOR: "rear_right_drive_motor_from_can",
+    CanBusMappings.CANID_ARM_TURNTABLE_MOTOR: "arm_turntable_motor",
+    CanBusMappings.CANID_ARM_SHOULDER_MOTOR: "arm_shoulder_motor",
+    CanBusMappings.CANID_ARM_ELBOW_MOTOR: "arm_elbow_motor",
+    CanBusMappings.CANID_ARM_LEFT_WRIST_MOTOR: "arm_left_wrist_motor",
+    CanBusMappings.CANID_ARM_RIGHT_WRIST_MOTOR: "arm_right_wrist_motor"
 }
 
 
