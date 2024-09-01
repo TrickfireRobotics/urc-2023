@@ -156,7 +156,7 @@ class RobotInterface(Node):
     def disable_arm_left_wrist_motor(self):
         self._disable_motor("arm_left_wrist_motor")
     
-    def disable_arm_left_right_motor(self):
+    def disable_arm_right_wrist_motor(self):
         self._disable_motor("arm_right_wrist_motor")
     
     def _disable_motor(self, pubName):

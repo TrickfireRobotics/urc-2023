@@ -43,6 +43,23 @@ class Arm(Node):
     def updateArmMode(self, msg):
         self.current_mode = msg.data
         
+        if self.current_mode == 0:
+            self.botInterface.disable_arm_turntable_motor()
+            self.botInterface.disable_arm_shoulder_motor()
+            self.botInterface.disable_arm_elbow_motor()
+            self.botInterface.disable_arm_left_wrist_motor()
+            self.botInterface.disable_arm_right_wrist_motor()
+            
+            self.individualControlVel.canSend = False
+        elif (self.current_mode == 1):
+            self.individualControlVel.canSend = True
+        elif (self.current_mode == 2):
+            self.individualControlVel.canSend = False
+        elif (self.current_mode == 3):
+            self.individualControlVel.canSend = False
+            
+            
+        
         
         
 def main(args=None):

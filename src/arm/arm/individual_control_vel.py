@@ -12,6 +12,8 @@ class IndividualControlVel():
         self.rosNode = rosNode
         self.botInterface = interface
         
+        self.canSend = False
+        
         self.WRIST_VEL = 0.3
         self.VEL = 1.0
 
@@ -50,6 +52,8 @@ class IndividualControlVel():
     
     
     def left_wrist_cw(self, msg):
+        if not self.canSend: return
+        
         joystick = msg.data
 
         if joystick > 0:
@@ -62,6 +66,8 @@ class IndividualControlVel():
             
 
     def left_wrist_ccw(self, msg):
+        if not self.canSend: return
+        
         joystick = msg.data
 
         if joystick > 0:
@@ -74,6 +80,8 @@ class IndividualControlVel():
             
 
     def right_wrist_cw(self, msg):
+        if not self.canSend: return
+        
         joystick = msg.data
 
         if joystick > 0:
@@ -86,6 +94,8 @@ class IndividualControlVel():
             
 
     def right_wrist_ccw(self, msg):
+        if not self.canSend: return
+        
         joystick = msg.data
 
         if joystick > 0:
@@ -98,6 +108,8 @@ class IndividualControlVel():
             
 
     def elbow_up(self, msg):
+        if not self.canSend: return
+        
         data = msg.data
 
         if data > 0:
@@ -110,6 +122,8 @@ class IndividualControlVel():
             
 
     def elbow_down(self, msg):
+        if not self.canSend: return
+        
         data = msg.data
 
         if data > 0:
@@ -123,6 +137,8 @@ class IndividualControlVel():
 
 
     def shoulder_up(self, msg):
+        if not self.canSend: return
+        
         data = msg.data
 
         if data > 0:
@@ -136,6 +152,8 @@ class IndividualControlVel():
 
 
     def shoulder_down(self, msg):
+        if not self.canSend: return
+        
         data = msg.data
 
         if data > 0:
@@ -148,6 +166,8 @@ class IndividualControlVel():
             
             
     def turntable_cw(self, msg):
+        if not self.canSend: return
+        
         data = msg.data
         
         if  data > 0:
@@ -159,6 +179,8 @@ class IndividualControlVel():
             self.botInterface.arm_turntable_velocity(0.0)
 
     def turntable_ccw(self, msg):
+        if not self.canSend: return
+        
         data = msg.data
         
         if  data > 0:
