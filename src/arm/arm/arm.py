@@ -3,6 +3,8 @@ from rclpy.node import Node
 from rclpy.executors import ExternalShutdownException
 from enum import IntEnum
 from custom_interfaces.srv import ArmMode
+from std_msgs.msg import Int32
+
 
 import sys
 sys.path.append("/home/trickfire/urc-2023/src")
@@ -10,25 +12,29 @@ from utility.color_text import ColorCodes
 
 
 class ArmModeEnum(IntEnum):
-    individual_motor_control_vel = 0
-    individual_motor_control_pos = 1
-    inverse_kinematics = 2
-    disabled = 3
+    disabled = 0
+    individual_motor_control_vel = 1
+    individual_motor_control_pos = 2
+    inverse_kinematics = 3
+    
 
 class Arm(Node):
     def __init__(self):
         super().__init__("arm_node")
         self.get_logger().info(ColorCodes.BLUE_OK + "Launching arm_node" + ColorCodes.ENDC)
         
+        self.changeArmModeSub = self.create_subscription(Int32, "update_arm_mode", self.updateArmMode, 10)
+        
         self.current_mode = ArmModeEnum.disabled
         
         self.mode_service = self.create_service(ArmMode, "get_arm_mode", self.mode_serviceHandler)
         
     def mode_serviceHandler(self, request, response):
-        response.current_mode = int(self.current_mode)
-        self.get_logger().info("get_arm_mode service called")
-        
+        response.current_mode = int(self.current_mode)        
         return response
+    
+    def updateArmMode(self, msg):
+        self.current_mode = msg.data
         
         
         
