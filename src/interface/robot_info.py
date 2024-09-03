@@ -56,6 +56,11 @@ class RobotInfo():
         self.canIDToJSON[23] = MoteusDataOutJsonHelper()
         self.canIDToJSON[24] = MoteusDataOutJsonHelper()
         self.canIDToJSON[25] = MoteusDataOutJsonHelper()
+        self.canIDToJSON[1] = MoteusDataOutJsonHelper()
+        self.canIDToJSON[2] = MoteusDataOutJsonHelper()
+        self.canIDToJSON[3] = MoteusDataOutJsonHelper()
+        self.canIDToJSON[4] = MoteusDataOutJsonHelper()
+        self.canIDToJSON[5] = MoteusDataOutJsonHelper()
         
         # self.moteusNameToJSON = {}
         # self.subList = []

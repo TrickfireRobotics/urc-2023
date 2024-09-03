@@ -27,7 +27,7 @@ class MissionControlUpdater(Node):
         
         
     def sendData(self):
-        setOfCANID = {20,21,22,23,24,25}
+        setOfCANID = {20,21,22,23,24,25,1,2,3,4,5}
         
         jsonBuilder = infoToJSONHelper.InfoToJSONHelper()
         

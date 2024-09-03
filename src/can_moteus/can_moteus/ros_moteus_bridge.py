@@ -69,7 +69,7 @@ class RosMotuesBridge(Node):
         # Drivebase
         self.threadManager.addMotor(CanBusMappings.CANID_REAR_RIGHT_DRIVE_MOTOR, "rear_right_drive_motor")
         self.threadManager.addMotor(CanBusMappings.CANID_MID_RIGHT_DRIVE_MOTOR, "mid_right_drive_motor")
-        self.threadManager.addMotor(CanBusMappings.canbusMappings.CANID_FRONT_RIGHT_DRIVE_MOTOR, "front_right_drive_motor")
+        self.threadManager.addMotor(CanBusMappings.CANID_FRONT_RIGHT_DRIVE_MOTOR, "front_right_drive_motor")
         
         self.threadManager.addMotor(CanBusMappings.CANID_REAR_LEFT_DRIVE_MOTOR, "rear_left_drive_motor")
         self.threadManager.addMotor(CanBusMappings.CANID_MID_LEFT_DRIVE_MOTOR, "mid_left_drive_motor")

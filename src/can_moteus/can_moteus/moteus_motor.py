@@ -139,6 +139,8 @@ class MoteusMotor():
                 jsonHelper.temperature = moteusData.values[moteus.Register.TEMPERATURE]
                 jsonHelper.power = moteusData.values[moteus.Register.POWER]
                 jsonHelper.inputVoltage = moteusData.values[moteus.Register.VOLTAGE]
+                jsonHelper.qCurrent = moteusData.values[moteus.Register.Q_CURRENT]
+                jsonHelper.dCurrent = moteusData.values[moteus.Register.D_CURRENT]
                 
                 #self._rosNode.get_logger().info(str(moteusData.values))
                 
