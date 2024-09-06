@@ -3,6 +3,7 @@ import threading
 import asyncio
 from rclpy.node import Node
 import moteus
+import json
 
 import sys
 sys.path.append("/home/trickfire/urc-2023/src")
@@ -28,12 +29,23 @@ class MoteusThreadManager():
 
 
 
-    def addMotor(self, canID, motorName):
+    def addMotor(self, canID, motorName, **configKwargs):
         """
             Adds a motor to the list to attempt to connect to
+
+                        
+            Paramaters
+            -------
+            canID : int
+                The canID of the Moteus Controller
+            motorName : string
+                The name of the motor. This is used in the topic names
+            configKwargs : dict[str, Any]
+                The config keys and values for the motor specified in the moteus reference.
+                `id.id` will be ignored if included in this dictionary.
         """
         #Create motor
-        motor = moteus_motor.MoteusMotor(canID, motorName, self._rosNode)
+        motor = moteus_motor.MoteusMotor(canID, motorName, self._rosNode, **configKwargs)
         self._nameToMoteusMotor[motorName] = motor
 
     def start(self):
@@ -169,7 +181,7 @@ class MoteusThreadManager():
             qr = moteus.QueryResolution()
             qr.power = moteus.F32
             controller = moteus.Controller(moteusMotor.canID, query_resolution=qr)
-            
+            commandStream = moteus.Stream(controller)
             
             try:
                 # Reset the controller
@@ -178,11 +190,26 @@ class MoteusThreadManager():
                 self._nameToMoteusController[key] = controller
                 await controller.set_stop()
                 self._rosNode.get_logger().info(ColorCodes.GREEN_OK + "Moteus motor controller connected: \"" + str(moteusMotor.name) + "\"(CANID " + str(moteusMotor.canID) + ")" + ColorCodes.ENDC)
-                
+
             except asyncio.TimeoutError:
                 self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "FAILED TO CONNECT TO MOTEUS CONTROLLER WITH CANID " + str(moteusMotor.canID) + ColorCodes.ENDC)
+                return
             except RuntimeError as error:
                 self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "ERROR WHEN set_stop() IS CALLED. MOST LIKELY CANNOT FIND CANBUS" + ColorCodes.ENDC)
+                self._rosNode.get_logger().info(ColorCodes.FAIL_RED + error.with_traceback() + ColorCodes.ENDC)
+                return
+
+            # Returns in try/except so this doesn't get called if motor couldn't be connected
+            try:
+                self._rosNode.get_logger().info("Sending config to controller: " + str(moteusMotor.name))
+                # Using json here just pretty prints the dictionary
+                self._rosNode.get_logger().debug(json.dumps(moteusMotor.config, indent=4))
+                for key, value in moteusMotor.config:
+                    await commandStream.command(f"conf set {key} {value} ".encode("utf-8"))
+                self._rosNode.get_logger().info(ColorCodes.GREEN_OK + "Config values set: \"" + str(moteusMotor.name) + "\"(CANID " + str(moteusMotor.canID) + ")" + ColorCodes.ENDC)
+
+            except RuntimeError as error:
+                self._rosNode.get_logger().info(ColorCodes.FAIL_RED + "ERROR WHEN command() IS CALLED. COULD NOT SET CONFIG VALUES" + ColorCodes.ENDC)
                 self._rosNode.get_logger().info(ColorCodes.FAIL_RED + error.with_traceback() + ColorCodes.ENDC)
                 
 

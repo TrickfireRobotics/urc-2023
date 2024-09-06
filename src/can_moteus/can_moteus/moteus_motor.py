@@ -13,7 +13,7 @@ from utility.moteus_data_out_json_helper import MoteusDataOutJsonHelper
 
 class MoteusMotor():
 
-    def __init__(self, canID, name, rosNode):
+    def __init__(self, canID, name, rosNode, **configKwargs):
         """
             Create a logical representation of a motor that is using
             a Moteus controller. Contains a list of variables that should be
@@ -27,10 +27,15 @@ class MoteusMotor():
                 The name of the motor. This is used in the topic names
             rosNode : Node
                 The ROS node used to create the ros_moteus_bridge.py
+            configKwargs : dict[str, Any]
+                The config keys and values for the motor specified in the moteus reference.
+                `id.id` will be ignored if included in this dictionary.
         """
         
         self.canID = canID
         self.name = name
+        configKwargs.pop("id.id", None)
+        self.config = configKwargs
         self._rosNode = rosNode
 
         self._subscriber = self._createSubscriber()
