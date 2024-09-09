@@ -81,27 +81,27 @@ class RobotInterface(Node):
     # ------ DRIVEBASE ------
     # Left front wheel - MEASURED IN REVOLUTIONS PER SECOND
     def front_left_drive_motor(self, amount):        
-        self._send_drive_motor("front_left_drive_motor", radiansPerSecond = (amount * REV_TO_RADIANS))
+        self._send_drive_motor("front_left_drive_motor", radiansPerSecond = (amount))
 
     # Right front wheel
     def front_right_drive_motor(self, amount):
-        self._send_drive_motor("front_right_drive_motor", radiansPerSecond = (amount * REV_TO_RADIANS))
+        self._send_drive_motor("front_right_drive_motor", radiansPerSecond = (amount))
 
     # Left middle wheel
     def mid_left_drive_motor(self, amount):
-        self._send_drive_motor("mid_left_drive_motor", radiansPerSecond = (amount * REV_TO_RADIANS))
+        self._send_drive_motor("mid_left_drive_motor", radiansPerSecond = (amount))
 
     # Right middle wheel
     def mid_right_drive_motor(self, amount):
-        self._send_drive_motor("mid_right_drive_motor", radiansPerSecond = (amount * REV_TO_RADIANS))
+        self._send_drive_motor("mid_right_drive_motor", radiansPerSecond = (amount))
 
     # Left back wheel
     def rear_left_drive_motor(self, amount):
-        self._send_drive_motor("rear_left_drive_motor", radiansPerSecond = (amount * REV_TO_RADIANS))
+        self._send_drive_motor("rear_left_drive_motor", radiansPerSecond = (amount))
 
     # Right back wheel
     def rear_right_drive_motor(self, amount):
-        self._send_drive_motor("rear_right_drive_motor", radiansPerSecond = (amount * REV_TO_RADIANS))
+        self._send_drive_motor("rear_right_drive_motor", radiansPerSecond = (amount))
 
     def _send_drive_motor(self, pubName, radiansPerSecond = 0):
         publisher = robotPublishers[pubName]
