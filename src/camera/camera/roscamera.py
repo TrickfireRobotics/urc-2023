@@ -5,6 +5,7 @@ from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Image
 from rclpy.executors import MultiThreadedExecutor
 import cv2 # OpenCV library
 from pathlib import Path
+from std_msgs.msg import String
 
 # returns a list of working camera ids to capture every camera connected to the robot
 def get_cameras() -> list[int]:
@@ -38,6 +39,20 @@ class RosCamera(Node):
         self._publisher = self.create_publisher(CompressedImage, topicName, 10)
         self.get_logger().info("Created Publisher " + topicName)
 
+        # Create a subscription to read 'camera_control' topic from
+        # mission control. Topic messages are Strings.
+        #       ex. topic message: "toggle arm_camera, ID: 0"
+        # The topic message should always have the corresponding camera number
+        # at the last index of each message.
+        subTopicName = "camera_control"
+        self.subscription = self.create_subscription(
+            String,
+            subTopicName,
+            self.toggle_camera,
+            10)
+        self.subscription
+        self.get_logger().info("Created Subscription to" + subTopicName)
+
         # We will publish a message every 0.1 seconds
         # timer_period = 0.1  # seconds
         timer_period = 2  # seconds
@@ -52,7 +67,10 @@ class RosCamera(Node):
             
         # Used to convert between ROS and OpenCV images
         self.br = CvBridge()
-
+        
+        # Declare parameters for each 'ros_camera' node thread
+        self.declare_parameter("cameraNumber", camera)
+        self.declare_parameter("isOn", True)
 
     def timer_callback(self):
         """
@@ -64,14 +82,26 @@ class RosCamera(Node):
         # as the video frame.
         ret, frame = self.cap.read()
             
-        if ret == True:
+        # Get 'ros_camera' parameter, isOn, then check the state of the camera to publish frame or not
+        isOn = bool(self.get_parameter("isOn")._value)
+        if ret and isOn:
             # Publish the image.
             self._publisher.publish(self.br.cv2_to_compressed_imgmsg(frame))
     
         # Display the message on the console
         # self.get_logger().info('Publishing compressed video frame')
         
+    def toggle_camera(self, msg) -> None:
+        # Read the last index of the message and check whether mission control is targeting this
+        # instance of 'ros_camera'
+        cameraNumber = int(self.get_parameter("cameraNumber")._value)
+        if (int(msg.data[-1]) != cameraNumber):
+            return
 
+        # Toggle by not'ing the bool value
+        isOn = bool(self.get_parameter("isOn")._value)
+        self.undeclare_parameter("isOn")
+        self.declare_parameter("isOn", not isOn)
 
 def main(args=None):
     rclpy.init(args=args)
