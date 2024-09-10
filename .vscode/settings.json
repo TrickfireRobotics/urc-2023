@@ -1,14 +1,18 @@
 {
     "python.autoComplete.extraPaths": [
-        "/opt/ros/galactic/lib/python3.8/site-packages"
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "./src"
     ],
     "python.analysis.extraPaths": [
-        "/opt/ros/galactic/lib/python3.8/site-packages",
-        "./src/interface"
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "./src"
     ],
+    "python.defaultInterpreterPath": "python3",
+    "pylint.args": [
+        "--rcfile=.pylintrc"
+    ],
+    "pylint.importStrategy": "useBundled",
     "cmake.configureOnOpen": false,
-    "python.linting.enabled": false,
-    "python.linting.flake8Enabled": true,
     "cmake.sourceDirectory": "${workspaceFolder}/src/hello_world",
     "files.associations": {
         "*.tcc": "cpp"

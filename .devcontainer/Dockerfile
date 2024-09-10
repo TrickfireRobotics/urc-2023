@@ -1,4 +1,4 @@
-# Base image: Ubuntu 20.04 with ROS2 Galactic installed
+# Base image: Ubuntu 20.04 with ROS2 Humble installed
 FROM ros:humble
 
 # Install dependencies from apt
