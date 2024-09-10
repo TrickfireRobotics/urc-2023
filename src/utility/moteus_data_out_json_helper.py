@@ -12,6 +12,8 @@ class MoteusDataOutJsonHelper():
         self.temperature = None
         self.power = None
         self.inputVoltage = None
+        self.qCurrent = None
+        self.dCurrent = None
         
         
         
@@ -31,6 +33,8 @@ class MoteusDataOutJsonHelper():
             "temperature": self.temperature,
             "power": self.power,
             "inputVoltage": self.inputVoltage,
+            "qCurrent": self.qCurrent,
+            "dCurrent": self.dCurrent
         }
         
         return pythonDict
@@ -45,6 +49,8 @@ class MoteusDataOutJsonHelper():
         self.temperature = pythonDict["temperature"]
         self.power = pythonDict["power"]
         self.inputVoltage = pythonDict["inputVoltage"]
+        self.qCurrent = pythonDict["qCurrent"]
+        self.dCurrent = pythonDict["dCurrent"]
         
 
         
