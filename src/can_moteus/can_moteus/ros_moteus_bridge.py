@@ -33,15 +33,21 @@ class RosMotuesBridge(Node):
         # run "lsusb" in cmd with the CANFD-USB connected
         # to find the idVendor and the idProduct
         dev = finddev(idVendor=0x0483, idProduct=0x5740)
-        dev.reset()
+
+        if (dev is not None): 
+            dev.reset()
+            self.threadManager = None
+            self.canbusMappings = CanBusMappings()
+            
+            self.reconnectToMoteusSub = self.create_subscription(Float32, "reconnectMoteusControllers", self.reconnect, 1)
+            
+            self.createMoteusMotors()
+        else:
+            self.get_logger().info(ColorCodes.FAIL_RED + "Failed to find CANFD-USB usb device. Is it plugged in?" + ColorCodes.ENDC)
+        
+        
         
 
-        self.threadManager = None
-        self.canbusMappings = CanBusMappings()
-        
-        self.reconnectToMoteusSub = self.create_subscription(Float32, "reconnectMoteusControllers", self.reconnect, 1)
-        
-        self.createMoteusMotors()
         
     def reconnect(self, msg):
         """
@@ -60,13 +66,22 @@ class RosMotuesBridge(Node):
         
         self.threadManager = moteus_thread_manager.MoteusThreadManager(self)
         
-        self.threadManager.addMotor(self.canbusMappings.CANID_REAR_RIGHT_DRIVE_MOTOR, "rear_right_drive_motor")
-        self.threadManager.addMotor(self.canbusMappings.CANID_MID_RIGHT_DRIVE_MOTOR, "mid_right_drive_motor")
-        self.threadManager.addMotor(self.canbusMappings.CANID_FRONT_RIGHT_DRIVE_MOTOR, "front_right_drive_motor")
+        # Drivebase
+        self.threadManager.addMotor(CanBusMappings.CANID_REAR_RIGHT_DRIVE_MOTOR, "rear_right_drive_motor")
+        self.threadManager.addMotor(CanBusMappings.CANID_MID_RIGHT_DRIVE_MOTOR, "mid_right_drive_motor")
+        self.threadManager.addMotor(CanBusMappings.CANID_FRONT_RIGHT_DRIVE_MOTOR, "front_right_drive_motor")
         
-        self.threadManager.addMotor(self.canbusMappings.CANID_REAR_LEFT_DRIVE_MOTOR, "rear_left_drive_motor")
-        self.threadManager.addMotor(self.canbusMappings.CANID_MID_LEFT_DRIVE_MOTOR, "mid_left_drive_motor")
-        self.threadManager.addMotor(self.canbusMappings.CANID_FRONT_LEFT_DRIVE_MOTOR, "front_left_drive_motor")
+        self.threadManager.addMotor(CanBusMappings.CANID_REAR_LEFT_DRIVE_MOTOR, "rear_left_drive_motor")
+        self.threadManager.addMotor(CanBusMappings.CANID_MID_LEFT_DRIVE_MOTOR, "mid_left_drive_motor")
+        self.threadManager.addMotor(CanBusMappings.CANID_FRONT_LEFT_DRIVE_MOTOR, "front_left_drive_motor")
+        
+        # Arm
+        self.threadManager.addMotor(CanBusMappings.CANID_ARM_TURNTABLE_MOTOR, "arm_turntable_motor")
+        self.threadManager.addMotor(CanBusMappings.CANID_ARM_SHOULDER_MOTOR, "arm_shoulder_motor")
+        self.threadManager.addMotor(CanBusMappings.CANID_ARM_ELBOW_MOTOR, "arm_elbow_motor")
+        self.threadManager.addMotor(CanBusMappings.CANID_ARM_LEFT_WRIST_MOTOR, "arm_left_wrist_motor")
+        self.threadManager.addMotor(CanBusMappings.CANID_ARM_RIGHT_WRIST_MOTOR, "arm_right_wrist_motor")
+        
 
         self.threadManager.start()
         

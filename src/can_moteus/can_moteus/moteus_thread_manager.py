@@ -168,6 +168,8 @@ class MoteusThreadManager():
         for key, moteusMotor in self._nameToMoteusMotor.items():
             qr = moteus.QueryResolution()
             qr.power = moteus.F32
+            qr.q_current = moteus.F32
+            qr.d_current = moteus.F32
             controller = moteus.Controller(moteusMotor.canID, query_resolution=qr)
             
             

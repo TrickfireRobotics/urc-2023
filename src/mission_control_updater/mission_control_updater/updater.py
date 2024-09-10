@@ -27,7 +27,7 @@ class MissionControlUpdater(Node):
         
         
     def sendData(self):
-        setOfCANID = {20,21,22,23,24,25}
+        setOfCANID = {20,21,22,23,24,25,1,2,3,4,5}
         
         jsonBuilder = infoToJSONHelper.InfoToJSONHelper()
         
@@ -54,7 +54,6 @@ def main(args=None):
     except ExternalShutdownException:
         # This is done when we ctrl-c the progam to shut it down
         node.get_logger().info(ColorCodes.BLUE_OK + "Shutting down mission_control_updater_node" + ColorCodes.ENDC)
-        node.threadManager.terminateAllThreads()
         node.destroy_node()
         sys.exit(0)
 
