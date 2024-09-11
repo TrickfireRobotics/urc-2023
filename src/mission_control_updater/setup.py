@@ -18,8 +18,6 @@ setup(
     license="TODO: License declaration",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": [
-            "mission_control_updater = mission_control_updater.updater:main"
-        ],
+        "console_scripts": ["mission_control_updater = mission_control_updater.updater:main"],
     },
 )

@@ -42,9 +42,7 @@ class RobotInfo:
 
     def createSubscribers(self) -> None:
         for topic_name in moteusTopicList:
-            sub = self._ros_node.create_subscription(
-                String, topic_name, self.subCallback, 1
-            )
+            sub = self._ros_node.create_subscription(String, topic_name, self.subCallback, 1)
             self.sub_list.append(sub)
 
     def subCallback(self, msg: String) -> None:

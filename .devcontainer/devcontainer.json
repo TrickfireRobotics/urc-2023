@@ -17,7 +17,6 @@
 		"ms-python.pylint",
         "ms-python.mypy-type-checker",
         "ms-python.isort",
-        "ms-python.black-formatter",
 		"ms-vscode.cmake-tools",
 		"ms-vscode.cpptools",
 		"twxs.cmake",

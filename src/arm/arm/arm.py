@@ -24,9 +24,7 @@ class ArmModeEnum(IntEnum):
 class Arm(Node):
     def __init__(self) -> None:
         super().__init__("arm_node")
-        self.get_logger().info(
-            ColorCodes.BLUE_OK + "Launching arm_node" + ColorCodes.ENDC
-        )
+        self.get_logger().info(ColorCodes.BLUE_OK + "Launching arm_node" + ColorCodes.ENDC)
 
         self.change_arm_mode_sub = self.create_subscription(
             Int32, "update_arm_mode", self.updateArmMode, 10
@@ -34,9 +32,7 @@ class Arm(Node):
 
         self.current_mode = ArmModeEnum.DISABLED
 
-        self.mode_service = self.create_service(
-            ArmMode, "get_arm_mode", self.modeServiceHandler
-        )
+        self.mode_service = self.create_service(ArmMode, "get_arm_mode", self.modeServiceHandler)
 
         self.bot_interface = RobotInterface(self)
 
@@ -79,9 +75,7 @@ def main(args: list[str] | None = None) -> None:
         pass
     except ExternalShutdownException:
         # This is done when we ctrl-c the progam to shut it down
-        node.get_logger().info(
-            ColorCodes.BLUE_OK + "Shutting down arm_node node" + ColorCodes.ENDC
-        )
+        node.get_logger().info(ColorCodes.BLUE_OK + "Shutting down arm_node node" + ColorCodes.ENDC)
         node.destroy_node()
         sys.exit(0)
 

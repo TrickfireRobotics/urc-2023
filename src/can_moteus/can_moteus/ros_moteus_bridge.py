@@ -24,9 +24,7 @@ class RosMotuesBridge(Node):
 
     def __init__(self) -> None:
         super().__init__("can_moteus_node")
-        self.get_logger().info(
-            ColorCodes.BLUE_OK + "Launching can_moteus node" + ColorCodes.ENDC
-        )
+        self.get_logger().info(ColorCodes.BLUE_OK + "Launching can_moteus node" + ColorCodes.ENDC)
 
         # Reset the CANFD-USB
         # run "lsusb" in cmd with the CANFD-USB connected
@@ -92,12 +90,8 @@ class RosMotuesBridge(Node):
         self.thread_manager.addMotor(
             CanBusMappings.CANID_ARM_TURNTABLE_MOTOR, "arm_turntable_motor"
         )
-        self.thread_manager.addMotor(
-            CanBusMappings.CANID_ARM_SHOULDER_MOTOR, "arm_shoulder_motor"
-        )
-        self.thread_manager.addMotor(
-            CanBusMappings.CANID_ARM_ELBOW_MOTOR, "arm_elbow_motor"
-        )
+        self.thread_manager.addMotor(CanBusMappings.CANID_ARM_SHOULDER_MOTOR, "arm_shoulder_motor")
+        self.thread_manager.addMotor(CanBusMappings.CANID_ARM_ELBOW_MOTOR, "arm_elbow_motor")
         self.thread_manager.addMotor(
             CanBusMappings.CANID_ARM_LEFT_WRIST_MOTOR, "arm_left_wrist_motor"
         )

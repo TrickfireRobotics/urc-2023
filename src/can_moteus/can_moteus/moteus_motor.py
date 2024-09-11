@@ -66,7 +66,7 @@ class MoteusMotor:
             std_msgs.msg.String,
             topic_name,
             self.dataInCallback,
-            1 # Size of queue is 1. All additional ones are dropped
+            1,  # Size of queue is 1. All additional ones are dropped
         )
 
         return subscriber
@@ -146,7 +146,7 @@ class MoteusMotor:
                 msg.data = json_string
 
                 self._publisher.publish(msg)
-        except Exception as error: # pylint: disable=broad-exception-caught
+        except Exception as error:  # pylint: disable=broad-exception-caught
             # This is used to handle any errors in order to prevent the thread from dying
             # Specifically, when we crtl-c we want the motors to be set_stop(), but if this thread
             # crashes we cannot do that. So we catch any errors

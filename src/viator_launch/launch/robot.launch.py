@@ -16,7 +16,7 @@ mission_control_updater_node = Node(
 arm_node = Node(package="arm", executable="arm", name="arm_node")
 
 
-def generate_launch_description() -> launch.LaunchDescription: # pylint: disable=invalid-name
+def generate_launch_description() -> launch.LaunchDescription:  # pylint: disable=invalid-name
     return launch.LaunchDescription(
         [can_moteus_node, drivebase_node, mission_control_updater_node, arm_node]
     )

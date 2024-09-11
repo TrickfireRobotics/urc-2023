@@ -65,13 +65,9 @@ class RobotInterface:
             String, "arm_turntable_motor_from_interface", 10
         )
         robot_publishers["arm_turntable_motor"] = publisher
-        publisher = self._ros_node.create_publisher(
-            String, "arm_shoulder_motor_from_interface", 10
-        )
+        publisher = self._ros_node.create_publisher(String, "arm_shoulder_motor_from_interface", 10)
         robot_publishers["arm_shoulder_motor"] = publisher
-        publisher = self._ros_node.create_publisher(
-            String, "arm_elbow_motor_from_interface", 10
-        )
+        publisher = self._ros_node.create_publisher(String, "arm_elbow_motor_from_interface", 10)
         robot_publishers["arm_elbow_motor"] = publisher
         publisher = self._ros_node.create_publisher(
             String, "arm_left_wrist_motor_from_interface", 10
