@@ -1,20 +1,32 @@
 {
     "python.autoComplete.extraPaths": [
         "/opt/ros/humble/lib/python3.10/site-packages",
-        "./src"
+        "./src",
+        // Add type checking to srv files and msg files
+        "/home/trickfire/urc-2023/install/custom_interfaces/local/lib/python3.10/dist-packages"
     ],
     "python.analysis.extraPaths": [
         "/opt/ros/humble/lib/python3.10/site-packages",
-        "./src"
+        "./src",
+        "/home/trickfire/urc-2023/install/custom_interfaces/local/lib/python3.10/dist-packages"
     ],
     "python.defaultInterpreterPath": "python3",
     "pylint.args": [
         "--rcfile=.pylintrc"
     ],
-    "pylint.importStrategy": "useBundled",
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true
+    },
     "cmake.configureOnOpen": false,
     "cmake.sourceDirectory": "${workspaceFolder}/src/hello_world",
     "files.associations": {
         "*.tcc": "cpp"
-    }
+    },
+    "editor.rulers": [
+        100
+    ]
 }

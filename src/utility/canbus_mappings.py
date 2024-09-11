@@ -1,5 +1,4 @@
-
-class CanBusMappings():
+class CanBusMappings:
     # Drivebase
     CANID_REAR_RIGHT_DRIVE_MOTOR = 20
     CANID_MID_RIGHT_DRIVE_MOTOR = 21
@@ -15,7 +14,6 @@ class CanBusMappings():
     CANID_ARM_LEFT_WRIST_MOTOR = 3
     CANID_ARM_RIGHT_WRIST_MOTOR = 4
     CANID_ARM_TURNTABLE_MOTOR = 5
-    
-    def __init__(self):
-        pass
 
+    def __init__(self) -> None:
+        pass
