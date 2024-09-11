@@ -1,15 +1,8 @@
-import math
-from typing import Any, Callable, get_args, Literal, TYPE_CHECKING
-import sys
-sys.path.append("/home/trickfire/urc-2023/src")
-
-from utility.canbus_mappings import CanBusMappings
-from utility.moteus_data_out_json_helper import MoteusDataOutJsonHelper
-
 from rclpy.node import Node
+from rclpy.subscription import Subscription
 from std_msgs.msg import String
 
-
+from utility.moteus_data_out_json_helper import MoteusDataOutJsonHelper
 
 moteusTopicList = {
     "front_left_drive_motor_from_can",
@@ -26,41 +19,36 @@ moteusTopicList = {
 }
 
 
+class RobotInfo:
 
-class RobotInfo():
-    
-    
-    def __init__(self, rosNode : Node):
-        self._rosNode = rosNode
-        self.subList = [] # empty array
-        self.canIDToJSON = {} #Dict
-        
-        self.canIDToJSON[20] = MoteusDataOutJsonHelper()
-        self.canIDToJSON[21] = MoteusDataOutJsonHelper()
-        self.canIDToJSON[22] = MoteusDataOutJsonHelper()
-        self.canIDToJSON[23] = MoteusDataOutJsonHelper()
-        self.canIDToJSON[24] = MoteusDataOutJsonHelper()
-        self.canIDToJSON[25] = MoteusDataOutJsonHelper()
-        self.canIDToJSON[1] = MoteusDataOutJsonHelper()
-        self.canIDToJSON[2] = MoteusDataOutJsonHelper()
-        self.canIDToJSON[3] = MoteusDataOutJsonHelper()
-        self.canIDToJSON[4] = MoteusDataOutJsonHelper()
-        self.canIDToJSON[5] = MoteusDataOutJsonHelper()
-        
+    def __init__(self, ros_node: Node):
+        self._ros_node = ros_node
+        self.sub_list: list[Subscription] = []  # empty array
+        self.can_id_to_json: dict[int, MoteusDataOutJsonHelper] = {}  # Dict
+
+        self.can_id_to_json[20] = MoteusDataOutJsonHelper()
+        self.can_id_to_json[21] = MoteusDataOutJsonHelper()
+        self.can_id_to_json[22] = MoteusDataOutJsonHelper()
+        self.can_id_to_json[23] = MoteusDataOutJsonHelper()
+        self.can_id_to_json[24] = MoteusDataOutJsonHelper()
+        self.can_id_to_json[25] = MoteusDataOutJsonHelper()
+        self.can_id_to_json[1] = MoteusDataOutJsonHelper()
+        self.can_id_to_json[2] = MoteusDataOutJsonHelper()
+        self.can_id_to_json[3] = MoteusDataOutJsonHelper()
+        self.can_id_to_json[4] = MoteusDataOutJsonHelper()
+        self.can_id_to_json[5] = MoteusDataOutJsonHelper()
+
         self.createSubscribers()
-        
-    def createSubscribers(self):
-        for topicName in moteusTopicList:
-            sub = self._rosNode.create_subscription(String, topicName, self.subCallback, 1)
-            self.subList.append(sub)
-            
-    def subCallback(self, msg):
-        jsonHelper = MoteusDataOutJsonHelper()
-        jsonHelper.buildHelper(msg.data)
-        self.canIDToJSON[jsonHelper.canID] = jsonHelper
-        
-    def getDataFromCanID(self, canID):          
-        return self.canIDToJSON[canID]
 
-        
-        
+    def createSubscribers(self) -> None:
+        for topic_name in moteusTopicList:
+            sub = self._ros_node.create_subscription(String, topic_name, self.subCallback, 1)
+            self.sub_list.append(sub)
+
+    def subCallback(self, msg: String) -> None:
+        json_helper = MoteusDataOutJsonHelper()
+        json_helper.buildHelper(msg.data)
+        self.can_id_to_json[json_helper.can_id] = json_helper
+
+    def getDataFromCanID(self, can_id: int) -> MoteusDataOutJsonHelper:
+        return self.can_id_to_json[can_id]
