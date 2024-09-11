@@ -9,13 +9,8 @@ source /home/trickfire/urc-2023/install/setup.bash
 #ip link set can0 type can bitrate 1000000 dbitrate 5000000 fd on
 #ip link set can0 up
 
-#modprobe can
-#modprobe can_raw
-#modprobe mttcan
-#ip link set can0 type can bitrate 1000000 dbitrate 5000000 fd on
-#ip link set can0 up
-
 # Add to the python import pathes. Not the best, but will work for now
+# TODO: Switch this folder to the libs folder once that's done
 export PYTHONPATH="/home/trickfire/urc-2023/src/:$PYTHONPATH"
 
 ros2 launch viator_launch robot.launch.py & ros2 launch rosbridge_server rosbridge_websocket_launch.xml
