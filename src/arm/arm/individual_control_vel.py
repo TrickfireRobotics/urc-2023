@@ -38,9 +38,7 @@ class IndividualControlVel:
         )
 
         # Elbow motor
-        self.elbow_up_sub = ros_node.create_subscription(
-            Float32, "elbow_up", self.elbowUp, 10
-        )
+        self.elbow_up_sub = ros_node.create_subscription(Float32, "elbow_up", self.elbowUp, 10)
 
         self.elbow_down_sub = ros_node.create_subscription(
             Float32, "elbow_down", self.elbowDown, 10

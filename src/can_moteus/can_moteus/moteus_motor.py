@@ -154,7 +154,7 @@ class MoteusMotor:
                 msg.data = json_string
 
                 self._publisher.publish(msg)
-        except Exception as error: # pylint: disable=broad-exception-caught
+        except Exception as error:  # pylint: disable=broad-exception-caught
             # This is used to handle any errors in order to prevent the thread from dying
             # Specifically, when we crtl-c we want the motors to be set_stop(), but if this thread
             # crashes we cannot do that. So we catch any errors
