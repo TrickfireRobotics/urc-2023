@@ -3,6 +3,8 @@ This module just contains the RobotInterface class. It provides utility function
 motors on the robot. 
 """
 
+import math
+
 from rclpy.node import Node
 from rclpy.publisher import Publisher
 from std_msgs.msg import String
@@ -72,7 +74,7 @@ class RobotInterface:
         motor: MoteusMotorConfig
             The config of the motor to stop.
         """
-        self.runMotor(motor, MoteusRunSettings(velocity=0))
+        self.runMotor(motor, MoteusRunSettings(position=math.nan, velocity=0))
 
     def disableMotor(self, motor: MoteusMotorConfig) -> None:
         """
