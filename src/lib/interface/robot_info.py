@@ -7,7 +7,7 @@ from rclpy.node import Node
 from rclpy.subscription import Subscription
 from std_msgs.msg import String
 
-from lib.configs import MotorConfigs
+from lib.configs import MoteusMotorConfig, MotorConfigs
 from lib.moteus_motor_state import MoteusMotorState
 
 
@@ -32,7 +32,7 @@ class RobotInfo:  # pylint: disable=too-few-public-methods
         state = MoteusMotorState.fromJsonMsg(msg)
         self.can_id_to_json[state.can_id] = state
 
-    def getMotorState(self, can_id: int) -> MoteusMotorState:
+    def getMotorState(self, motor: MoteusMotorConfig) -> MoteusMotorState:
         """
         Gets the state of the motor with the given can_id.
 
@@ -41,4 +41,4 @@ class RobotInfo:  # pylint: disable=too-few-public-methods
         can_id: int
             The can id of the motor to get the state of.
         """
-        return self.can_id_to_json[can_id]
+        return self.can_id_to_json[motor.can_id]

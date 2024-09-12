@@ -6,6 +6,7 @@ from rclpy.node import Node
 from std_msgs.msg import String
 
 from lib.color_codes import ColorCodes, colorStr
+from lib.configs import MotorConfigs
 from lib.interface.robot_info import RobotInfo
 
 from . import info_to_json_helper
@@ -25,12 +26,10 @@ class MissionControlUpdater(Node):
         self.robot_info = RobotInfo(self)
 
     def sendData(self) -> None:
-        set_of_can_id = {20, 21, 22, 23, 24, 25, 1, 2, 3, 4, 5}
-
         json_builder = info_to_json_helper.InfoToJSONHelper()
 
-        for can_id in set_of_can_id:
-            json_builder.addMoteusEntry(self.robot_info.getMotorState(can_id))
+        for motor in MotorConfigs.getAllMotors():
+            json_builder.addMoteusEntry(self.robot_info.getMotorState(motor))
 
         msg = String()
         msg.data = json_builder.buildJSONString()
