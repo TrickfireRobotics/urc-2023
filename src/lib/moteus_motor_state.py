@@ -18,13 +18,37 @@ class MoteusMotorState(JsonMsg["MoteusMotorState"]):
 
     can_id: int = -1
     position: float | None = None
+    """
+    Current position of the motor in revolutions.
+    """
     velocity: float | None = None
+    """
+    Current velocity of the motor in revolutions per second. 
+    """
     torque: float | None = None
+    """
+    Current torque of the motor in newton meters.
+    """
     temperature: float | None = None
+    """
+    Current temperature of the controller in celcius.
+    """
     power: float | None = None
+    """
+    Current power draw of the controller in watts.
+    """
     input_voltage: float | None = None
+    """
+    Current voltage of the controller in volts.
+    """
     q_current: float | None = None
+    """
+    Current q phase measured in amps.
+    """
     d_current: float | None = None
+    """
+    Current d phase measured in amps.
+    """
 
     @classmethod
     def fromMoteusData(cls, can_id: int, moteus_result: Result) -> "MoteusMotorState":
@@ -53,7 +77,13 @@ class MoteusRunSettings(JsonMsg["MoteusRunSettings"]):
     """
 
     position: float | None = None
+    """
+    Requested position of the motor in revolutions.
+    """
     velocity: float | None = None
+    """
+    Requested velocity of the motor in revolutions per second.
+    """
     feedforward_torque: float | None = None
     kp_scale: float | None = None
     kd_scale: float | None = None

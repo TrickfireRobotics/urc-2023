@@ -25,7 +25,6 @@ class RobotInfo:  # pylint: disable=too-few-public-methods
             self._ros_node.create_subscription(
                 String, motor_config.getCanTopicName(), self._subCallback, 10
             )
-            # TODO: Perhaps setting it to the default state isn't good?
             self.can_id_to_json[motor_config.can_id] = MoteusMotorState()
 
     def _subCallback(self, msg: String) -> None:

@@ -12,6 +12,9 @@ from std_msgs.msg import String
 from lib.configs import MoteusMotorConfig, MotorConfigs
 from lib.moteus_motor_state import MoteusRunSettings
 
+REVS_TO_RADIANS = math.pi * 2
+RADIANS_TO_REVS = 1 / REVS_TO_RADIANS
+
 
 class RobotInterface:
     """
@@ -55,12 +58,12 @@ class RobotInterface:
             motor,
             MoteusRunSettings(
                 position=math.nan,
-                velocity=target_radians_per_second,
+                velocity=target_radians_per_second * RADIANS_TO_REVS,
                 set_stop=False,
             ),
         )
 
-    def runMotorPosition(self, motor: MoteusMotorConfig, target_revolutions: float) -> None:
+    def runMotorPosition(self, motor: MoteusMotorConfig, target_radians: float) -> None:
         """
         Runs the specified motor to reach the specified position.
 
@@ -68,10 +71,12 @@ class RobotInterface:
         -------
         motor : MoteusMotorConfig
             The config of the motor to run.
-        target_revolutions: float
+        target_radians: float
             The target position in revolutions.
         """
-        self.runMotor(motor, MoteusRunSettings(position=target_revolutions, set_stop=False))
+        self.runMotor(
+            motor, MoteusRunSettings(position=target_radians * RADIANS_TO_REVS, set_stop=False)
+        )
 
     def stopMotor(self, motor: MoteusMotorConfig) -> None:
         """
