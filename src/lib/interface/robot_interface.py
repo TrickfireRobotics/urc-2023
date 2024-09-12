@@ -51,11 +51,14 @@ class RobotInterface:
         target_radians_per_second: float
             The target speed in radians per second to run the motor.
         """
-        self.runMotor(motor, MoteusRunSettings(
-            position=math.nan,
-            velocity=target_radians_per_second, 
-            set_stop=False,
-        ))
+        self.runMotor(
+            motor,
+            MoteusRunSettings(
+                position=math.nan,
+                velocity=target_radians_per_second,
+                set_stop=False,
+            ),
+        )
 
     def runMotorPosition(self, motor: MoteusMotorConfig, target_revolutions: float) -> None:
         """
