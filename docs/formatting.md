@@ -132,6 +132,10 @@ class Banana:
     def getPortions(self) -> list[BananaPortion]:
         """
         Returns a list of `BananaPortion` containing the portions this banana represents.
+
+        Returns
+        ------
+            A list of `BananPortion` containing the portions this banana represents.
         """
         return self._portions
 
