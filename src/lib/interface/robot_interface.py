@@ -64,11 +64,24 @@ class RobotInterface:
 
     def stopMotor(self, motor: MoteusMotorConfig) -> None:
         """
-        Stops the specified motor.
+        Stops the specified motor. This will stop the motor in place, not make it go limp unlike
+        `disableMotor()`.
+
+        Parameters
+        ------
+        motor: MoteusMotorConfig
+            The config of the motor to stop.
+        """
+        self.runMotor(motor, MoteusRunSettings(velocity=0))
+
+    def disableMotor(self, motor: MoteusMotorConfig) -> None:
+        """
+        Disables the specified motor. This essentially turns off the motor, stopping all output and
+        making it go limp.
 
         Parameters
         -------
         motor : MoteusMotorConfig
-            The config of the motor to stop.
+            The config of the motor to disable.
         """
         self.runMotor(motor, MoteusRunSettings(velocity=0, set_stop=True))

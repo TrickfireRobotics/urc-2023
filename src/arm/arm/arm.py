@@ -47,11 +47,11 @@ class Arm(Node):
         self.current_mode = msg.data
 
         if self.current_mode == 0:
-            self.bot_interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
-            self.bot_interface.stopMotor(MotorConfigs.ARM_SHOULDER_MOTOR)
-            self.bot_interface.stopMotor(MotorConfigs.ARM_ELBOW_MOTOR)
-            self.bot_interface.stopMotor(MotorConfigs.ARM_LEFT_WRIST_MOTOR)
-            self.bot_interface.stopMotor(MotorConfigs.ARM_RIGHT_WRIST_MOTOR)
+            self.bot_interface.disableMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
+            self.bot_interface.disableMotor(MotorConfigs.ARM_SHOULDER_MOTOR)
+            self.bot_interface.disableMotor(MotorConfigs.ARM_ELBOW_MOTOR)
+            self.bot_interface.disableMotor(MotorConfigs.ARM_LEFT_WRIST_MOTOR)
+            self.bot_interface.disableMotor(MotorConfigs.ARM_RIGHT_WRIST_MOTOR)
 
             self.individual_control_vel.can_send = False
         elif self.current_mode == 1:
