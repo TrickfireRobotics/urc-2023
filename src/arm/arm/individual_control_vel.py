@@ -1,7 +1,7 @@
-from rclpy import Node
+from rclpy.node import Node
 from std_msgs.msg import Float32
 
-from interface.robot_interface import RobotInterface
+from lib.interface.robot_interface import RobotInterface
 
 
 class IndividualControlVel:

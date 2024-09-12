@@ -5,8 +5,8 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import String
 
-from interface.robot_info import RobotInfo
-from utility.color_text import ColorCodes
+from lib.color_codes import ColorCodes
+from lib.interface.robot_info import RobotInfo
 
 from . import info_to_json_helper
 

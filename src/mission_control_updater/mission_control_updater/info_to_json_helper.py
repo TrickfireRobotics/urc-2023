@@ -1,6 +1,6 @@
 import json
 
-from utility.moteus_data_out_json_helper import MoteusDataOutJsonHelper
+from lib.moteus_data_out_json_helper import MoteusDataOutJsonHelper
 
 
 class InfoToJSONHelper:

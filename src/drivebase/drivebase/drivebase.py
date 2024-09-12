@@ -5,8 +5,8 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import Float32
 
-from interface.robot_interface import RobotInterface
-from utility.color_text import ColorCodes
+from lib.color_codes import ColorCodes
+from lib.interface.robot_interface import RobotInterface
 
 
 class Drivebase(Node):

@@ -2,7 +2,7 @@ from rclpy.node import Node
 from rclpy.subscription import Subscription
 from std_msgs.msg import String
 
-from utility.moteus_data_out_json_helper import MoteusDataOutJsonHelper
+from lib.moteus_data_out_json_helper import MoteusDataOutJsonHelper
 
 moteusTopicList = {
     "front_left_drive_motor_from_can",

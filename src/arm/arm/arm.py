@@ -8,8 +8,8 @@ from rclpy.node import Node
 from std_msgs.msg import Int32
 
 from custom_interfaces.srv import ArmMode
-from interface.robot_interface import RobotInterface
-from utility.color_text import ColorCodes
+from lib.color_codes import ColorCodes
+from lib.interface.robot_interface import RobotInterface
 
 from .individual_control_vel import IndividualControlVel
 

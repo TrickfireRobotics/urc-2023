@@ -4,7 +4,7 @@ from rclpy.node import Node
 from rclpy.publisher import Publisher
 from std_msgs.msg import Float32, String
 
-from utility.moteus_data_in_json_helper import MoteusDataInJsonHelper
+from lib.moteus_data_in_json_helper import MoteusDataInJsonHelper
 
 VELOCITY_CONVERSION = 1
 POSITION_CONVERSION = 1 / (6.28)  # Radians to position ticks

@@ -3,18 +3,19 @@ from typing import Any
 
 import moteus
 import std_msgs.msg
-from rclpy import Node
+from rclpy.node import Node
 from rclpy.publisher import Publisher
 from rclpy.subscription import Subscription
 from std_msgs.msg import String
 
-from utility.moteus_data_in_json_helper import MoteusDataInJsonHelper
-from utility.moteus_data_out_json_helper import MoteusDataOutJsonHelper
+from lib.configs import MoteusMotorConfig
+from lib.moteus_data_in_json_helper import MoteusDataInJsonHelper
+from lib.moteus_data_out_json_helper import MoteusDataOutJsonHelper
 
 
 class MoteusMotor:
 
-    def __init__(self, can_id: int, name: str, ros_node: Node) -> None:
+    def __init__(self, config: MoteusMotorConfig, ros_node: Node) -> None:
         """
         Create a logical representation of a motor that is using
         a Moteus controller. Contains a list of variables that should be
@@ -22,16 +23,13 @@ class MoteusMotor:
 
         Paramaters
         -------
-        canID : int
-            The canID of the Moteus Controller
-        name : string
-            The name of the motor. This is used in the topic names
+        config : MoteusMotorConfig
+            The config of the motor.
         rosNode : Node
             The ROS node used to create the ros_moteus_bridge.py
         """
 
-        self.can_id = can_id
-        self.name = name
+        self.config = config
         self._ros_node = ros_node
 
         self._subscriber = self._createSubscriber()
@@ -59,9 +57,9 @@ class MoteusMotor:
     def _createSubscriber(self) -> Subscription:
         """
         The subscriber to get data from.
-        The format of the topic is the following: <motor name>_from_interface
+        The format of the topic is the following: moteusmotor_<can_id>_from_interface
         """
-        topic_name = self.name + "_from_interface"
+        topic_name = self.config.getInterfaceTopicName()
         subscriber = self._ros_node.create_subscription(
             std_msgs.msg.String,
             topic_name,
@@ -74,9 +72,9 @@ class MoteusMotor:
     def _createPublisher(self) -> Publisher:
         """
         The publisher to send data to.
-        The format of the topic is the following: <motor name>_from_can
+        The format of the topic is the following: moteusmotor_<can_id>_from_can
         """
-        topic_name = self.name + "_from_can"
+        topic_name = self.config.getCanTopicName()
         # Size of queue is 1. All additional ones are dropped
         publisher = self._ros_node.create_publisher(std_msgs.msg.String, topic_name, 1)
 
@@ -88,12 +86,9 @@ class MoteusMotor:
         meaning that no one can go into any other "critical section"
         of code that also has a mutex protecting it.
         """
-        self.mutex_lock.acquire()
-        try:
+        with self.mutex_lock:
             json_string = msg.data
             self.updateMotorState(json_string)
-        finally:
-            self.mutex_lock.release()
 
     def updateMotorState(self, raw_json_string: str) -> None:
         """
@@ -119,11 +114,13 @@ class MoteusMotor:
         """
         Publishes the data from the moteus controller
         """
-        self.mutex_lock.acquire()
-        try:
-            if self._ros_node.context.ok:
+        with self.mutex_lock:
+            try:
+                if not self._ros_node.context.ok():
+                    return
+
                 json_helper = MoteusDataOutJsonHelper()
-                json_helper.can_id = self.can_id
+                json_helper.can_id = self.config.can_id
                 json_helper.position = moteus_data.values[moteus.Register.POSITION]
                 json_helper.velocity = moteus_data.values[moteus.Register.VELOCITY]
                 json_helper.torque = moteus_data.values[moteus.Register.TORQUE]
@@ -146,11 +143,9 @@ class MoteusMotor:
                 msg.data = json_string
 
                 self._publisher.publish(msg)
-        except Exception as error:  # pylint: disable=broad-exception-caught
-            # This is used to handle any errors in order to prevent the thread from dying
-            # Specifically, when we crtl-c we want the motors to be set_stop(), but if this thread
-            # crashes we cannot do that. So we catch any errors
-            self._ros_node.get_logger().info("Failed to publish motor data")
-            self._ros_node.get_logger().info(str(error))
-        finally:
-            self.mutex_lock.release()
+            except Exception as error:  # pylint: disable=broad-exception-caught
+                # This is used to handle any errors in order to prevent the thread from dying
+                # Specifically, when we crtl-c we want the motors to be set_stop(), but if this
+                # thread crashes we cannot do that. So we catch any errors
+                self._ros_node.get_logger().info("Failed to publish motor data")
+                self._ros_node.get_logger().info(str(error))
