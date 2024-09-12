@@ -8,7 +8,7 @@ from rclpy.node import Node
 from std_msgs.msg import Int32
 
 from custom_interfaces.srv import ArmMode
-from lib.color_codes import ColorCodes
+from lib.color_codes import ColorCodes, colorStr
 from lib.configs import MotorConfigs
 from lib.interface.robot_interface import RobotInterface
 
@@ -25,7 +25,7 @@ class ArmModeEnum(IntEnum):
 class Arm(Node):
     def __init__(self) -> None:
         super().__init__("arm_node")
-        self.get_logger().info(ColorCodes.BLUE_OK + "Launching arm_node" + ColorCodes.ENDC)
+        self.get_logger().info(colorStr("Launching arm_node", ColorCodes.BLUE_OK))
 
         self.change_arm_mode_sub = self.create_subscription(
             Int32, "update_arm_mode", self.updateArmMode, 10
@@ -76,7 +76,7 @@ def main(args: list[str] | None = None) -> None:
         pass
     except ExternalShutdownException:
         # This is done when we ctrl-c the progam to shut it down
-        node.get_logger().info(ColorCodes.BLUE_OK + "Shutting down arm_node node" + ColorCodes.ENDC)
+        node.get_logger().info(colorStr("Shutting down arm_node node", ColorCodes.BLUE_OK))
         node.destroy_node()
         sys.exit(0)
 

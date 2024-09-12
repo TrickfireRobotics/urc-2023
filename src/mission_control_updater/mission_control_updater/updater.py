@@ -5,7 +5,7 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import String
 
-from lib.color_codes import ColorCodes
+from lib.color_codes import ColorCodes, colorStr
 from lib.interface.robot_info import RobotInfo
 
 from . import info_to_json_helper
@@ -16,7 +16,7 @@ class MissionControlUpdater(Node):
     def __init__(self) -> None:
         super().__init__("mission_control_updater_node")
         self.get_logger().info(
-            ColorCodes.BLUE_OK + "Launching mission_control_updater_node" + ColorCodes.ENDC
+            colorStr("Launching mission_control_updater_node", ColorCodes.BLUE_OK)
         )
 
         self.publisher_to_mc = self.create_publisher(String, "mission_control_updater", 1)
@@ -52,7 +52,7 @@ def main(args: list[str] | None = None) -> None:
     except ExternalShutdownException:
         # This is done when we ctrl-c the progam to shut it down
         node.get_logger().info(
-            ColorCodes.BLUE_OK + "Shutting down mission_control_updater_node" + ColorCodes.ENDC
+            colorStr("Shutting down mission_control_updater_node", ColorCodes.BLUE_OK)
         )
         node.destroy_node()
         sys.exit(0)

@@ -6,7 +6,7 @@ from rclpy.node import Node
 from std_msgs.msg import Float32
 from usb.core import find as finddev
 
-from lib.color_codes import ColorCodes
+from lib.color_codes import ColorCodes, colorStr
 from lib.configs import MotorConfigs
 
 from . import moteus_thread_manager
@@ -24,7 +24,7 @@ class RosMotuesBridge(Node):
 
     def __init__(self) -> None:
         super().__init__("can_moteus_node")
-        self.get_logger().info(ColorCodes.BLUE_OK + "Launching can_moteus node" + ColorCodes.ENDC)
+        self.get_logger().info(colorStr("Launching can_moteus node", ColorCodes.BLUE_OK))
 
         # Reset the CANFD-USB
         # run "lsusb" in cmd with the CANFD-USB connected
@@ -42,9 +42,9 @@ class RosMotuesBridge(Node):
             self.createMoteusMotors()
         else:
             self.get_logger().info(
-                ColorCodes.FAIL_RED
-                + "Failed to find CANFD-USB usb device. Is it plugged in?"
-                + ColorCodes.ENDC
+                colorStr(
+                    "Failed to find CANFD-USB usb device. Is it plugged in?", ColorCodes.FAIL_RED
+                )
             )
 
     def reconnect(self, _: Float32) -> None:
@@ -96,7 +96,7 @@ def main(args: list[str] | None = None) -> None:
         pass
     except ExternalShutdownException:
         # This is done when we ctrl-c the progam to shut it down
-        node.get_logger().info(ColorCodes.BLUE_OK + "Shutting down can_moteus" + ColorCodes.ENDC)
+        node.get_logger().info(colorStr("Shutting down can_moteus", ColorCodes.BLUE_OK))
         if node.thread_manager is not None:
             node.thread_manager.terminateAllThreads()
         node.destroy_node()

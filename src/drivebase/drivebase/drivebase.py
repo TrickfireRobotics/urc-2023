@@ -5,7 +5,7 @@ from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import Float32
 
-from lib.color_codes import ColorCodes
+from lib.color_codes import ColorCodes, colorStr
 from lib.configs import MotorConfigs
 from lib.interface.robot_interface import RobotInterface
 
@@ -15,8 +15,7 @@ class Drivebase(Node):
 
     def __init__(self) -> None:
         super().__init__("drivebase")
-        self.get_logger().info(ColorCodes.BLUE_OK + "Launching drivebase node" + ColorCodes.ENDC)
-
+        self.get_logger().info(colorStr("Launching drivebase node", ColorCodes.BLUE_OK))
         self.bot_interface = RobotInterface(self)
 
         self.left_subscription = self.create_subscription(
@@ -58,9 +57,7 @@ def main(args: list[str] | None = None) -> None:
         # Destroy the node explicitly
         # (optional - otherwise it will be done automatically
         # when the garbage collector destroys the node object)
-        drivebase.get_logger().info(
-            ColorCodes.BLUE_OK + "Shutting down drivebase" + ColorCodes.ENDC
-        )
+        drivebase.get_logger().info(colorStr("Shutting down drivebase", ColorCodes.BLUE_OK))
         drivebase.destroy_node()
         sys.exit(0)
 
