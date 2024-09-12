@@ -23,7 +23,9 @@ class RobotInterface:
         self._publishers: dict[int, Publisher] = {}
 
         for motor_config in MotorConfigs.getAllMotors():
-            self._ros_node.create_publisher(String, motor_config.getInterfaceTopicName(), 10)
+            self._publishers[motor_config.can_id] = self._ros_node.create_publisher(
+                String, motor_config.getInterfaceTopicName(), 10
+            )
 
     def runMotor(self, motor: MoteusMotorConfig, run_settings: MoteusRunSettings) -> None:
         """
@@ -49,7 +51,11 @@ class RobotInterface:
         target_radians_per_second: float
             The target speed in radians per second to run the motor.
         """
-        self.runMotor(motor, MoteusRunSettings(velocity=target_radians_per_second))
+        self.runMotor(motor, MoteusRunSettings(
+            position=math.nan,
+            velocity=target_radians_per_second, 
+            set_stop=False,
+        ))
 
     def runMotorPosition(self, motor: MoteusMotorConfig, target_revolutions: float) -> None:
         """
@@ -62,7 +68,7 @@ class RobotInterface:
         target_revolutions: float
             The target position in revolutions.
         """
-        self.runMotor(motor, MoteusRunSettings(position=target_revolutions))
+        self.runMotor(motor, MoteusRunSettings(position=target_revolutions, set_stop=False))
 
     def stopMotor(self, motor: MoteusMotorConfig) -> None:
         """
@@ -74,7 +80,7 @@ class RobotInterface:
         motor: MoteusMotorConfig
             The config of the motor to stop.
         """
-        self.runMotor(motor, MoteusRunSettings(position=math.nan, velocity=0))
+        self.runMotor(motor, MoteusRunSettings(position=math.nan, velocity=0, set_stop=False))
 
     def disableMotor(self, motor: MoteusMotorConfig) -> None:
         """

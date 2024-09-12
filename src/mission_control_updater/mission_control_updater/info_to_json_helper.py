@@ -21,5 +21,5 @@ class InfoToJSONHelper:
             "moteusMotorLength": len(moteus_dict_array),
             "moteusMotors": moteus_dict_array,
         }
-
+        
         return json.dumps(python_dict)

@@ -16,7 +16,7 @@ class MoteusMotorState(JsonMsg["MoteusMotorState"]):
     A dataclass representing the state of the moteus motor.
     """
 
-    can_id = -1
+    can_id: int = -1
     position: float | None = None
     velocity: float | None = None
     torque: float | None = None
@@ -27,11 +27,12 @@ class MoteusMotorState(JsonMsg["MoteusMotorState"]):
     d_current: float | None = None
 
     @classmethod
-    def fromMoteusData(cls, moteus_result: Result) -> "MoteusMotorState":
+    def fromMoteusData(cls, can_id: int, moteus_result: Result) -> "MoteusMotorState":
         """
         Creates a MoteusMotorState from a moteus result.
         """
         dict_ = {
+            "can_id": can_id,
             "position": moteus_result.values[moteus.Register.POSITION],
             "velocity": moteus_result.values[moteus.Register.VELOCITY],
             "torque": moteus_result.values[moteus.Register.TORQUE],
@@ -61,4 +62,4 @@ class MoteusRunSettings(JsonMsg["MoteusRunSettings"]):
     velocity_limit: float | None = None
     accel_limit: float | None = None
     fixed_voltage_override: float | None = None
-    set_stop: bool = False
+    set_stop: bool = True

@@ -138,22 +138,22 @@ class MoteusThreadManager:
                         await self.tryToShutdownMotor(can_id)
                         continue
 
-                    if motor.set_stop is True:
+                    if motor.run_settings.set_stop is True:
                         await asyncio.wait_for(controller.set_stop(), self.GENERAL_TIMEOUT)
 
                     else:
                         result_from_moteus = await asyncio.wait_for(
                             controller.set_position(
-                                position=motor.position,
-                                velocity=motor.velocity,
-                                feedforward_torque=motor.feedforward_torque,
-                                kp_scale=motor.kp_scale,
-                                kd_scale=motor.kd_scale,
-                                maximum_torque=motor.max_torque,
-                                watchdog_timeout=motor.watchdog_timeout,
-                                velocity_limit=motor.velocity_limit,
-                                accel_limit=motor.accel_limit,
-                                fixed_voltage_override=motor.fixed_voltage_override,
+                                position=motor.run_settings.position,
+                                velocity=motor.run_settings.velocity,
+                                feedforward_torque=motor.run_settings.feedforward_torque,
+                                kp_scale=motor.run_settings.kp_scale,
+                                kd_scale=motor.run_settings.kd_scale,
+                                maximum_torque=motor.run_settings.max_torque,
+                                watchdog_timeout=motor.run_settings.watchdog_timeout,
+                                velocity_limit=motor.run_settings.velocity_limit,
+                                accel_limit=motor.run_settings.accel_limit,
+                                fixed_voltage_override=motor.run_settings.fixed_voltage_override,
                                 query=True,
                             ),
                             self.GENERAL_TIMEOUT,

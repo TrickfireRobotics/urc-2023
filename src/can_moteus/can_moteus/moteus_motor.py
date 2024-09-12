@@ -94,7 +94,7 @@ class MoteusMotor:
                 # https://discord.com/channels/633996205759791104/722434939676786688/1252380387783610428
                 # self._rosNode.get_logger().info(str(moteusData.values.keys()))
 
-                state = MoteusMotorState.fromMoteusData(moteus_data)
+                state = MoteusMotorState.fromMoteusData(self.config.can_id, moteus_data)
                 self._publisher.publish(state.toMsg())
             except Exception as error:  # pylint: disable=broad-exception-caught
                 # This is used to handle any errors in order to prevent the thread from dying

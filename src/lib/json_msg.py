@@ -46,7 +46,7 @@ class JsonMsg(Generic[T]):
         Convert the message object into a String message containing a Json string.
         """
         str_msg = String()
-        str_msg.data = json.dumps(self)
+        str_msg.data = json.dumps(self.toDict())
         return str_msg
 
     def toDict(self) -> dict[str, Any]:
@@ -67,4 +67,4 @@ class JsonMsg(Generic[T]):
         # This code just gets the child class and constructs a new one
         # You can think of it like this: return T(**json_obj)
         # It's just that the above code is not valid
-        return get_args(cls)[0](**json_obj)
+        return cls(**json_obj)
