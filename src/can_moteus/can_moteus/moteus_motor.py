@@ -1,7 +1,7 @@
 from threading import Lock
-from typing import Any
 
 import std_msgs.msg
+from moteus.moteus import Result
 from rclpy.node import Node
 from rclpy.publisher import Publisher
 from rclpy.subscription import Subscription
@@ -78,7 +78,7 @@ class MoteusMotor:
         with self.mutex_lock:
             self.run_settings = MoteusRunSettings.fromJsonMsg(msg)
 
-    def publishData(self, moteus_data: Any) -> None:
+    def publishData(self, moteus_data: Result) -> None:
         """
         Publishes the data from the moteus controller
         """

@@ -3,9 +3,9 @@ This module contains objects representing the moteus motor state and settings fo
 """
 
 from dataclasses import dataclass
-from typing import Any
 
 import moteus
+from moteus.moteus import Result
 
 from lib.json_msg import JsonMsg
 
@@ -27,7 +27,7 @@ class MoteusMotorState(JsonMsg["MoteusMotorState"]):
     d_current: float | None = None
 
     @classmethod
-    def fromMoteusData(cls, moteus_result: Any) -> "MoteusMotorState":
+    def fromMoteusData(cls, moteus_result: Result) -> "MoteusMotorState":
         """
         Creates a MoteusMotorState from a moteus result.
         """

@@ -2,6 +2,7 @@ import asyncio
 import threading
 
 import moteus
+from moteus.moteus import Result
 from rclpy.node import Node
 
 from lib.color_codes import ColorCodes, colorStr
@@ -122,7 +123,7 @@ class MoteusThreadManager:
 
                 try:
                     # Check for faults
-                    result_from_moteus = await asyncio.wait_for(
+                    result_from_moteus: Result = await asyncio.wait_for(
                         controller.query(), self.GENERAL_TIMEOUT
                     )
 
