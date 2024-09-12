@@ -1,54 +1,44 @@
+"""
+This module just contains the RobotInfo class. It provides utility functions to access the state of
+motor on the robot.
+"""
+
 from rclpy.node import Node
 from rclpy.subscription import Subscription
 from std_msgs.msg import String
 
-from lib.moteus_data_out_json_helper import MoteusDataOutJsonHelper
-
-moteusTopicList = {
-    "front_left_drive_motor_from_can",
-    "mid_left_drive_motor_from_can",
-    "rear_left_drive_motor_from_can",
-    "front_right_drive_motor_from_can",
-    "mid_right_drive_motor_from_can",
-    "rear_right_drive_motor_from_can",
-    "arm_turntable_motor_from_can",
-    "arm_shoulder_motor_from_can",
-    "arm_elbow_motor_from_can",
-    "arm_left_wrist_motor_from_can",
-    "arm_right_wrist_motor_from_can",
-}
+from lib.configs import MotorConfigs
+from lib.moteus_motor_state import MoteusMotorState
 
 
-class RobotInfo:
+class RobotInfo:  # pylint: disable=too-few-public-methods
+    """
+    A class that provides utility functions to access the state of motors within the robot.
+    """
 
     def __init__(self, ros_node: Node):
         self._ros_node = ros_node
         self.sub_list: list[Subscription] = []  # empty array
-        self.can_id_to_json: dict[int, MoteusDataOutJsonHelper] = {}  # Dict
+        self.can_id_to_json: dict[int, MoteusMotorState] = {}  # Dict
 
-        self.can_id_to_json[20] = MoteusDataOutJsonHelper()
-        self.can_id_to_json[21] = MoteusDataOutJsonHelper()
-        self.can_id_to_json[22] = MoteusDataOutJsonHelper()
-        self.can_id_to_json[23] = MoteusDataOutJsonHelper()
-        self.can_id_to_json[24] = MoteusDataOutJsonHelper()
-        self.can_id_to_json[25] = MoteusDataOutJsonHelper()
-        self.can_id_to_json[1] = MoteusDataOutJsonHelper()
-        self.can_id_to_json[2] = MoteusDataOutJsonHelper()
-        self.can_id_to_json[3] = MoteusDataOutJsonHelper()
-        self.can_id_to_json[4] = MoteusDataOutJsonHelper()
-        self.can_id_to_json[5] = MoteusDataOutJsonHelper()
+        for motor_config in MotorConfigs.getAllMotors():
+            self._ros_node.create_subscription(
+                String, motor_config.getCanTopicName(), self._subCallback, 10
+            )
+            # TODO: Perhaps setting it to the default state isn't good?
+            self.can_id_to_json[motor_config.can_id] = MoteusMotorState()
 
-        self.createSubscribers()
+    def _subCallback(self, msg: String) -> None:
+        state = MoteusMotorState.fromJsonMsg(msg)
+        self.can_id_to_json[state.can_id] = state
 
-    def createSubscribers(self) -> None:
-        for topic_name in moteusTopicList:
-            sub = self._ros_node.create_subscription(String, topic_name, self.subCallback, 1)
-            self.sub_list.append(sub)
+    def getMotorState(self, can_id: int) -> MoteusMotorState:
+        """
+        Gets the state of the motor with the given can_id.
 
-    def subCallback(self, msg: String) -> None:
-        json_helper = MoteusDataOutJsonHelper()
-        json_helper.buildHelper(msg.data)
-        self.can_id_to_json[json_helper.can_id] = json_helper
-
-    def getDataFromCanID(self, can_id: int) -> MoteusDataOutJsonHelper:
+        Parameters
+        ------
+        can_id: int
+            The can id of the motor to get the state of.
+        """
         return self.can_id_to_json[can_id]

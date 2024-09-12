@@ -60,9 +60,14 @@ class MotorConfigs:
     def __setattr__(self, _: str, __: Any) -> Any:
         raise AttributeError("Trying to set attribute on a frozen instance")
 
-    def getAllMotors(self) -> list[MoteusMotorConfig]:
+    @classmethod
+    def getAllMotors(cls) -> list[MoteusMotorConfig]:
         """
         Returns a list of every motor in this constants class.
         """
-        # Simply return every attribute that doesn't start with an underscore
-        return [value for key, value in self.__dict__.items() if not key.startswith("_")]
+        # Simply return every attribute that doesn't start with an underscore and isn't this method
+        return [
+            value
+            for key, value in cls.__dict__.items()
+            if not key.startswith("_") and key != "getAllMotors"
+        ]

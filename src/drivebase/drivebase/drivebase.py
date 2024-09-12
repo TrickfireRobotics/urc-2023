@@ -6,6 +6,7 @@ from rclpy.node import Node
 from std_msgs.msg import Float32
 
 from lib.color_codes import ColorCodes
+from lib.configs import MotorConfigs
 from lib.interface.robot_interface import RobotInterface
 
 
@@ -27,15 +28,15 @@ class Drivebase(Node):
 
     def moveLeftSide(self, msg: Float32) -> None:
         vel = msg.data * self.SPEED
-        self.bot_interface.frontLeftDriveMotor(-vel)
-        self.bot_interface.midLeftDriveMotor(-vel)
-        self.bot_interface.rearLeftDriveMotor(-vel)
+        self.bot_interface.runMotorSpeed(MotorConfigs.FRONT_LEFT_DRIVE_MOTOR, -vel)
+        self.bot_interface.runMotorSpeed(MotorConfigs.MID_LEFT_DRIVE_MOTOR, -vel)
+        self.bot_interface.runMotorSpeed(MotorConfigs.REAR_LEFT_DRIVE_MOTOR, -vel)
 
     def moveRightSide(self, msg: Float32) -> None:
         vel = msg.data * self.SPEED
-        self.bot_interface.frontRightDriverMotor(vel)
-        self.bot_interface.midRightDriveMotor(vel)
-        self.bot_interface.rearRightDriveMotor(vel)
+        self.bot_interface.runMotorSpeed(MotorConfigs.FRONT_RIGHT_DRIVE_MOTOR, vel)
+        self.bot_interface.runMotorSpeed(MotorConfigs.MID_RIGHT_DRIVE_MOTOR, vel)
+        self.bot_interface.runMotorSpeed(MotorConfigs.REAR_RIGHT_DRIVE_MOTOR, vel)
 
     def turnLeft(self, msg: Float32) -> None:
         self.moveLeftSide(msg)

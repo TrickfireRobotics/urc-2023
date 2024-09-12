@@ -30,7 +30,7 @@ class MissionControlUpdater(Node):
         json_builder = info_to_json_helper.InfoToJSONHelper()
 
         for can_id in set_of_can_id:
-            json_builder.addMoteusEntry(self.robot_info.getDataFromCanID(can_id))
+            json_builder.addMoteusEntry(self.robot_info.getMotorState(can_id))
 
         msg = String()
         msg.data = json_builder.buildJSONString()

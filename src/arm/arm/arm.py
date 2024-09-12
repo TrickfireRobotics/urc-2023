@@ -9,6 +9,7 @@ from std_msgs.msg import Int32
 
 from custom_interfaces.srv import ArmMode
 from lib.color_codes import ColorCodes
+from lib.configs import MotorConfigs
 from lib.interface.robot_interface import RobotInterface
 
 from .individual_control_vel import IndividualControlVel
@@ -46,11 +47,11 @@ class Arm(Node):
         self.current_mode = msg.data
 
         if self.current_mode == 0:
-            self.bot_interface.disableArmTurntableMotor()
-            self.bot_interface.disableArmShoulderMotor()
-            self.bot_interface.disableArmElbowMotor()
-            self.bot_interface.disableArmLeftWristMotor()
-            self.bot_interface.disableArmRightWristMotor()
+            self.bot_interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
+            self.bot_interface.stopMotor(MotorConfigs.ARM_SHOULDER_MOTOR)
+            self.bot_interface.stopMotor(MotorConfigs.ARM_ELBOW_MOTOR)
+            self.bot_interface.stopMotor(MotorConfigs.ARM_LEFT_WRIST_MOTOR)
+            self.bot_interface.stopMotor(MotorConfigs.ARM_RIGHT_WRIST_MOTOR)
 
             self.individual_control_vel.can_send = False
         elif self.current_mode == 1:
