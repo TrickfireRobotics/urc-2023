@@ -227,3 +227,17 @@ class MoteusThreadManager:
                 self._ros_node.get_logger().info(
                     colorStr(str(error.with_traceback(None)), ColorCodes.FAIL_RED)
                 )
+
+            stream = moteus.Stream(controller)
+            try:
+                await stream.command("conf default".encode(encoding="utf-8"))
+                await stream.command("conf load".encode(encoding="utf-8"))
+                for key, value in motor.config:
+                    await stream.command(f"confg set {key} {value}".encode(encoding="utf-8"))
+            except RuntimeError as error:
+                self._ros_node.get_logger().info(
+                    colorStr("ERROR WHEN SETTING CONFIG.", ColorCodes.FAIL_RED)
+                )
+                self._ros_node.get_logger().info(
+                    colorStr(str(error.with_traceback(None)), ColorCodes.FAIL_RED)
+                )

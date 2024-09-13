@@ -18,6 +18,14 @@ class MoteusMotorConfig:
     The can id of the motor.
     """
 
+    config: dict[str, float | int]
+    """
+    The config of the motor. See:
+    https://github.com/mjbots/moteus/blob/main/docs/reference.md#c-configurable-values
+
+    The `id.id` will be ignored.
+    """
+
     def getCanTopicName(self) -> str:
         """
         Gets the motor's topic name for data sourced from can.
@@ -41,20 +49,20 @@ class MotorConfigs:
     """
 
     # Drivebase
-    REAR_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(can_id=20)
-    MID_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(can_id=21)
-    FRONT_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(can_id=22)
+    REAR_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(can_id=20, config={})
+    MID_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(can_id=21, config={})
+    FRONT_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(can_id=22, config={})
 
-    REAR_LEFT_DRIVE_MOTOR = MoteusMotorConfig(can_id=23)
-    MID_LEFT_DRIVE_MOTOR = MoteusMotorConfig(can_id=24)
-    FRONT_LEFT_DRIVE_MOTOR = MoteusMotorConfig(can_id=25)
+    REAR_LEFT_DRIVE_MOTOR = MoteusMotorConfig(can_id=23, config={})
+    MID_LEFT_DRIVE_MOTOR = MoteusMotorConfig(can_id=24, config={})
+    FRONT_LEFT_DRIVE_MOTOR = MoteusMotorConfig(can_id=25, config={})
 
     # Arm
-    ARM_SHOULDER_MOTOR = MoteusMotorConfig(can_id=1)
-    ARM_ELBOW_MOTOR = MoteusMotorConfig(can_id=2)
-    ARM_LEFT_WRIST_MOTOR = MoteusMotorConfig(can_id=3)
-    ARM_RIGHT_WRIST_MOTOR = MoteusMotorConfig(can_id=4)
-    ARM_TURNTABLE_MOTOR = MoteusMotorConfig(can_id=5)
+    ARM_SHOULDER_MOTOR = MoteusMotorConfig(can_id=1, config={})
+    ARM_ELBOW_MOTOR = MoteusMotorConfig(can_id=2, config={})
+    ARM_LEFT_WRIST_MOTOR = MoteusMotorConfig(can_id=3, config={})
+    ARM_RIGHT_WRIST_MOTOR = MoteusMotorConfig(can_id=4, config={})
+    ARM_TURNTABLE_MOTOR = MoteusMotorConfig(can_id=5, config={})
 
     # Don't allow anyone to change this class's attributes
     def __setattr__(self, _: str, __: Any) -> Any:
