@@ -3,6 +3,7 @@ This module contains all the relevant configs for the rover, and any classes nee
 configs.
 """
 
+import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -49,20 +50,130 @@ class MotorConfigs:
     """
 
     # Drivebase
-    REAR_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(can_id=20, config={})
-    MID_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(can_id=21, config={})
-    FRONT_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(can_id=22, config={})
+    REAR_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(
+        can_id=20,
+        config={
+            "servo.pwm_rate_hz": 50000,
+            "servo.pid_position.kp": 20.0,
+            "servo.pid_position.ki": 0.0,
+            "servo.pid_position.kd": 0.0,
+            "servo.default_timeout_s": 0.5,
+            "servo.max_current_A": 10.0,
+            "servo.max_velocity": 100.0,
+            "servopos.position_min": math.nan,
+            "servopos.position_max": math.nan,
+        },
+    )
+    MID_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(
+        can_id=21,
+        config={
+            "servo.pwm_rate_hz": 50000,
+            "servo.pid_position.kp": 20.0,
+            "servo.pid_position.ki": 0.0,
+            "servo.pid_position.kd": 0.0,
+            "servo.default_timeout_s": 0.5,
+            "servo.max_current_A": 10.0,
+            "servo.max_velocity": 100.0,
+            "servopos.position_min": math.nan,
+            "servopos.position_max": math.nan,
+        },
+    )
+    FRONT_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(
+        can_id=22,
+        config={
+            "servo.pid_position.kp": 20.0,
+            "servo.pid_position.ki": 0.0,
+            "servo.pid_position.kd": 0.0,
+            "servo.default_timeout_s": 0.5,
+            "servo.max_current_A": 10.0,
+            "servo.max_velocity": 100.0,
+            "servopos.position_min": math.nan,
+            "servopos.position_max": math.nan,
+        },
+    )
 
-    REAR_LEFT_DRIVE_MOTOR = MoteusMotorConfig(can_id=23, config={})
-    MID_LEFT_DRIVE_MOTOR = MoteusMotorConfig(can_id=24, config={})
-    FRONT_LEFT_DRIVE_MOTOR = MoteusMotorConfig(can_id=25, config={})
+    REAR_LEFT_DRIVE_MOTOR = MoteusMotorConfig(
+        can_id=23,
+        config={
+            "servo.pwm_rate_hz": 50000,
+            "servo.pid_position.kp": 20.0,
+            "servo.pid_position.ki": 0.0,
+            "servo.pid_position.kd": 0.0,
+            "servo.default_timeout_s": 0.5,
+            "servo.max_current_A": 10.0,
+            "servo.max_velocity": 100.0,
+            "servopos.position_min": math.nan,
+            "servopos.position_max": math.nan,
+        },
+    )
+    MID_LEFT_DRIVE_MOTOR = MoteusMotorConfig(
+        can_id=24,
+        config={
+            "servo.pwm_rate_hz": 50000,
+            "servo.pid_position.kp": 20.0,
+            "servo.pid_position.ki": 0.0,
+            "servo.pid_position.kd": 0.0,
+            "servo.default_timeout_s": 0.5,
+            "servo.max_current_A": 10.0,
+            "servo.max_velocity": 100.0,
+            "servopos.position_min": math.nan,
+            "servopos.position_max": math.nan,
+        },
+    )
+    FRONT_LEFT_DRIVE_MOTOR = MoteusMotorConfig(
+        can_id=25,
+        config={
+            "servo.pwm_rate_hz": 50000,
+            "servo.pid_position.kp": 20.0,
+            "servo.pid_position.ki": 0.0,
+            "servo.pid_position.kd": 0.0,
+            "servo.default_timeout_s": 0.5,
+            "servo.max_current_A": 10.0,
+            "servo.max_velocity": 100.0,
+            "servopos.position_min": math.nan,
+            "servopos.position_max": math.nan,
+        },
+    )
 
     # Arm
-    ARM_SHOULDER_MOTOR = MoteusMotorConfig(can_id=1, config={})
-    ARM_ELBOW_MOTOR = MoteusMotorConfig(can_id=2, config={})
+    ARM_SHOULDER_MOTOR = MoteusMotorConfig(
+        can_id=1,
+        config={
+            "servo.max_voltage": 56.0,
+            "servopos.position_min": math.nan,
+            "servopos.position_max": math.nan,
+        },
+    )
+    ARM_ELBOW_MOTOR = MoteusMotorConfig(
+        can_id=2,
+        config={
+            "motor_position.rotor_to_output_ratio": 0.01666,
+            "servo.pwm_rate_hz": 60000,
+            "servo.pid_position.kp": 10000.0,
+            "servo.pid_position.ki": 0.0,
+            "servo.pid_position.kd": 0.0,
+            "servo.default_timeout_s": 1.0,
+            "servo.max_current_A": 6.0,
+            "servo.max_velocity": 0.1,
+            "servopos.position_min": -0.5,
+            "servopos.position_max": 0.0,
+        },
+    )
     ARM_LEFT_WRIST_MOTOR = MoteusMotorConfig(can_id=3, config={})
     ARM_RIGHT_WRIST_MOTOR = MoteusMotorConfig(can_id=4, config={})
-    ARM_TURNTABLE_MOTOR = MoteusMotorConfig(can_id=5, config={})
+    ARM_TURNTABLE_MOTOR = MoteusMotorConfig(
+        can_id=5,
+        config={
+            "motor_position.rotor_to_output_ratio": 0.030581,
+            "servo.pid_position.kp": 16.0,
+            "servo.pid_position.ki": 0.0,
+            "servo.pid_position.kd": 1.0,
+            "servo.max_current_A": 10.0,
+            "servo.max_velocity": 1.0,
+            "servopos.position_min": math.nan,
+            "servopos.position_max": math.nan,
+        },
+    )
 
     # Don't allow anyone to change this class's attributes
     def __setattr__(self, _: str, __: Any) -> Any:
