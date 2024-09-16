@@ -262,12 +262,43 @@ class MoteusThreadManager:
                         ColorCodes.FAIL_RED,
                     )
                 )
+                continue
             except RuntimeError as error:
                 self._ros_node.get_logger().info(
                     colorStr(
                         "ERROR WHEN set_stop() IS CALLED. MOST LIKELY CANNOT FIND CANBUS",
                         ColorCodes.FAIL_RED,
                     )
+                )
+                self._ros_node.get_logger().info(
+                    colorStr(str(error.with_traceback(None)), ColorCodes.FAIL_RED)
+                )
+                continue
+
+            stream = moteus.Stream(controller, verbose=True)
+            try:
+                await asyncio.wait_for(
+                    stream.command("conf load".encode(encoding="utf-8")),
+                    timeout=self.CONNECTION_TIMEOUT_IN_SECONDS
+                )
+                for key, value in motor.config.config.items():
+                    if key == "id.id":
+                        continue
+                    await asyncio.wait_for(
+                        stream.command(f"conf set {key} {value}".encode(encoding="utf-8")),
+                        timeout=self.CONNECTION_TIMEOUT_IN_SECONDS
+                    )
+            except asyncio.TimeoutError:
+                self._ros_node.get_logger().info(
+                    colorStr(
+                        "FAILED TO SET CONFIG ON MOTOR: "
+                        + str(motor.config.can_id),
+                        ColorCodes.FAIL_RED,
+                    )
+                )
+            except RuntimeError as error:
+                self._ros_node.get_logger().info(
+                    colorStr("ERROR WHEN SETTING CONFIG.", ColorCodes.FAIL_RED)
                 )
                 self._ros_node.get_logger().info(
                     colorStr(str(error.with_traceback(None)), ColorCodes.FAIL_RED)
