@@ -237,6 +237,8 @@ class MoteusThreadManager:
                     timeout=self.CONNECTION_TIMEOUT_IN_SECONDS
                 )
                 for key, value in motor.config.config.items():
+                    if key == "id.id":
+                        continue
                     await asyncio.wait_for(
                         stream.command(f"conf set {key} {value}".encode(encoding="utf-8")),
                         timeout=self.CONNECTION_TIMEOUT_IN_SECONDS
