@@ -29,23 +29,23 @@ class IndividualControlPosition():
         self.target_elbow_pos = self.getMotorPosition(MotorConfigs.ARM_ELBOW_MOTOR)
 
         # create subscriptions
-        self.cw_turntable_pos = self._ros_node.create_subscription(
-            Float32, "clockwise turntable position", 10
+        self.cw_turntable_pos_sub = self._ros_node.create_subscription(
+            Float32, "turntable_cw", self.cwTurntablePosition, 10
         )
-        self.ccw_turntable_pos = self._ros_node.create_subscription(
-            Float32, "counter clockwise turntable position", 10
+        self.ccw_turntable_pos_sub = self._ros_node.create_subscription(
+            Float32, "turntable_ccw", self.ccwTurntablePosition, 10
         )
-        self.increase_shoulder_pos = self._ros_node.create_subscription(
-            Float32, "increase shoulder position", 10
+        self.increase_shoulder_pos_sub = self._ros_node.create_subscription(
+            Float32, "shoulder_up", self.increaseShoulderPosition, 10
         )
-        self.decrease_shoulder_pos = self._ros_node.create_subscription(
-            Float32, "decrease shoulder position", 10
+        self.decrease_shoulder_pos_sub = self._ros_node.create_subscription(
+            Float32, "shoulder_down", self.decreaseShoulderPosition, 10
         )
-        self.increase_elbow_pos = self._ros_node.create_subscription(
-            Float32, "increase elbow position", 10
+        self.increase_elbow_pos_sub = self._ros_node.create_subscription(
+            Float32, "elbow_up", self.increaseElbowPosition, 10
         )
-        self.decrease_elbow_pos = self._ros_node.create_subscription(
-            Float32, "decrease elbow position", 10
+        self.decrease_elbow_pos_sub = self._ros_node.create_subscription(
+            Float32, "elbow_down", self.decreaseElbowPosition, 10
         )
 
     def getMotorPosition(self, motor_config: MoteusMotorConfig) -> float:
