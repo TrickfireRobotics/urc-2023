@@ -8,6 +8,8 @@
 # `-c` -> Force create the `trickfirerobot` container, even if it exists
 
 text_helper="TRICKFIRE DOCKER LAUNCH"
+trickire_container="trickfirerobot"
+trickfire_image="trickfireimage"
 
 # Colors
 bold=$(tput bold)
@@ -28,45 +30,51 @@ while getopts 'bnc' flag; do
   esac
 done
 
+# --- Shutdown the current trickfirerobot container if it is running
+if [ "$( docker container inspect -f '{{.State.Running}}' ${trickire_container} )" = "true" ]; then
+  echo -e "${BLUE}$(tput bold)[${text_helper}] Shutting down current \"${trickire_container}\" container${NC}"
+  docker container kill ${trickire_container}
+fi
+
 # --- Handle the Docker image ---
 
 # If the image does NOT exist OR we force the image to be built
-if [ -z "$(docker images -q trickfireimage:latest 2> /dev/null)" ] || [ "$b_flag" = true ]; then
+if [ -z "$(docker images -q ${trickire_container}:latest 2> /dev/null)" ] || [ "$b_flag" = true ]; then
   # Should we build without cache?
   if [ "$no_cache_flag" = true ]; then
-    echo -e "${BLUE}$(tput bold)[${text_helper}] Building trickfireimage without cache${NC}"
-    docker build --no-cache -t trickfireimage -f .devcontainer/Dockerfile . 
+    echo -e "${BLUE}$(tput bold)[${text_helper}] Building \"${trickire_container}\" without cache${NC}"
+    docker build --no-cache -t ${trickire_container} -f .devcontainer/Dockerfile . 
   else
-    echo -e "${BLUE}$(tput bold)[${text_helper}] Building trickfireimage with cache${NC}"
-    docker build -t trickfireimage -f .devcontainer/Dockerfile . 
+    echo -e "${BLUE}$(tput bold)[${text_helper}] Building \"${trickire_container}\" with cache${NC}"
+    docker build -t ${trickire_container} -f .devcontainer/Dockerfile . 
   fi
 else
-    echo -e "${BLUE}$(tput bold)[${text_helper}] Image trickfireimage exists. Skipping${NC}"
+    echo -e "${BLUE}$(tput bold)[${text_helper}] Image \"${trickire_container}\" exists. Skipping${NC}"
 fi
 
 
 # Handle the Docker image
 
 # If the container does NOT exist OR we force the container to be built
-if [ ! "$(docker ps -a -q -f name=trickfirerobot)" ]; then
-    echo -e "${BLUE}$(tput bold)[${text_helper}] Container trickfirerobot does not exist. Creating${NC}"
-    docker create --mount type=bind,source="$(pwd)",target="/home/trickfire/urc-2023" --name trickfirerobot -it --privileged --network=host --workdir /home/trickfire/urc-2023 trickfireimage
+if [ ! "$(docker ps -a -q -f name=${trickire_container})" ]; then
+    echo -e "${BLUE}$(tput bold)[${text_helper}] Container \"${trickire_container}\" does not exist. Creating${NC}"
+    docker create --mount type=bind,source="$(pwd)",target="/home/trickfire/urc-2023" --name ${trickire_container} -it --privileged --network=host --workdir /home/trickfire/urc-2023 ${trickire_container}
 else
-    echo -e "${BLUE}$(tput bold)[${text_helper}] Container \"trickfirerobot\" does exist${NC}"
+    echo -e "${BLUE}$(tput bold)[${text_helper}] Container \"${trickire_container}\" does exist${NC}"
     # Should we remake the container?
     if [ "$c_flag" = true ]; then
-        echo -e "${BLUE}$(tput bold)[${text_helper}] Container trickfire exists. Forcing removal and creation of a new trickfirerobot container${NC}"
-        docker container rm trickfirerobot
-        docker create --mount type=bind,source="$(pwd)",target="/home/trickfire/urc-2023" --name trickfirerobot -it --privileged --network=host --workdir /home/trickfire/urc-2023 trickfireimage
+        echo -e "${BLUE}$(tput bold)[${text_helper}] Container trickfire exists. Forcing removal and creation of a new \"${trickire_container}\" container${NC}"
+        docker container rm ${trickire_container}
+        docker create --mount type=bind,source="$(pwd)",target="/home/trickfire/urc-2023" --name ${trickire_container} -it --privileged --network=host --workdir /home/trickfire/urc-2023 ${trickire_container}
 
     fi
 fi
 
 #Start the container
-echo -e "${BLUE}$(tput bold)[${text_helper}] Starting trickfirerobot container${NC}"
-docker container restart trickfirerobot
+echo -e "${BLUE}$(tput bold)[${text_helper}] Starting \"${trickire_container}\" container${NC}"
+docker container restart ${trickire_container}
 
 # Have the container take over the shell that executed this script
-echo -e "${BLUE}$(tput bold)[${text_helper}] Connecting to trickfirerobot container${NC}"
-docker exec -it trickfirerobot /bin/bash
+echo -e "${BLUE}$(tput bold)[${text_helper}] Connecting to \"${trickire_container}\" container${NC}"
+docker exec -it ${trickire_container} /bin/bash
 echo ""

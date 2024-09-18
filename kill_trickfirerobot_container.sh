@@ -1,1 +1,0 @@
-docker container kill trickfirerobot
