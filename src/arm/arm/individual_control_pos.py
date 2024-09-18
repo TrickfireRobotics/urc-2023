@@ -106,3 +106,9 @@ class IndividualControlPosition():
             self.target_elbow_pos = self.MAX_ELBOW_POS
         elif self.target_elbow_pos < self.MIN_ELBOW_POS:
             self.target_elbow_pos = self.MIN_ELBOW_POS
+
+    def setTargetPositions(self) -> None:
+        # set initial target positions to motors' starting positions
+        self.target_turntable_pos = self.getMotorPosition(MotorConfigs.ARM_TURNTABLE_MOTOR)
+        self.target_shoulder_pos = self.getMotorPosition(MotorConfigs.ARM_SHOULDER_MOTOR)
+        self.target_elbow_pos = self.getMotorPosition(MotorConfigs.ARM_ELBOW_MOTOR)

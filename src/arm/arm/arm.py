@@ -61,12 +61,22 @@ class Arm(Node):
 
             self.individual_control_vel.can_send = False
             self.individual_control_pos.can_send = False
+        
         elif self.current_mode == 1:
             self.individual_control_vel.can_send = True
             self.individual_control_pos.can_send = False
+        
         elif self.current_mode == 2:
             self.individual_control_vel.can_send = False
+            
+            # reset target positions to arm motors' current positions if switching from another
+            # mode to position mode
+            if not self.individual_control_pos.prev_can_send:
+                self.individual_control_pos.setTargetPositions()
+                self.individual_control_pos.prev_can_send = True
+
             self.individual_control_pos.can_send = True
+        
         elif self.current_mode == 3:
             self.individual_control_vel.can_send = False
             self.individual_control_pos.can_send = False
