@@ -25,7 +25,7 @@ class ExampleNode(Node):
         self.robotInfo = RobotInfo(self)
         self.robotInterface = RobotInterface(self)
         
-        self.drivebaseSpeed = 6.28 # 1.0 rev/sec
+        self.drivebaseSpeedInRadians = 6.28 # 6.28 rad/sec = 1.0 rev/sec
         
         # --- ROS TIMER EXAMPLE ---
         # Half a second delay between the calls to the method timer_callback()
@@ -42,7 +42,8 @@ class ExampleNode(Node):
     def timer_callback(self) -> None:
         # Tell the motor to move at a speed. We skip having to create a run config
         # Take a look at the runMotor() to see the config
-        self.robotInterface.runMotorSpeed(MotorConfigs.FRONT_LEFT_DRIVE_MOTOR, self.drivebaseSpeed)
+        # In this case, runMotorSpeed() takes speed as in input in radians per second
+        self.robotInterface.runMotorSpeed(MotorConfigs.FRONT_LEFT_DRIVE_MOTOR, self.drivebaseSpeedInRadians)
         
         # Get the motor's position
         motorPosition = self.robotInfo.getMotorState(MotorConfigs.FRONT_LEFT_DRIVE_MOTOR).position
@@ -69,7 +70,7 @@ def main(args: list[str] | None = None) -> None:
         # Create a new instance of our class
         example = ExampleNode()
         
-        # Have ROS spin this node, meanining that this object will continuously
+        # Have ROS spin this node, meaning that this object will continuously
         # be part of the ROS event loop and such. 
         rclpy.spin(example)
     except KeyboardInterrupt: # Detects ctrl-c

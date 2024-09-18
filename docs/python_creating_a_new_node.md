@@ -1,7 +1,7 @@
 # Creating a New Node
 This will help you create a new node package, set up any dependencies, and get your node to be launched with the rest of the codebase. 
 
-## Creating a Package
+## `Creating a Package`
 1. Make sure you are inside your Docker container. See [getting_started.md](./getting_started.md) if you do not know how
 
 2. Change your directory to `/src`
@@ -17,7 +17,7 @@ Run the following command `ros2 pkg create --build-type ament_python <package_na
 
     I ran `ros2 pkg create --build-type ament_python example_node`
 
-## Setting Up the Node
+## `Setting Up the Node`
 4. Make a new Python file under your node's src location. Call it whatever you want, I called it `example.py`
 
     For me it is under `src/example_node/example_node`. Yes, it is a bit funky why
@@ -29,8 +29,10 @@ Run the following command `ros2 pkg create --build-type ament_python <package_na
 
 6. Open up the `setup.py` file. Leave it open for now, we will get to it later
 
-## Writing a Basic Node to Say "Hello World"
-7. You will need to import the ROS Python library, create a class representing your node, create an entry point, and write code to "gracefully-ish" shutdown the node when we press `ctrl-c`. An important detail to remember is the name of your node:
+## `Writing a Basic Node to Say "Hello World"`
+7. You will need to import the ROS Python library, create a class representing your node, create an entry point, and write code to "gracefully-ish" shutdown the node when we press `ctrl-c`. Make sure to read the [formatting.md](./formatting.md) document to make sure you are writing good readable code. 
+
+    An important detail to remember is the name of your node:
    
     `super().__init__("this_is_the_name_of_the_node")`
 
@@ -64,7 +66,7 @@ def main(args: list[str] | None = None) -> None:
         sys.exit(0)
 ```
 
-## Adding to the List of Launch-able Nodes
+## `Adding to the List of Launch-able Nodes`
 8. Go back to your `setup.py` file. Look at the `console_scripts`, it should look this right now
 
     ` 'console_scripts': [],`
@@ -77,7 +79,7 @@ def main(args: list[str] | None = None) -> None:
 
     `'console_scripts': ["myExampleNode = example_node.example:main"],`
 
-9. Open the file `robot.launch.py` under the folder `/src/viator_launch`. Create a new variable to store your node. The `package` parameter should be the same name as your node package name. The `executable` parameter should be the variable name you chose in the `setup.py` file. The `name` is the name of your node. 
+9. Open the file `robot.launch.py` under the folder `/src/viator_launch`. Create a new variable to store your node. The `package` parameter should be the same name as your node package name. The `executable` parameter should be the variable name you chose in the `setup.py` file. The `name` is the name of your node you wrote in the code in the `super().__init__()` method step 7. 
  
     For me, I wrote the following.
 
@@ -98,10 +100,10 @@ def main(args: list[str] | None = None) -> None:
 
     `<exec_depend>example_node</exec_depend>`
 
-## Build and Execute Code
+## `Build and Execute Code`
 12. All while in the Docker container, execute the shell scripts `./build.sh` and `./launch.sh` in the command line. You might have to delete the `/build` and `/install` folders. 
 
-13. Congrats, you have made a new node ! Yippie!
+13. Congrats, you have made a new node ! Yippie! Further examples of how to use ROS timers, subscribers, and publishers are found in the `/src/example_node/example_node` node; go ahead open it up and read the code. 
 
 
 

@@ -39,5 +39,7 @@ If you have no clue what commands to use for Git, go [here](https://learngitbran
 All of the documentation for this codebase is stored inside this `docs` folder. Here, you will find a markdown file for each ROS Node (packge/folder) under the `src` folder that explains its workings in more detail. You will also find some other general documentation in there.
 
 ## **What Should I do Now?**
+Checkout the [code_overview.md](./code_overview.md) to understand how the codebase is structured. Also take a look at the (formatting.md)[./formatting.md] document to make sure that your code is readable and well maintained. 
+
 After reading this document, you should follow the instructions for installing on [Windows,](./install_on_windows.md), installing on [Mac](./installing_on_mac.md), or installing on [Linux](./install_on_linux.md)
 

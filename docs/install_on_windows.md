@@ -71,7 +71,7 @@ The tilde `~` is shorthand for your `$HOME` directory (`/home/yourusername`) in 
 ## Docker Desktop
 Install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop). If you already have it, update it, and make sure it uses the WSL2 backend (Docker Desktop > Settings > **Use the WSL 2 based engine**). If Docker Desktop fails to start, try deleting `%appdata%/Docker`.
 
-Docker Desktop will offer you a tutorial - it's not necessary for setting up this repository. You can skip it if you want.
+Docker Desktop will offer you a tutorial - it's not necessary for setting up this repository. You can skip it if you want. You also do not need a Docker account to use Docker, so skip that as well. 
 
 In general, you can't work with containers if Docker isn't running on Windows. There will be a whale icon in the Windows system tray if Docker is running. You can enable/disable Docker auto-starting when you log in (Docker Desktop > Settings > General > **Start Docker Desktop when you log in**).
 
@@ -83,13 +83,13 @@ We need a few VS Code extensions. Open the Extensions sidebar (`Ctrl+Shift+X`) a
 ## Open `urc-2023` in VS Code
 You're almost there.
 
-In VS Code, open the Command Palette (`Ctrl+Shift+P`), search for **Remote-WSL: Open Folder in WSL...** and run that command. A folder browser will pop up - find and select `urc-2023`. This folder browser is showing your WSL2 filesystem, not your Windows filesystem.
+In VS Code, open the Command Palette (`F1`), search for **Open Folder in WSL...** and run that command. A folder browser will pop up - find and select `urc-2023`. This folder browser is showing your WSL2 filesystem, not your Windows filesystem.
 
 The folder browser might not put you into a familiar WSL2 directory. The correct absolute path should look like `Network > wsl$ > Ubuntu > home > your-linux-username > urc-2023`.
 
 If VS Code asks you if you trust the workspace authors, select **Yes, I trust the authors**.
 
-After VS Code loads into WSL2, a notification will tell you that it noticed a Dev Container configuration file. Click the **Reopen in Container** option. If you miss the notification, you can search **Remote-Containers: Reopen in Container** in the Command Palette.
+After VS Code loads into WSL2, a notification will tell you that it noticed a Dev Container configuration file. Click the **Reopen in Container** option. If you miss the notification, you can search **Reopen in Container** in the Command Palette.
 
 **You're ready to develop now!** 🥳
 
