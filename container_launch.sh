@@ -40,13 +40,13 @@ fi
 # If the container does NOT exist OR we force the container to be built
 if [ ! "$(docker ps -a -q -f name=trickfirerobot)" ]; then
     echo -e "${BLUE}$(tput bold)[${text_helper}] Container trickfirerobot does not exist. Creating${NC}"
-    docker create --mount type=bind,source="$(pwd)",target="/home/trickfire/urc-2023" --name trickfirerobot -i --privileged --network=host --workdir /home/trickfire/urc-2023 trickfireimage
+    docker create --mount type=bind,source="$(pwd)",target="/home/trickfire/urc-2023" --name trickfirerobot -it --privileged --network=host --workdir /home/trickfire/urc-2023 trickfireimage
 else
     echo -e "${BLUE}$(tput bold)[${text_helper}] Container \"trickfirerobot\" does exist${NC}"
     if [ "$c_flag" = true ]; then
         echo -e "${BLUE}$(tput bold)[${text_helper}] Container trickfire exists. Forcing removal and creation of a new trickfirerobot container${NC}"
         docker container rm trickfirerobot
-        docker create --mount type=bind,source="$(pwd)",target="/home/trickfire/urc-2023" --name trickfirerobot -t --privileged --network=host --workdir /home/trickfire/urc-2023 trickfireimage
+        docker create --mount type=bind,source="$(pwd)",target="/home/trickfire/urc-2023" --name trickfirerobot -it --privileged --network=host --workdir /home/trickfire/urc-2023 trickfireimage
 
     fi
 fi
