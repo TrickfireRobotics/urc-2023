@@ -16,13 +16,13 @@ The code is split into three parts:
 
 2. **The interface** -> This deals making it easy to interact with the rover by exposing functions such as `runMotor()` or `getMotorState()`
 
-3. **High-level code** -> This implements the subsystems found on the rover. It directly talks to the interface in order to get the rover to physicall do things. 
+3. **High-level code** -> This implements the subsystems found on the rover. It directly talks to the interface in order to get the rover to physical do things. 
 Notice how the high-level code does not care about the hardware, thus making it easier to focus on the **algorithms** rather than fighting the hardware.
 
 ![Code Funnel](./resources/code_funnel.png)
 
 ## Mission Control
-The mission control is a piece of software that allows us to intereact with the rover over a browser as it is written in Vue.js/Typescript. 
+The mission control is a piece of software that allows us to interact with the rover over a browser as it is written in Vue.js/Typescript. 
 Cameras, controller input, telemetry data, controlling motors, life-detection results, and so on are all shown here. 
 
 A very important concept is that the mission control acts as a **CLIENT** when sending and getting data from the rover. This means that the mission control
@@ -40,7 +40,7 @@ Implements the arm in different control types such as individual motor control (
 Interacts with the Moteus Field Oriented BLDC motor controllers. This code is able to update the motor controller configs, send data to the motor, read data from the motor,
 and handle CAN-FD bus issues. 
 ### custom_interfaces (misc)
-This code is used to create custom publisher/subsriber and service payloads. 
+This code is used to create custom publisher/subscriber and service payloads. 
 ### lib (misc and "the interface")
 Contains commonly used functionality throughout the codebase. This is the home to "the interface" code as well under the folder `\interface`
 ### viator_launch (misc)

@@ -78,7 +78,7 @@ In general, you can't work with containers if Docker isn't running on Windows. T
 ## Visual Studio Code
 Install [VS Code](https://code.visualstudio.com/). If you already have it, update it (Help > Check for Updates...).
 
-We need a few VS Code extensions. Open the Extensions sidebar (`Ctrl+Shift+X`) and install **Remote - WSL** and **Remote - Containers** by Microsoft. VS Code may auto-detect software and offer to install extensions for you.
+We need a few VS Code extensions. Open the Extensions sidebar (`Ctrl+Shift+X`) and install **WSL** and **Dev Containers** by Microsoft. VS Code may auto-detect software and offer to install extensions for you.
 
 ## Open `urc-2023` in VS Code
 You're almost there.

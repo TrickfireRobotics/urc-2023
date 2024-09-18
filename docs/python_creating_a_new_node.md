@@ -64,7 +64,7 @@ def main(args: list[str] | None = None) -> None:
         sys.exit(0)
 ```
 
-## Adding to the List of Launchable Nodes
+## Adding to the List of Launch-able Nodes
 8. Go back to your `setup.py` file. Look at the `console_scripts`, it should look this right now
 
     ` 'console_scripts': [],`
@@ -77,7 +77,7 @@ def main(args: list[str] | None = None) -> None:
 
     `'console_scripts': ["myExampleNode = example_node.example:main"],`
 
-9. Open the file `robot.launch.py` under the folder `/src/viator_launch`. Create a new variable to store your node. The `package` paramater should be the same name as your node package name. The `executable` paramater should be the variable name you chose in the `setup.py` file. The `name` is the name of your node. 
+9. Open the file `robot.launch.py` under the folder `/src/viator_launch`. Create a new variable to store your node. The `package` parameter should be the same name as your node package name. The `executable` parameter should be the variable name you chose in the `setup.py` file. The `name` is the name of your node. 
  
     For me, I wrote the following.
 
