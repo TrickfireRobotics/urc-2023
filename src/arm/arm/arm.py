@@ -10,8 +10,10 @@ from std_msgs.msg import Int32
 from custom_interfaces.srv import ArmMode
 from lib.color_codes import ColorCodes, colorStr
 from lib.configs import MotorConfigs
+from lib.interface.robot_info import RobotInfo
 from lib.interface.robot_interface import RobotInterface
 
+from .individual_control_pos import IndividualControlPosition
 from .individual_control_vel import IndividualControlVel
 
 
@@ -37,7 +39,11 @@ class Arm(Node):
 
         self.bot_interface = RobotInterface(self)
 
+        self.bot_info = RobotInfo(self)
+
         self.individual_control_vel = IndividualControlVel(self, self.bot_interface)
+
+        self.individual_control_pos = IndividualControlPosition(self, self.bot_interface, self.bot_info)
 
     def modeServiceHandler(self, _: Any, response: ArmMode.Response) -> ArmMode.Response:
         response.current_mode = int(self.current_mode)
@@ -54,12 +60,16 @@ class Arm(Node):
             self.bot_interface.disableMotor(MotorConfigs.ARM_RIGHT_WRIST_MOTOR)
 
             self.individual_control_vel.can_send = False
+            self.individual_control_pos.can_send = False
         elif self.current_mode == 1:
             self.individual_control_vel.can_send = True
+            self.individual_control_pos.can_send = False
         elif self.current_mode == 2:
             self.individual_control_vel.can_send = False
+            self.individual_control_pos.can_send = True
         elif self.current_mode == 3:
             self.individual_control_vel.can_send = False
+            self.individual_control_pos.can_send = False
 
 
 def main(args: list[str] | None = None) -> None:

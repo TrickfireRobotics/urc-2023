@@ -12,7 +12,7 @@ class IndividualControlPosition():
 
     REVS_TO_RADIANS = math.pi * 2.0
 
-    # physical min and max positions of shoulder and elbow positions 
+    # physical min and max positions of shoulder and elbow positions
     MAX_SHOULDER_POS = math.pi * 2.0
     MIN_SHOULDER_POS = 0.0
     MAX_ELBOW_POS = math.pi * 2.0
@@ -22,6 +22,8 @@ class IndividualControlPosition():
         self._ros_node = ros_node
         self._interface = interface
         self._info = info
+        self.can_send = False
+        self.prev_can_send = False
 
         # set initial target positions to motors' starting positions
         self.target_turntable_pos = self.getMotorPosition(MotorConfigs.ARM_TURNTABLE_MOTOR)
@@ -54,29 +56,41 @@ class IndividualControlPosition():
         return position_radians
 
     def cwTurntablePosition(self, msg: Float32) -> None:
+        if not self.can_send:
+            return
         self.target_turntable_pos += 0.1
         self._interface.runMotorPosition(MotorConfigs.ARM_TURNTABLE_MOTOR, self.target_turntable_pos)
     
     def ccwTurntablePosition(self, msg: Float32) -> None:
+        if not self.can_send:
+            return
         self.target_turntable_pos -= 0.1
         self._interface.runMotorPosition(MotorConfigs.ARM_TURNTABLE_MOTOR, self.target_turntable_pos)
 
     def increaseShoulderPosition(self, msg: Float32) -> None:
+        if not self.can_send:
+            return
         self.target_shoulder_pos += 0.1
         self.checkShoulderTargetPos()
         self._interface.runMotorPosition(MotorConfigs.ARM_SHOULDER_MOTOR, self.target_shoulder_pos)
 
     def decreaseShoulderPosition(self, msg: Float32) -> None:
+        if not self.can_send:
+            return
         self.target_shoulder_pos -= 0.1
         self.checkShoulderTargetPos()
         self._interface.runMotorPosition(MotorConfigs.ARM_SHOULDER_MOTOR, self.target_shoulder_pos)
 
     def increaseElbowPosition(self, msg: Float32) -> None:
+        if not self.can_send:
+            return
         self.target_elbow_pos += 0.1
         self.checkElbowTargetPos()
         self._interface.runMotorPosition(MotorConfigs.ARM_ELBOW_MOTOR, self.target_elbow_pos)
 
     def decreaseElbowPosition(self, msg: Float32) -> None:
+        if not self.can_send:
+            return
         self.target_elbow_pos -= 0.1
         self.checkElbowTargetPos()
         self._interface.runMotorPosition(MotorConfigs.ARM_ELBOW_MOTOR, self.target_elbow_pos)
