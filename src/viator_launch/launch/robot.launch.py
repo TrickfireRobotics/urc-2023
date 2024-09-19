@@ -22,5 +22,5 @@ example_node = Node(package="example_node", executable="myExampleNode", name="my
 
 def generate_launch_description() -> launch.LaunchDescription:  # pylint: disable=invalid-name
     return launch.LaunchDescription(
-        [can_moteus_node, drivebase_node, mission_control_updater_node, arm_node, example_node]
+        [can_moteus_node, drivebase_node, mission_control_updater_node, arm_node]
     )
