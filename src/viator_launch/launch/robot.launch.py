@@ -18,8 +18,12 @@ mission_control_updater_node = Node(
 
 arm_node = Node(package="arm", executable="arm", name="arm_node")
 
+# This is the example node. It will show ROS timers, subscribers, and publishers
+# To include it in the startup, add it to the array in the generate_launch_description() method
+example_node = Node(package="example_node", executable="myExampleNode", name="my_example_node")
+
 
 def generate_launch_description() -> launch.LaunchDescription:  # pylint: disable=invalid-name
     return launch.LaunchDescription(
-        [can_moteus_node, drivebase_node, mission_control_updater_node, arm_node]
+        [can_moteus_node, drivebase_node, mission_control_updater_node, arm_node, example_node]
     )
