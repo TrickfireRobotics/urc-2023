@@ -71,25 +71,25 @@ The tilde `~` is shorthand for your `$HOME` directory (`/home/yourusername`) in 
 ## Docker Desktop
 Install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop). If you already have it, update it, and make sure it uses the WSL2 backend (Docker Desktop > Settings > **Use the WSL 2 based engine**). If Docker Desktop fails to start, try deleting `%appdata%/Docker`.
 
-Docker Desktop will offer you a tutorial - it's not necessary for setting up this repository. You can skip it if you want.
+Docker Desktop will offer you a tutorial - it's not necessary for setting up this repository. You can skip it if you want. You also do not need a Docker account to use Docker, so skip that as well. 
 
 In general, you can't work with containers if Docker isn't running on Windows. There will be a whale icon in the Windows system tray if Docker is running. You can enable/disable Docker auto-starting when you log in (Docker Desktop > Settings > General > **Start Docker Desktop when you log in**).
 
 ## Visual Studio Code
 Install [VS Code](https://code.visualstudio.com/). If you already have it, update it (Help > Check for Updates...).
 
-We need a few VS Code extensions. Open the Extensions sidebar (`Ctrl+Shift+X`) and install **Remote - WSL** and **Remote - Containers** by Microsoft. VS Code may auto-detect software and offer to install extensions for you.
+We need a few VS Code extensions. Open the Extensions sidebar (`Ctrl+Shift+X`) and install **WSL** and **Dev Containers** by Microsoft. VS Code may auto-detect software and offer to install extensions for you.
 
 ## Open `urc-2023` in VS Code
 You're almost there.
 
-In VS Code, open the Command Palette (`Ctrl+Shift+P`), search for **Remote-WSL: Open Folder in WSL...** and run that command. A folder browser will pop up - find and select `urc-2023`. This folder browser is showing your WSL2 filesystem, not your Windows filesystem.
+In VS Code, open the Command Palette (`F1`), search for **Open Folder in WSL...** and run that command. A folder browser will pop up - find and select `urc-2023`. This folder browser is showing your WSL2 filesystem, not your Windows filesystem.
 
 The folder browser might not put you into a familiar WSL2 directory. The correct absolute path should look like `Network > wsl$ > Ubuntu > home > your-linux-username > urc-2023`.
 
 If VS Code asks you if you trust the workspace authors, select **Yes, I trust the authors**.
 
-After VS Code loads into WSL2, a notification will tell you that it noticed a Dev Container configuration file. Click the **Reopen in Container** option. If you miss the notification, you can search **Remote-Containers: Reopen in Container** in the Command Palette.
+After VS Code loads into WSL2, a notification will tell you that it noticed a Dev Container configuration file. Click the **Reopen in Container** option. If you miss the notification, you can search **Reopen in Container** in the Command Palette.
 
 **You're ready to develop now!** 🥳
 
@@ -103,3 +103,6 @@ Make sure Docker is running (check for the whale icon 🐳 in the system tray) o
 To leave the container (to work on other projects), run **Remote: Close Remote Connection** from the Command Palette or click the green Remote button in the bottom-left and select **Close Remote Connection**.
 
 You can always re-enter WSL2 then reopen in a container with this green button (**Open Folder in WSL** > `urc-2023` > **Reopen in Container**).
+
+### Building and Testing
+To build you can simply run the `./build.sh` command in the Visual Studio Code console. Similarly to launch the code or run tests you can run the `./test.sh` and `./launch.sh`.
