@@ -19,13 +19,28 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 
-#Install moteus python library https://github.com/mjbots/moteus/tree/main/lib/python
+# Install moteus python library https://github.com/mjbots/moteus/tree/main/lib/python
 RUN pip3 install moteus
 
 RUN pip3 install pyusb
 
+# Pybind build capability for the RMD lib
+RUN pip3 install pybind11
+
 # Update pydocstyle to remove a deprecation warning when testing for PEP257
 RUN pip install --upgrade pydocstyle
+
+# Add the RMD lib
+RUN git clone https://github.com/2b-t/myactuator_rmd.git \
+  && cd myactuator_rmd \
+  # Build instructions taken from the github repo
+  && mkdir build \
+  && cd build \
+  && cmake .. -D PYTHON_BINDINGS=on \
+  && make -j $(nproc) \
+  && sudo make install \
+  # Install python bindings
+  && pip3 install ../
 
 # Add a user so we can remote into this container with a non-root user
 RUN useradd trickfire \
