@@ -1,17 +1,33 @@
 {
     "python.autoComplete.extraPaths": [
-        "/opt/ros/galactic/lib/python3.8/site-packages"
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "./src",
+        // Add type checking to srv files and msg files
+        "/home/trickfire/urc-2023/install/custom_interfaces/local/lib/python3.10/dist-packages"
     ],
     "python.analysis.extraPaths": [
-        "/opt/ros/galactic/lib/python3.8/site-packages"
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "./src",
+        "/home/trickfire/urc-2023/install/custom_interfaces/local/lib/python3.10/dist-packages"
     ],
-    "cmake.configureOnOpen": false,
-    "python.linting.enabled": true,
-    "python.linting.flake8Enabled": true,
-    "cmake.sourceDirectory": "${workspaceFolder}/src/hello_world",
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.autopep8"
+    "python.defaultInterpreterPath": "python3",
+    "pylint.args": [
+        "--rcfile=.pylintrc"
+    ],
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
     },
-    "python.formatting.provider": "none",
-    "ros.distro": "humble"
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true
+    },
+    "black-formatter.args": ["-l", "100"],
+    "cmake.configureOnOpen": false,
+    "cmake.sourceDirectory": "${workspaceFolder}/src/hello_world",
+    "files.associations": {
+        "*.tcc": "cpp"
+    },
+    "editor.rulers": [
+        100
+    ]
 }

@@ -1,4 +1,4 @@
-# Base image: Ubuntu 20.04 with ROS2 Galactic installed
+# Base image: Ubuntu 20.04 with ROS2 Humble installed
 FROM ros:humble
 
 # Install dependencies from apt
@@ -12,32 +12,20 @@ RUN apt-get update && apt-get install -y \
   ros-humble-rosbridge-server \
   # Install usb utilities
   usbutils \ 
-  #Used for cv_bridge
-  python3-numpy \
-  #USed for cv_bridge
-  libboost-python-dev \
-  #OpenCV
-  libopencv-dev \
-  #Opencv
-  python3-opencv \
+  can-utils \
+  iproute2 \
+  kmod \ 
   # Clean out the apt lists after `apt-get update`
   && rm -rf /var/lib/apt/lists/*
 
 
 #Install moteus python library https://github.com/mjbots/moteus/tree/main/lib/python
-Run pip3 install moteus
+RUN pip3 install moteus
+
+RUN pip3 install pyusb
+
 # Update pydocstyle to remove a deprecation warning when testing for PEP257
 RUN pip install --upgrade pydocstyle
-#Install OpenCV for python
-RUN pip3 install opencv-python
-
-RUN pip3 install numpy --upgrade
-
-
-#Install cv_bridge
-#RUN apt install python3-numpy
-#RUN apt-get install -y libboost-python-dev
-
 
 # Add a user so we can remote into this container with a non-root user
 RUN useradd trickfire \

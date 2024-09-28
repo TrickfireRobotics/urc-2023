@@ -7,11 +7,13 @@
   <maintainer email="phillipov@outlook.com">trickfire</maintainer>
   <license>TODO: License declaration</license>
 
-  <exec_depend>hello_world</exec_depend>
   <exec_depend>can_moteus</exec_depend>
   <exec_depend>ros2launch</exec_depend>
+  <exec_depend>mission_control_updater</exec_depend>
+  <exec_depend>arm</exec_depend>
   <exec_depend>camera</exec_depend>
-  <exec_depend>camera_subscriber_test</exec_depend>
+  <exec_depend>example_node</exec_depend>
+  
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

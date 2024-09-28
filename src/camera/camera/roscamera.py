@@ -7,8 +7,10 @@ import cv2 # OpenCV library
 from pathlib import Path
 from std_msgs.msg import String
 
-# returns a list of working camera ids to capture every camera connected to the robot
-def get_cameras() -> list[int]:
+"""
+Function returns a list of working camera IDs to capture every camera connected to the robot
+"""
+def getCameras() -> list[int]:
     nonWorkingPorts = 0
     devPort = 0
     workingPorts = []
@@ -28,6 +30,7 @@ def get_cameras() -> list[int]:
     
     return workingPorts
 
+
 class RosCamera(Node):
 
     def __init__(self, topicName: str, camera: int):
@@ -41,14 +44,14 @@ class RosCamera(Node):
 
         # Create a subscription to read 'camera_control' topic from
         # mission control. Topic messages are Strings.
-        #       ex. topic message: "toggle arm_camera, ID: 0"
+        #        ex. topic message: "0 off", "0 on"
         # The topic message should always have the corresponding camera number
-        # at the last index of each message.
+        # at the first index of each message.
         subTopicName = "camera_control"
         self.subscription = self.create_subscription(
             String,
             subTopicName,
-            self.toggle_camera,
+            self.setCameraState,
             10)
         self.subscription
         self.get_logger().info("Created Subscription to" + subTopicName)
@@ -58,7 +61,7 @@ class RosCamera(Node):
         timer_period = 2  # seconds
         
         # Create the timer
-        self.timer = self.create_timer(timer_period, self.timer_callback)
+        self.timer = self.create_timer(timer_period, self.publishCameraFrame)
             
         # Create a VideoCapture object
         # The argument '0' gets the default webcam.
@@ -71,50 +74,72 @@ class RosCamera(Node):
         # Declare parameters for each 'ros_camera' node thread
         self.declare_parameter("cameraNumber", camera)
         self.declare_parameter("isOn", True)
+        
 
-    def timer_callback(self):
-        """
-        Callback function.
-        This function gets called every 0.1 seconds.
-        """
+    """
+    Callback function publishes a frame captured from a camera to /video_framesX (X is specific
+    camera ID) every 0.1 seconds
+    """
+    def publishCameraFrame(self):
         # Capture frame-by-frame
-        # This method returns True/False as well
-        # as the video frame.
+        # This method returns True/False as well as the video frame.
         ret, frame = self.cap.read()
             
-        # Get 'ros_camera' parameter, isOn, then check the state of the camera to publish frame or not
+        # Get bool parameter, isOn, and check the state of the camera to publish frame or not
+        # Value of isOn is controlled by setCameraState()
         isOn = bool(self.get_parameter("isOn")._value)
         if ret and isOn:
             # Publish the image.
             self._publisher.publish(self.br.cv2_to_compressed_imgmsg(frame))
+            
+
+    """
+    Function reads str msgs from topic, 'camera_control' (published by mission control), and
+    turns on/off the periodic publishing of frames by a certain camera
     
-        # Display the message on the console
-        # self.get_logger().info('Publishing compressed video frame')
-        
-    def toggle_camera(self, msg) -> None:
-        # Read the last index of the message and check whether mission control is targeting this
-        # instance of 'ros_camera'
+    Function is called whenever a msg is published to 'camera_control'
+    
+    Function assumes str msgs sent to 'camera_control' begin with a number and ends with an 'f'
+    (meaning off) or 'n' (meaning on)
+        ex.
+            "0 off" -> to turn off camera with id=0
+            "2 on" -> to turn on camera with id=2
+    """
+    def setCameraState(self, msg) -> None:
+        # Check if this specific camera is targeted by mission control, stop the function otherwise
         cameraNumber = int(self.get_parameter("cameraNumber")._value)
-        if (int(msg.data[-1]) != cameraNumber):
+        if (int(msg.data[0]) != cameraNumber):
+            return
+        
+        # Check if the desired camera state is already fulfilled, print and stop the function if so
+        cameraOn = bool(self.get_parameter("isOn")._value)
+        if (str(msg.data[-1]) == 'f' and not cameraOn):
+            self.get_logger().info("camera" + str(cameraNumber) + " is already off!")
+            return
+        elif (str(msg.data[-1]) == 'n' and cameraOn):
+            self.get_logger().info("camera" + str(cameraNumber) + " is already on!")
             return
 
-        # Toggle by not'ing the bool value
-        isOn = bool(self.get_parameter("isOn")._value)
+        # Set isOn bool parameter to either stop or restart the publishing of frames
         self.undeclare_parameter("isOn")
-        self.declare_parameter("isOn", not isOn)
+        if (str(msg.data[-1]) == 'f'):
+            # self.get_logger().info("turning camera" + str(cameraNumber) + " off!")
+            self.declare_parameter("isOn", False)
+        else:
+            # self.get_logger().info("turning camera" + str(cameraNumber) + " on!")
+            self.declare_parameter("isOn", True)
+            
 
 def main(args=None):
     rclpy.init(args=args)
     try:
-        """
-        we need an executor because running .spin() is a blocking function.
-        using the MultiThreadedExecutor, we can control multiple nodes
-        """
+        # We need an executor because running .spin() is a blocking function.
+        # using the MultiThreadedExecutor, we can control multiple nodes
         executor = MultiThreadedExecutor()
         nodes = []
         cameraNum = 0
 
-        for cameraID in get_cameras():
+        for cameraID in getCameras():
             node = RosCamera("video_frames" + str(cameraNum), cameraID)
             nodes.append(node)
             executor.add_node(node)

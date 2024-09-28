@@ -36,7 +36,10 @@ Github is a website that allows us to have a Git repository that lives on the cl
 If you have no clue what commands to use for Git, go [here](https://learngitbranching.js.org/?locale=en_US) to learn! Just a couple of lessons are enough to understand how it works.
 
 ## **Documentation**
-All of the documentation for this codebase is stored inside this `docs` folder. Here, you will find a markdown file for each ROS Node (packge/folder) under the `src` folder that explains its workings in more detail. 
+All of the documentation for this codebase is stored inside this `docs` folder. Here, you will find a markdown file for each ROS Node (packge/folder) under the `src` folder that explains its workings in more detail. You will also find some other general documentation in there.
 
 ## **What Should I do Now?**
-After reading this document, you should follow the instructions for [install_on_windows.md](./install_on_windows.md) if you will be developing code on a Windows machine or [install_on_linux.md](./install_on_linux.md) if you will be developing on Linux.
+Checkout the [code_overview.md](./code_overview.md) to understand how the codebase is structured. Also take a look at the (formatting.md)[./formatting.md] document to make sure that your code is readable and well maintained. 
+
+After reading this document, you should follow the instructions for installing on [Windows,](./install_on_windows.md), installing on [Mac](./installing_on_mac.md), or installing on [Linux](./install_on_linux.md)
+

@@ -1,60 +1,28 @@
 import launch
-from launch_ros.actions import ComposableNodeContainer
-from launch_ros.descriptions import ComposableNode
 from launch_ros.actions import Node
 
-hello_node = ComposableNode(
-    package='hello_world',
-    plugin='hello_world::hello_node',
-    name='hello_node'
+can_moteus_node = Node(package="can_moteus", executable="can_moteus", name="can_moteus_node")
+
+
+drivebase_node = Node(package="drivebase", executable="drivebase", name="drivebase_node")
+
+
+mission_control_updater_node = Node(
+    package="mission_control_updater",
+    executable="mission_control_updater",
+    name="mission_control_updater_node",
 )
 
-can_moteus_node = Node(
-    package='can_moteus',
-    executable='can_moteus',
-    name='can_moteus_node'
-)
+arm_node = Node(package="arm", executable="arm", name="arm_node")
 
-ros_camera_node = Node(
-    package='camera',
-    executable='roscamera',
-    name='ros_camera'
-)
+camera_node = Node(package="camera", executable="roscamera", name="camera_node")
 
-ros_camera_test_node = Node(
-    package='camera_subscriber_test',
-    executable='roscamerasub',
-    name='ros_camera_sub'
-)
-
-ros_executor_test_node = Node(
-    package='executor_test',
-    executable='executor_test',
-    name='executor_camera_test_node'
-)
-
-# Composable Nodes launched in a Composable Node container will share a process
-# and can use very fast inter-process communication instead of publishing
-# messages over a network socket.
-# Note: "Composable Node container" does not mean "Docker-like container".
-robot_container = ComposableNodeContainer(
-    name='robot',
-    package='rclcpp_components',
-    namespace='',
-    executable='component_container',
-    composable_node_descriptions=[
-        hello_node
-    ],
-    output='screen',
-    emulate_tty=True
-)
+# This is the example node. It will show ROS timers, subscribers, and publishers
+# To include it in the startup, add it to the array in the generate_launch_description() method
+example_node = Node(package="example_node", executable="myExampleNode", name="my_example_node")
 
 
-def generate_launch_description():
-    return launch.LaunchDescription([
-        robot_container,
-        can_moteus_node,
-        ros_camera_node,
-        #ros_executor_test_node,
-        #ros_camera_test_node
-    ])
+def generate_launch_description() -> launch.LaunchDescription:  # pylint: disable=invalid-name
+    return launch.LaunchDescription(
+        [can_moteus_node, drivebase_node, mission_control_updater_node, arm_node, camera_node]
+    )

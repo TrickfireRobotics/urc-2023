@@ -4,13 +4,8 @@
   <name>camera</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="vladimirkupryukhin@gmail.com">trickfire</maintainer>
+  <maintainer email="kimdavid2222@gmail.com">trickfire</maintainer>
   <license>TODO: License declaration</license>
-
-  <depend>rclpy</depend>
-  <depend>std_msgs</depend>
-  <depend>cv2</depend>
-  <depend>cv_bridge</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

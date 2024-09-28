@@ -1,4 +1,0 @@
-[submodule "src/vision_opencv"]
-	path = src/vision_opencv
-	url = https://github.com/ros-perception/vision_opencv.git
-	branch = humble
