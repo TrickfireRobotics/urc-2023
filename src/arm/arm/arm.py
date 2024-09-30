@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 
+import sys
+sys.path.append("/home/trickfire/urc-2023/src")
+
 import rclpy
 from rclpy.node import Node
-from src.interface.robot_interface import RobotInterface
-from src.robot_info.robot_info import RobotInfo
+from interface.robot_interface import RobotInterface
+from robot_info.robot_info import RobotInfo
 
+from std_msgs.msg import Bool
 from std_msgs.msg import String
 from std_msgs.msg import Float32
 import ikpy.chain
@@ -18,6 +22,9 @@ from geometry_msgs.msg import Point
 class Arm(Node):
     def __init__(self, urdf_file_name, active_links_masks, start_position):
         super().__init__(node_name="arm")
+
+        # print node name [debug purpose]
+        self.get_logger().info("Arm Node has been started.")
 
         # robot interface: send data
         # robot info: retrieve data
@@ -54,9 +61,9 @@ class Arm(Node):
         # **************
         # Note to self: change msg types later
         self._enable_status_subscriber = self.create_subscription(
-            bool, "enable_status_from_mission_control", self.update_enable_status, 10)
+            Bool, "enable_status_from_mission_control", self.update_enable_status, 10)
         self._reset_status_subscriber = self.create_subscription(
-            bool, "reset_status_from_mission_control", self.need_reset, 10)
+            Bool, "reset_status_from_mission_control", self.need_reset, 10)
         self._pitch_action_subscriber = self.create_subscription(
             Point, "yaw_pitch_action_from_mission_control", self.perform_yaw_pitch_action, 10)
         self._move_on_xy_subscriber = self.create_subscription(
@@ -255,8 +262,14 @@ class Arm(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    arm_node = Arm("placeholder.urdf", ["placeholder_masks"],
-                   ["placeholder_positions"])
+    # arm_node = Arm("placeholder.urdf", ["placeholder_masks"],
+    #                ["placeholder_positions"])
+
+    active_link_masks = [False, True, True, True, True, True, True]
+    start_positions = [0, 0, 1.5, -3.14, 0, 0, 0]
+
+    print("Start arm node")
+    arm_node = Arm("src/arm/arm/arm.urdf", active_link_masks, start_positions)
 
     rclpy.spin(arm_node)
 

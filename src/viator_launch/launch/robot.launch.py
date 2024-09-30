@@ -27,6 +27,11 @@ robot_info_node_talker = Node(
     name='TestPublisher'
 )
 
+arm_node = Node(
+    package='arm',
+    executable='arm',
+    name='arm_node'
+)
 
 # Composable Nodes launched in a Composable Node container will share a process
 # and can use very fast inter-process communication instead of publishing
@@ -50,5 +55,6 @@ def generate_launch_description():
         robot_container,
         can_moteus_node,
         robot_info_node,
-        robot_info_node_talker
+        robot_info_node_talker,
+        arm_node,
     ])
