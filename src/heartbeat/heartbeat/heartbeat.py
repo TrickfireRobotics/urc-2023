@@ -43,8 +43,8 @@ class Heartbeat(Node):
         # self._robot_info = RobotInfo(self)
         self._robot_interface = RobotInterface(self)
 
-        # give enough time (3s) for others to initialize
-        time.sleep(3)
+        # give enough time (10s) for others to initialize
+        time.sleep(10)
 
         # flag to store connection status
         self._connection_lost = False
@@ -76,6 +76,8 @@ class Heartbeat(Node):
                         publisher that indicates the connection
                         status.
         """
+
+        # self.get_logger().info("heartbeat call back")
 
         # only update time if connection is still active
         if (self._connection_lost):
