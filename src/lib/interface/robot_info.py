@@ -45,6 +45,7 @@ class RobotInfo:  # pylint: disable=too-few-public-methods
         can_id = request.target_can_id
         string_message = self.can_id_to_json[can_id].toMsg()
         response.json_payload = str(string_message.data)
+    
         return response
 
     def getMotorState(self, motor: MoteusMotorConfig) -> MoteusMotorState:
