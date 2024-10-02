@@ -79,16 +79,15 @@ class Heartbeat(Node):
 
         # self.get_logger().info("heartbeat call back")
 
-        # only update time if connection is still active
-        if (self._connection_lost):
-            return
-
         # Update the timestamp of the last received heartbeat message
         self._last_heartbeat_time = time.time()
 
         # Log connection active as before
+        # doesn't matter the data, pub always pub True
+        # just check to make sure nothing is wrong with pub
         if msg.data == True:
             self.get_logger().info(colorStr("Connection active", ColorCodes.GREEN_OK))
+            self._connection_lost = False
 
 
     def check_connection(self):
@@ -100,17 +99,15 @@ class Heartbeat(Node):
 
         # Check if the last heartbeat was received more than a threshold ago
         if time.time() - self._last_heartbeat_time > 2:  # threshold = 2 seconds
+            # if already shut down motor, don't have to do this again
+            if self._connection_lost:
+                return
+
             self.get_logger().warning(colorStr("Connection lost", ColorCodes.WARNING_YELLOW))
             self._connection_lost = True
 
             # call the robot interface to stop all motors
             self._stop_all_motors()
-
-            # stop the timer
-            self._timer.cancel()
-
-        else:
-            self._connection_lost = False  # Reset flag if connection is okay
 
     
     # ***************
