@@ -29,5 +29,6 @@
     },
     "editor.rulers": [
         100
-    ]
+    ],
+    "ros.distro": "humble"
 }
