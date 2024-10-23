@@ -142,6 +142,9 @@ class MotorConfigs:
             "servo.max_voltage": 56.0,
             "servopos.position_min": math.nan,
             "servopos.position_max": math.nan,
+            "servo.pid_position.kp": 1500.0,
+            "servo.pid_position.ki": 0.0,
+            "servo.pid_position.kd": 0.0,
         },
     )
     ARM_ELBOW_MOTOR = MoteusMotorConfig(
@@ -155,12 +158,18 @@ class MotorConfigs:
             "servo.default_timeout_s": 1.0,
             "servo.max_current_A": 6.0,
             "servo.max_velocity": 0.1,
-            "servopos.position_min": -0.5,
-            "servopos.position_max": 0.0,
+            "servopos.position_min": math.nan,
+            "servopos.position_max": math.nan,
         },
     )
-    ARM_LEFT_WRIST_MOTOR = MoteusMotorConfig(can_id=3, config={})
-    ARM_RIGHT_WRIST_MOTOR = MoteusMotorConfig(can_id=4, config={})
+    ARM_LEFT_WRIST_MOTOR = MoteusMotorConfig(can_id=3, config={
+        "servopos.position_min": math.nan,
+        "servopos.position_max": math.nan,
+    })
+    ARM_RIGHT_WRIST_MOTOR = MoteusMotorConfig(can_id=4, config={
+        "servopos.position_min": math.nan,
+        "servopos.position_max": math.nan,
+    })
     ARM_TURNTABLE_MOTOR = MoteusMotorConfig(
         can_id=5,
         config={
