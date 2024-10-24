@@ -6,6 +6,7 @@ from std_msgs.msg import Bool
 import time
 
 import sys
+
 sys.path.append("/home/trickfire/urc-2023/src")
 
 from lib.color_codes import ColorCodes, colorStr
@@ -16,6 +17,7 @@ from lib import configs
 
 # Credit: Most of this code is credit to Anna. I (Hong) just
 # add some finishing code and clean up the class.
+
 
 class Heartbeat(Node):
     """
@@ -51,19 +53,17 @@ class Heartbeat(Node):
 
         # create subscription to mission control
         self._is_alive_subscriber = self.create_subscription(
-            Bool, # message type (might change later)
-            "/heartbeat", # topic name
-            self.heartbeat_callback, # callback function
-            10  # Quality of Service (QoS) profile
+            Bool,  # message type (might change later)
+            "/heartbeat",  # topic name
+            self.heartbeat_callback,  # callback function
+            10,  # Quality of Service (QoS) profile
         )
 
         # store the most recent hearbeat time
         self._last_heartbeat_time = time.time()
 
         # check connection every 1 second
-        self._timer = self.create_timer(1.0, self.check_connection) 
-
-    
+        self._timer = self.create_timer(1.0, self.check_connection)
 
     def heartbeat_callback(self, msg):
         """
@@ -89,7 +89,6 @@ class Heartbeat(Node):
             self.get_logger().info(colorStr("Connection active", ColorCodes.GREEN_OK))
             self._connection_lost = False
 
-
     def check_connection(self):
         """
         A method for checking the connection status. If the heartbeat
@@ -109,7 +108,6 @@ class Heartbeat(Node):
             # call the robot interface to stop all motors
             self._stop_all_motors()
 
-    
     # ***************
     # Private helper method
     # ***************
@@ -126,9 +124,10 @@ class Heartbeat(Node):
             self._robot_interface.stopMotor(motor)
 
             # debug message
-            self.get_logger().info(colorStr("Stop motor can id" + str(motor.can_id), ColorCodes.FAIL_RED))
+            self.get_logger().info(
+                colorStr("Stop motor can id" + str(motor.can_id), ColorCodes.FAIL_RED)
+            )
 
-        
         # finish [debug message]
         self.get_logger().info(colorStr("Stop all motors!", ColorCodes.FAIL_RED))
 
@@ -141,5 +140,6 @@ def main(args=None):
     heartbeat_node.destroy_node()
     rclpy.shutdown()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     Heartbeat.main()

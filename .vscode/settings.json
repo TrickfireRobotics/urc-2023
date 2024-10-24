@@ -21,7 +21,6 @@
         "editor.defaultFormatter": "ms-python.black-formatter",
         "editor.formatOnSave": true
     },
-    "black-formatter.args": ["-l", "100"],
     "cmake.configureOnOpen": false,
     "cmake.sourceDirectory": "${workspaceFolder}/src/hello_world",
     "files.associations": {
