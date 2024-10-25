@@ -13,7 +13,6 @@ jobs:
           options: "--check --verbose"
           src: "./src"
           use_pyproject: true
-          version: "~= 24.8.0"
       - name: Setup Python 
         uses: actions/setup-python@v3
         with:
