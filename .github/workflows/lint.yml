@@ -12,7 +12,7 @@ jobs:
         with:
           options: "--check --verbose"
           src: "./src"
-          use_pyproject: true
+          version: 24.8.0
       - name: Setup Python 
         uses: actions/setup-python@v3
         with:
@@ -20,10 +20,11 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pylint==3.2.7 mypy==1.11.2
+          pip install pylint==3.2.7 mypy==1.11.2 moteus
       - name: Run Pylint
+        # Ignoring ros packages is unideal, but installing them as packages is not trivial
         run: |
-          pylint $(git ls-files "*.py")
+          pylint --fail-under=8 --ignored-modules=rclpy,std_msgs,ament_copyright,ament_flake8,pytest,launch ./src
       - name: Run Mypy
         run: |
-          mypy $(git ls-files "*.py")
+          mypy --exclude /test/ --exclude setup\.py ./src

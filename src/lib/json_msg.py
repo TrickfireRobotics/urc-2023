@@ -67,4 +67,4 @@ class JsonMsg(Generic[T]):
         # This code just gets the child class and constructs a new one
         # You can think of it like this: return T(**json_obj)
         # It's just that the above code is not valid
-        return cls(**json_obj)
+        return cls(**json_obj)  # type: ignore
