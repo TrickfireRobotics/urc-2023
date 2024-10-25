@@ -1,17 +1,11 @@
-#!/usr/bin/env python3
-
-import sys
 import time
 
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool
 
-sys.path.append("/home/trickfire/urc-2023/src")
-
 from lib import configs
 from lib.color_codes import ColorCodes, colorStr
-from lib.interface.robot_info import RobotInfo
 from lib.interface.robot_interface import RobotInterface
 
 # Credit: Most of this code is credit to Anna. I (Hong) just
@@ -27,7 +21,7 @@ class Heartbeat(Node):
         Node (Node): ROS Node
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the heartbeat node and provides it with a timer
         to keep track of the connection status of the rover.
@@ -70,7 +64,7 @@ class Heartbeat(Node):
         # check connection every 1 second
         self._timer = self.create_timer(1.0, self.check_connection)
 
-    def heartbeat_callback(self, msg):
+    def heartbeat_callback(self, msg: Bool) -> None:
         """
         A call back method for the heartbeat everytime the
         mission control publish a message indicating that the
@@ -90,7 +84,7 @@ class Heartbeat(Node):
         # Log connection active as before
         # doesn't matter the data, pub always pub True
         # just check to make sure nothing is wrong with pub
-        if msg.data == True:
+        if msg.data:
             self.get_logger().info(colorStr("Connection active", ColorCodes.GREEN_OK))
             self._connection_lost = False
 
@@ -99,7 +93,7 @@ class Heartbeat(Node):
         msg.data = True
         self._is_alive_publisher.publish(msg)
 
-    def check_connection(self):
+    def check_connection(self) -> None:
         """
         A method for checking the connection status. If the heartbeat
         does not receive a message within 1s, meaning the connection was
@@ -123,7 +117,7 @@ class Heartbeat(Node):
     # ***************
     # Private helper method
     # ***************
-    def _stop_all_motors(self):
+    def _stop_all_motors(self) -> None:
         """
         Get all motors from the motor configs file and stop all of them.
         """
@@ -144,7 +138,7 @@ class Heartbeat(Node):
         self.get_logger().info(colorStr("Stop all motors!", ColorCodes.FAIL_RED))
 
 
-def main(args=None):
+def main(args: list[str] | None = None) -> None:
     rclpy.init(args=args)
     heartbeat_node = Heartbeat()
     rclpy.spin(heartbeat_node)
@@ -154,4 +148,4 @@ def main(args=None):
 
 
 if __name__ == "__main__":
-    Heartbeat.main()
+    main()
