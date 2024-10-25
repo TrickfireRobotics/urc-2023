@@ -54,7 +54,7 @@ class Heartbeat(Node):
 
         self._is_alive_publisher = self.create_publisher(
             Bool,  # message type (might change later)
-            "/heartbeatres",  # topic name
+            "/hbr",  # topic name
             10,  # Quality of Service (QoS) profile
         )
 
@@ -106,9 +106,7 @@ class Heartbeat(Node):
             if self._connection_lost:
                 return
 
-            self.get_logger().warning(
-                colorStr("Connection lost", ColorCodes.WARNING_YELLOW)
-            )
+            self.get_logger().warning(colorStr("Connection lost", ColorCodes.WARNING_YELLOW))
             self._connection_lost = True
 
             # call the robot interface to stop all motors
