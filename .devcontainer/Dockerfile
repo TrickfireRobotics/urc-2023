@@ -15,14 +15,23 @@ RUN apt-get update && apt-get install -y \
   can-utils \
   iproute2 \
   kmod \ 
+  # Used for cv_bridge
+  python3-numpy \
+  libboost-python-dev \
+  # OpenCV
+  libopencv-dev \
+  python3-opencv \
   # Clean out the apt lists after `apt-get update`
   && rm -rf /var/lib/apt/lists/*
 
 
-#Install moteus python library https://github.com/mjbots/moteus/tree/main/lib/python
+# Install moteus python library https://github.com/mjbots/moteus/tree/main/lib/python
 RUN pip3 install moteus
 
 RUN pip3 install pyusb
+
+# Install OpenCV for python
+RUN pip3 install opencv-python
 
 # Update pydocstyle to remove a deprecation warning when testing for PEP257
 RUN pip install --upgrade pydocstyle
