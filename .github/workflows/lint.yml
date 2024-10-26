@@ -7,6 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        # Black has a first-party ci/cd solution doesn't require python or setup, so use that
+        # before running setup.
       - name: Run Black
         uses: psf/black@stable
         with:
@@ -14,7 +16,7 @@ jobs:
           src: "./src"
           version: 24.8.0
       - name: Setup Python 
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: 3.10.12
       - name: Install Dependencies
