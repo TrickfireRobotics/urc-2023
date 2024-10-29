@@ -39,17 +39,17 @@ fi
 # --- Handle the Docker image ---
 
 # If the image does NOT exist OR we force the image to be built
-if [ -z "$(docker images -q ${trickire_container}:latest 2> /dev/null)" ] || [ "$b_flag" = true ]; then
+if [ -z "$(docker images -q ${trickfire_image}:latest 2> /dev/null)" ] || [ "$b_flag" = true ]; then
   # Should we build without cache?
   if [ "$no_cache_flag" = true ]; then
-    echo -e "${BLUE}$(tput bold)[${text_helper}] Building \"${trickire_container}\" without cache${NC}"
-    docker build --no-cache -t ${trickire_container} -f .devcontainer/Dockerfile . 
+    echo -e "${BLUE}$(tput bold)[${text_helper}] Building \"${trickfire_image}\" without cache${NC}"
+    docker build --no-cache -t ${trickfire_image} -f .devcontainer/Dockerfile . 
   else
-    echo -e "${BLUE}$(tput bold)[${text_helper}] Building \"${trickire_container}\" with cache${NC}"
-    docker build -t ${trickire_container} -f .devcontainer/Dockerfile . 
+    echo -e "${BLUE}$(tput bold)[${text_helper}] Building \"${trickfire_image}\" with cache${NC}"
+    docker build -t ${trickfire_image} -f .devcontainer/Dockerfile . 
   fi
 else
-    echo -e "${BLUE}$(tput bold)[${text_helper}] Image \"${trickire_container}\" exists. Skipping${NC}"
+    echo -e "${BLUE}$(tput bold)[${text_helper}] Image \"${trickfire_image}\" exists. Skipping${NC}"
 fi
 
 
