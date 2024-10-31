@@ -51,7 +51,7 @@ class IndividualControlPos:
     def shoulderUp(self, msg: Float32) -> None:
         if not self.can_send or msg == 0.0:
             return
-        self.target_shoulder_pos -= 0.05
+        self.target_shoulder_pos -= 0.02
         self._ros_node.get_logger().info("shoulder up: " + str(self.target_shoulder_pos))
         self._bot_interface.runMotorPosition(
             MotorConfigs.ARM_SHOULDER_MOTOR, self.target_shoulder_pos
@@ -60,7 +60,7 @@ class IndividualControlPos:
     def shoulderDown(self, msg: Float32) -> None:
         if not self.can_send or msg == 0.0:
             return
-        self.target_shoulder_pos += 0.05
+        self.target_shoulder_pos += 0.02
         self._ros_node.get_logger().info("shoulder down: " + str(self.target_shoulder_pos))
         self._bot_interface.runMotorPosition(
             MotorConfigs.ARM_SHOULDER_MOTOR, self.target_shoulder_pos
