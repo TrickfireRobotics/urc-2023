@@ -2,14 +2,8 @@ import sys
 from enum import IntEnum
 from typing import Any
 
-from enum import IntEnum
-from typing import Any
-
 import rclpy
 from rclpy.executors import ExternalShutdownException
-from rclpy.node import Node
-from std_msgs.msg import Int32
-
 from rclpy.node import Node
 from std_msgs.msg import Int32
 
@@ -27,14 +21,8 @@ class ArmModeEnum(IntEnum):
     INDIVIDUAL_MOTOR_CONTROL_POS = 2
     INVERSE_KINEMATICS = 3
 
-    DISABLED = 0
-    INDIVIDUAL_MOTOR_CONTROL_VEL = 1
-    INDIVIDUAL_MOTOR_CONTROL_POS = 2
-    INVERSE_KINEMATICS = 3
-
 
 class Arm(Node):
-    def __init__(self) -> None:
     def __init__(self) -> None:
         super().__init__("arm_node")
         self.get_logger().info(colorStr("Launching arm_node", ColorCodes.BLUE_OK))
@@ -56,10 +44,7 @@ class Arm(Node):
         return response
 
     def updateArmMode(self, msg: Int32) -> None:
-
-    def updateArmMode(self, msg: Int32) -> None:
         self.current_mode = msg.data
-
 
         if self.current_mode == 0:
             self.bot_interface.disableMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
@@ -80,15 +65,12 @@ class Arm(Node):
 def main(args: list[str] | None = None) -> None:
     """
     The entry point of the node.
-    The entry point of the node.
     """
-
 
     rclpy.init(args=args)
     try:
         node = Arm()
         rclpy.spin(node)
-
 
     except KeyboardInterrupt:
         pass
@@ -99,7 +81,5 @@ def main(args: list[str] | None = None) -> None:
         sys.exit(0)
 
 
-
 if __name__ == "__main__":
     main()
-

@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = "camera"
+package_name = "heartbeat"
 
 setup(
     name=package_name,
@@ -13,11 +13,14 @@ setup(
     install_requires=["setuptools"],
     zip_safe=True,
     maintainer="trickfire",
-    maintainer_email="kimdavid2222@gmail.com",
+    maintainer_email="vanillanguyen635@gmail.com",
     description="TODO: Package description",
     license="TODO: License declaration",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": ["roscamera = camera.roscamera:main"],
+        "console_scripts": [
+            # ros 2 executable = packagename.filename : function we want to run
+            "heartbeat = heartbeat.heartbeat:main"
+        ],
     },
 )

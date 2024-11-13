@@ -23,13 +23,6 @@ class IndividualControlVel:
             Float32, "left_wrist_ccw", self.leftWristCCW, 10
         )
 
-        self.left_wrist_motor_sub = ros_node.create_subscription(
-            Float32, "left_wrist_cw", self.leftWristCW, 10
-        )
-        self.left_wrist_motor_sub = ros_node.create_subscription(
-            Float32, "left_wrist_ccw", self.leftWristCCW, 10
-        )
-
         # Right wrist motor
         self.left_wrist_motor_sub = ros_node.create_subscription(
             Float32, "right_wrist_cw", self.rightWristCW, 10
@@ -58,14 +51,6 @@ class IndividualControlVel:
         self.turntable_clockwise_sub = ros_node.create_subscription(
             Float32, "turntable_cw", self.turntableCW, 10
         )
-
-        self.turntable_counter_clockwise_sub = ros_node.create_subscription(
-            Float32, "turntable_ccw", self.turntableCCW, 10
-        )
-
-    def leftWristCW(self, msg: Float32) -> None:
-        if not self.can_send:
-            return
 
         self.turntable_counter_clockwise_sub = ros_node.create_subscription(
             Float32, "turntable_ccw", self.turntableCCW, 10
@@ -196,10 +181,6 @@ class IndividualControlVel:
         else:
             self._ros_node.get_logger().info("Turntable STOP")
             self.bot_interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
-
-    def turntableCCW(self, msg: Float32) -> None:
-        if not self.can_send:
-            return
 
     def turntableCCW(self, msg: Float32) -> None:
         if not self.can_send:

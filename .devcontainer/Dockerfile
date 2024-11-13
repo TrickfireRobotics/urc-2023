@@ -1,6 +1,5 @@
 # Base image: Ubuntu 20.04 with ROS2 Humble installed
 FROM ros:humble
-
 # Install dependencies from apt
 RUN apt-get update && apt-get install -y \
   # To use git in the container
@@ -25,7 +24,7 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 
-# Install moteus python library https://github.com/mjbots/moteus/tree/main/lib/python
+#Install moteus python library https://github.com/mjbots/moteus/tree/main/lib/python
 RUN pip3 install moteus
 
 RUN pip3 install pyusb

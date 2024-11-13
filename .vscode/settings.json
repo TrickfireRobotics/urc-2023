@@ -4,18 +4,11 @@
         "./src",
         // Add type checking to srv files and msg files
         "/home/trickfire/urc-2023/install/custom_interfaces/local/lib/python3.10/dist-packages"
-        "/opt/ros/humble/lib/python3.10/site-packages",
-        "./src",
-        // Add type checking to srv files and msg files
-        "/home/trickfire/urc-2023/install/custom_interfaces/local/lib/python3.10/dist-packages"
     ],
     "python.analysis.extraPaths": [
         "/opt/ros/humble/lib/python3.10/site-packages",
         "./src",
         "/home/trickfire/urc-2023/install/custom_interfaces/local/lib/python3.10/dist-packages"
-        "/opt/ros/humble/lib/python3.10/site-packages",
-        "./src",
-        "/home/trickfire/urc-2023/install/custom_interfaces/local/lib/python3.10/dist-packages"
     ],
     "python.defaultInterpreterPath": "python3",
     "pylint.args": [
@@ -28,19 +21,6 @@
         "editor.defaultFormatter": "ms-python.black-formatter",
         "editor.formatOnSave": true
     },
-    "black-formatter.args": ["-l", "100"],
-    "python.defaultInterpreterPath": "python3",
-    "pylint.args": [
-        "--rcfile=.pylintrc"
-    ],
-    "editor.codeActionsOnSave": {
-        "source.organizeImports": "explicit"
-    },
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter",
-        "editor.formatOnSave": true
-    },
-    "black-formatter.args": ["-l", "100"],
     "cmake.configureOnOpen": false,
     "cmake.sourceDirectory": "${workspaceFolder}/src/hello_world",
     "files.associations": {
@@ -48,6 +28,5 @@
     },
     "editor.rulers": [
         100
-    ],
-    "ros.distro": "humble"
+    ]
 }

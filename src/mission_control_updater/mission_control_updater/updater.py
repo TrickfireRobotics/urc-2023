@@ -1,10 +1,7 @@
 import sys
 
-import sys
-
 import rclpy
 from rclpy.executors import ExternalShutdownException
-from rclpy.node import Node
 from rclpy.node import Node
 from std_msgs.msg import String
 
@@ -16,8 +13,6 @@ from . import info_to_json_helper
 
 
 class MissionControlUpdater(Node):
-
-    def __init__(self) -> None:
 
     def __init__(self) -> None:
         super().__init__("mission_control_updater_node")
@@ -42,22 +37,14 @@ class MissionControlUpdater(Node):
 
 
 def main(args: list[str] | None = None) -> None:
-        msg.data = json_builder.buildJSONString()
-        self.publisher_to_mc.publish(msg)
-
-
-def main(args: list[str] | None = None) -> None:
     """
     The entry point of the node.
-    The entry point of the node.
     """
-
 
     rclpy.init(args=args)
     try:
         node = MissionControlUpdater()
         rclpy.spin(node)
-
 
     except KeyboardInterrupt:
         pass
@@ -70,7 +57,5 @@ def main(args: list[str] | None = None) -> None:
         sys.exit(0)
 
 
-
 if __name__ == "__main__":
     main()
-

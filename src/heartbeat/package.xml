@@ -1,11 +1,14 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>camera</name>
+  <name>heartbeat</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="kimdavid2222@gmail.com">trickfire</maintainer>
+  <description>Heartbeat Node Package</description>
+  <maintainer email="hongkng5@uw.edu">trickfire</maintainer>
   <license>TODO: License declaration</license>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

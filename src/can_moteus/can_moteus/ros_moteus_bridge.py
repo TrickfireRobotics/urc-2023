@@ -1,10 +1,7 @@
 import sys
 
-
 import rclpy
 from rclpy.executors import ExternalShutdownException
-from rclpy.node import Node
-from std_msgs.msg import Float32
 from rclpy.node import Node
 from std_msgs.msg import Float32
 from usb.core import find as finddev
@@ -23,15 +20,7 @@ class RosMotuesBridge(Node):
 
     You can attempt to reconnect to the Moteus Controllers during runtime.
     The CANFD-USB is reset every time the code is execute from the ./launch.sh
-    This is the node that connects the Moteus Motor Controllers
-    with the rest of the ROS codebase. You can easily add new
-    motors using the addMotor() function from the self.threadManager.
-
-    You can attempt to reconnect to the Moteus Controllers during runtime.
-    The CANFD-USB is reset every time the code is execute from the ./launch.sh
     """
-
-    def __init__(self) -> None:
 
     def __init__(self) -> None:
         super().__init__("can_moteus_node")
@@ -42,7 +31,6 @@ class RosMotuesBridge(Node):
         # to find the idVendor and the idProduct
         dev = finddev(idVendor=0x0483, idProduct=0x5740)
 
-        if dev is not None:
         if dev is not None:
             dev.reset()
             self.thread_manager: moteus_thread_manager.MoteusThreadManager | None = None
@@ -64,25 +52,15 @@ class RosMotuesBridge(Node):
         Gracefully shuts down the threadManager and creates a new instance of
         the threadManager object.
 
-        Gracefully shuts down the threadManager and creates a new instance of
-        the threadManager object.
-
         """
         self.get_logger().info("Reconnecting")
         if self.thread_manager is not None:
             self.thread_manager.reconnectMotors()
-        if self.thread_manager is not None:
-            self.thread_manager.reconnectMotors()
 
-    def createMoteusMotors(self) -> None:
     def createMoteusMotors(self) -> None:
         """
         Creates the threadManager and adds all the moteus motors
-        Creates the threadManager and adds all the moteus motors
         """
-
-        self.thread_manager = moteus_thread_manager.MoteusThreadManager(self)
-
 
         self.thread_manager = moteus_thread_manager.MoteusThreadManager(self)
 
@@ -107,15 +85,12 @@ class RosMotuesBridge(Node):
 def main(args: list[str] | None = None) -> None:
     """
     The entry point of the node.
-    The entry point of the node.
     """
-
 
     rclpy.init(args=args)
     try:
         node = RosMotuesBridge()
         rclpy.spin(node)
-
 
     except KeyboardInterrupt:
         pass
@@ -126,7 +101,6 @@ def main(args: list[str] | None = None) -> None:
             node.thread_manager.terminateAllThreads()
         node.destroy_node()
         sys.exit(0)
-
 
 
 if __name__ == "__main__":

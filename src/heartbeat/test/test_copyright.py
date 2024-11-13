@@ -17,11 +17,7 @@ import pytest
 
 
 # Remove the `skip` decorator once the source file(s) have a copyright header
-<<<<<<<< HEAD:src/heartbeat/test/test_copyright.py
-@pytest.mark.skip(reason='No copyright header has been placed in the generated source file.')
-========
 @pytest.mark.skip(reason="No copyright header has been placed in the generated source file.")
->>>>>>>> 0153dc0 (rebase + updated roscamera.py with on, off functionality instead of toggle and added better documentation, fixed formatting):src/mission_control_updater/test/test_copyright.py
 @pytest.mark.copyright
 @pytest.mark.linter
 def test_copyright():

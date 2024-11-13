@@ -34,8 +34,6 @@ class MoteusMotor:
         self._publisher = self._createPublisher()
 
         # Mutex - used to protect writing/reading the state of the motor
-
-        # Mutex - used to protect writing/reading the state of the motor
         self.mutex_lock = Lock()
 
         # The settings we can send to the moteus controller
@@ -45,7 +43,6 @@ class MoteusMotor:
         # By default, the motor is shutoff
         self.set_stop = True
 
-    def _createSubscriber(self) -> Subscription:
     def _createSubscriber(self) -> Subscription:
         """
         The subscriber to get data from.
@@ -59,10 +56,8 @@ class MoteusMotor:
             1,  # Size of queue is 1. All additional ones are dropped
         )
 
-
         return subscriber
 
-    def _createPublisher(self) -> Publisher:
     def _createPublisher(self) -> Publisher:
         """
         The publisher to send data to.
@@ -75,11 +70,7 @@ class MoteusMotor:
         return publisher
 
     def dataInCallback(self, msg: String) -> None:
-    def dataInCallback(self, msg: String) -> None:
         """
-        Update the motor state. Mutex protected,
-        meaning that no one can go into any other "critical section"
-        of code that also has a mutex protecting it.
         Update the motor state. Mutex protected,
         meaning that no one can go into any other "critical section"
         of code that also has a mutex protecting it.
