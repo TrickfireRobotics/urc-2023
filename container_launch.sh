@@ -19,16 +19,25 @@ NC='\033[0m' # No Color
 b_flag='' # Force build docker container "-b"
 no_cache_flag='' # Build docker container without cache "-n"
 c_flag='' # Force create container "-c"
+master_flag='' #Use the master image and container
 
 # Read the flags, if any were passed
-while getopts 'bnc' flag; do
+while getopts 'bncm' flag; do
   case "${flag}" in
     b) b_flag='true' ;;
     n) no_cache_flag='true' ;;
     c) c_flag='true' ;;
+    m) master_flag='true' ;;
     *) break ;;
   esac
 done
+
+if [ "$master_flag" = true ]; then
+  echo -e "${BLUE}$(tput bold)[${text_helper}] Using master image and container${NC}"
+  trickire_container="master_trickfirerobot"
+  trickfire_image="master_trickfireimage"
+fi
+
 
 # --- Shutdown the current trickfirerobot container if it is running
 if [ "$( docker container inspect -f '{{.State.Running}}' ${trickire_container} )" = "true" ]; then
