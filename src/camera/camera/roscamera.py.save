@@ -57,7 +57,8 @@ class RosCamera(Node):
 
         # We will publish a message every 0.1 seconds
         # timer_period = 0.1  # seconds
-        timer_period = 0.1  # seconds
+        timer_period = 0.1
+  # seconds
 
         # Create the timer
         self.timer = self.create_timer(timer_period, self.publishCameraFrame)

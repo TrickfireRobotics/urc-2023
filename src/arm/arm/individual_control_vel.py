@@ -176,7 +176,7 @@ class IndividualControlVel:
 
         if data > 0:
             self._ros_node.get_logger().info("Turntable clock wise")
-            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_TURNTABLE_MOTOR, self.VEL)
+            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_TURNTABLE_MOTOR, self.VEL * 0.5)
 
         else:
             self._ros_node.get_logger().info("Turntable STOP")
