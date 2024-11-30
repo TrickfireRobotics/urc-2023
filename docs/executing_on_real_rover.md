@@ -3,7 +3,7 @@ Updated on 10/10/2024
 
 Executing code is quite easy, this will walk you through the steps. The general steps are as follows:
 
-1) Turn on Orin, wait for it to boot up.
+1) Turn on the rover's computer (Orin), wait for it to boot up.
 2) Connect to the correct router
 3) SSH (secure shell) into the rover
 4) Change your directory into the folder with the code
@@ -20,7 +20,7 @@ A: If testing for a LONG time without needing the rover to physically move aroun
 
 | 12v Battery | Wall Plug |
 | ---- | ---- |
-| imge | img |
+| imge | ![Wall plug Image](./resources/reference_img/orion_charger.jpg) |
 
 ## Connecting to the Correct Router
 There are two routers that you will deal with - the white one (sometimes called the "development router") and the grey one (sometimes called the "rover's router"). Each one has a different IP you connect with a different set of passwords for the router as well. 
@@ -45,8 +45,14 @@ A2: Use the grey router if you want to drive the rover around the lab or outside
 ```
 
 ### Step 1 - Connecting
-Connect to the network by connecting to the wifi (see Table1 for credentials).
+Connect to the network by connecting to the wifi (see Table1 for credentials). This may be done already for you.
 
+If using the white router:
+Connect ethnet able and power cable below:
+![](./resources/reference_img/router_plug_ports.jpg)
+connect the ethernet cable to the router and the ethernet plug that is located overhead above the tables in the middle to like in 1 in image below
+![](./resources/reference_img/ethernet_router.jpg)
+![](./resources/reference_img/router_connected_indicator.jpg)
 If on Windows, open Powershell. If on Mac/Linux open the Terminal. Type in the following command and press enter:
 
 `ssh trickfire@<ip of the Orin>` Example: `ssh trickfire@192.168.0.145`
