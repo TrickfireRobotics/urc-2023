@@ -1,4 +1,4 @@
-Updated on 10/10/2024
+Updated on 12/3/2024
 # Executing Code on the Real Rover
 
 Executing code is quite easy, this will walk you through the steps. The general steps are as follows:
@@ -20,7 +20,7 @@ A: If testing for a LONG time without needing the rover to physically move aroun
 
 | 12v Battery | Wall Plug |
 | ---- | ---- |
-| imge | ![Wall plug Image](./resources/reference_img/orion_charger.jpg) |
+| ![li_battery](./resources//reference_img/li_ion_battery.jpg) | ![Wall plug Image](./resources/reference_img/orion_charger.jpg) |
 
 ## Connecting to the Correct Router
 There are two routers that you will deal with - the white one (sometimes called the "development router") and the grey one (sometimes called the "rover's router"). Each one has a different IP you connect with a different set of passwords for the router as well. 
@@ -45,14 +45,13 @@ A2: Use the grey router if you want to drive the rover around the lab or outside
 ```
 
 ### Step 1 - Connecting
-Connect to the network by connecting to the wifi (see Table1 for credentials). This may be done already for you.
+Connect to the network on your computer by connecting to the wifi (see Table1 for credentials). This may be done already for you.
 
 If using the white router:
-Connect ethnet able and power cable below:
-![](./resources/reference_img/router_plug_ports.jpg)
-connect the ethernet cable to the router and the ethernet plug that is located overhead above the tables in the middle to like in 1 in image below
-![](./resources/reference_img/ethernet_router.jpg)
-![](./resources/reference_img/router_connected_indicator.jpg)
+| Connect ethnet able and power cable  |  Connect the other end of the ethernet cable located overhead above the tables in the middle | This may take a minute but it should look like this |
+| ---- | ---- | ---- |
+| ![](./resources/reference_img/router_plug_ports.jpg) | ![](./resources/reference_img/ethernet_router.jpg) | ![](./resources/reference_img/router_connected_indicator.jpg) |
+
 If on Windows, open Powershell. If on Mac/Linux open the Terminal. Type in the following command and press enter:
 
 `ssh trickfire@<ip of the Orin>` Example: `ssh trickfire@192.168.0.145`
