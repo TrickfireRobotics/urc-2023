@@ -1,29 +1,31 @@
 Updated on 12/3/2024
+
 # Executing Code on the Real Rover
 
 Executing code is quite easy, this will walk you through the steps. The general steps are as follows:
 
-1) Turn on the rover's computer (Orin), wait for it to boot up.
-2) Connect to the correct router
-3) SSH (secure shell) into the rover
-4) Change your directory into the folder with the code
-5) Execute a few bash scripts
-
+1. Turn on the rover's computer (Orin), wait for it to boot up.
+2. Connect to the correct router
+3. SSH (secure shell) into the rover
+4. Change your directory into the folder with the code
+5. Execute a few bash scripts
 
 ## Turning On the Orin
+
 We need to power the Nvidia Jetson Orin, the main computer, with either its native wall plug or through a battery. The Orin will have a small white LED that turns on if it is getting power.
 
 ```
-Q: Which one do I use? 
+Q: Which one do I use?
 A: Generall you should use the wallplug if the rover does not need to be moved around. If you want the rover to move around, perhaps outside or in the lab, use the battery.
 ```
 
-| 12v Battery | Wall Plug |
-| ---- | ---- |
+| 12v Battery                                                  | Wall Plug                                                       |
+| ------------------------------------------------------------ | --------------------------------------------------------------- |
 | ![li_battery](./resources//reference_img/li_ion_battery.jpg) | ![Wall plug Image](./resources/reference_img/orion_charger.jpg) |
 
 ## Connecting to the Correct Router
-There are two routers that you will deal with - the white one (sometimes called the "development router") and the grey one (sometimes called the "rover's router"). Each one has a different IP you connect with a different set of passwords for the router as well. 
+
+There are two routers that you will deal with - the white one (sometimes called the "development router") and the grey one (sometimes called the "rover's router"). Each one has a different IP you connect with a different set of passwords for the router as well.
 
 TABLE 1: Router Info
 | Value | White | Grey |
@@ -37,18 +39,18 @@ TABLE 1: Router Info
 
 | Orin's Passwords | `trickfire` |
 
-
 ```
 Q: Which one do I use?
 A1: Use the white router if you need internet access on your laptop or if the Orin needs internet access. The white router is directly connected to UW's network via an Ethernet cable.
-A2: Use the grey router if you want to drive the rover around the lab or outside. This will remove internet access. 
+A2: Use the grey router if you want to drive the rover around the lab or outside. This will remove internet access.
 ```
 
 ### Step 1 - Connecting
+
 Connect to the network on your computer by connecting to the wifi (see Table1 for credentials). This may be done already for you.
 
 If using the white router:
-| Connect ethnet able and power cable  |  Connect the other end of the ethernet cable located overhead above the tables in the middle | This may take a minute but it should look like this |
+| Connect ethnet able and power cable | Connect the other end of the ethernet cable located overhead above the tables in the middle | This may take a minute but it should look like this |
 | ---- | ---- | ---- |
 | ![](./resources/reference_img/router_plug_ports.jpg) | ![](./resources/reference_img/ethernet_router.jpg) | ![](./resources/reference_img/router_connected_indicator.jpg) |
 
@@ -63,10 +65,12 @@ If this is your first time connecting to a new host, you will a message like thi
 The authenticity of host...
 Are you sure you want to continue connecting...
 ```
+
 Type in `yes` and press enter.
 
 ### Step 2 - Password
-If the command is successful, the terminal will as you to enter your password. Type in `trickfire`. **Note:** You will not see letters as you type, this is done for security. 
+
+If the command is successful, the terminal will as you to enter your password. Type in `trickfire`. **Note:** You will not see letters as you type, this is done for security.
 
 `trickfire@<ip of the Orin>'s password:`
 
