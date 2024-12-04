@@ -15,7 +15,7 @@ We need to power the Nvidia Jetson Orin, the main computer, with either its nati
 
 ```
 Q: Which one do I use? 
-A: If testing for a LONG time without needing the rover to physically move around, use the wall plug. If you want the rover to move around, perhaps outside or in the lab, use the battery.
+A: Generall you should use the wallplug if the rover does not need to be moved around. If you want the rover to move around, perhaps outside or in the lab, use the battery.
 ```
 
 | 12v Battery | Wall Plug |
