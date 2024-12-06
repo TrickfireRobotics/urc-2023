@@ -8,6 +8,7 @@
   <license>TODO: License declaration</license>
 
   <exec_depend>can_moteus</exec_depend>
+  <exec_depend>can_rmdx8</exec_depend>
   <exec_depend>ros2launch</exec_depend>
   <exec_depend>mission_control_updater</exec_depend>
   <exec_depend>arm</exec_depend>
