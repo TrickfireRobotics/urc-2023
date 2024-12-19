@@ -1,8 +1,10 @@
 # Write the code for the node, implement everything that you can until
 # the other RMD task is finished. Make sure to mimic the behaviour of
 # the current Moteus node, but not necessarily copy the code.
+import sys
 
 import myactuator_rmd_py as rmd
+import rclpy
 import std_msgs.msg
 
 # from moteus.moteus import Result
@@ -29,6 +31,14 @@ class RMDx8Motor(Node):
         self._subscriber = self._createSubscriber()
         self._publisher = self._createPublisher()
         self.run_settings: RMDX8RunSettings = RMDX8RunSettings()
+
+    # Main function
+    def main(self, args: list[str] | None = None) -> None:
+        """
+        The entry point of the node.
+        """
+
+        rclpy.init(args=args)
 
     # create a subscriber
     def _createSubscriber(self) -> Subscription:
