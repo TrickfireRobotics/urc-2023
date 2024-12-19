@@ -12,7 +12,7 @@ from rclpy.subscription import Subscription
 from std_msgs.msg import String
 
 from lib.configs import RMDx8MotorConfig
-from lib.rmdx8_motor_state import RMDx8MotorState, RMDx8RunSettings
+from lib.motor_state.rmd_motor_state import RMDX8MotorState, RMDX8RunSettings
 
 
 class RMDx8Motor(Node):
@@ -22,10 +22,13 @@ class RMDx8Motor(Node):
 
     def __init__(self, config: RMDx8MotorConfig) -> None:
         super().__init__("can_rmdx8_node")
+
         self.config = config
-        self.my_actuator = rmd
+        self.driver = rmd.CanDriver("can1")
+        self.my_actuator = rmd.ActuatorInterface(self.driver, config.can_id)
         self._subscriber = self._createSubscriber()
         self._publisher = self._createPublisher()
+        self.run_settings: RMDX8RunSettings = RMDX8RunSettings()
 
     # create a subscriber
     def _createSubscriber(self) -> Subscription:
@@ -53,12 +56,18 @@ class RMDx8Motor(Node):
         """
         Updates the RMDx8 motor state
         """
-        self.run_settings = RMDx8RunSettings.fromJsonMsg(msg)
+        self.run_settings = RMDX8RunSettings.fromJsonMsg(msg)
 
     def publishData(self) -> None:
         """
         Publishes data from the rmdx8 controller
         """
         # TODO Replace None with the Result that Saharsh creates
-        state = RMDx8MotorState.fromRMDx8Data(self.config.can_id, None)
+        state = RMDX8MotorState.fromRMDX8Data(
+            self.config.can_id,
+            self.my_actuator.getMotorStatus1(),
+            self.my_actuator.getMotorStatus2(),
+            self.my_actuator.getMotorPower(),
+            self.my_actuator.getAcceleration(),
+        )
         self._publisher.publish(state.toMsg())
