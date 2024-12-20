@@ -1,7 +1,6 @@
 # Write the code for the node, implement everything that you can until
 # the other RMD task is finished. Make sure to mimic the behaviour of
 # the current Moteus node, but not necessarily copy the code.
-import sys
 
 import myactuator_rmd_py as rmd
 import rclpy
