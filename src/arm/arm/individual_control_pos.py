@@ -30,6 +30,8 @@ class IndividualControlPos:
 
         self.target_shoulder_pos = self.getMotorPosition(MotorConfigs.ARM_SHOULDER_MOTOR)
         self.target_elbow_pos = self.getMotorPosition(MotorConfigs.ARM_ELBOW_MOTOR)
+        self.target_left_wrist_pos = self.getMotorPosition(MotorConfigs.ARM_LEFT_WRIST_MOTOR)
+        self.target_right_wrist_pos = self.getMotorPosition(MotorConfigs.ARM_RIGHT_WRIST_MOTOR)
 
         # elbow subscribers
         self.elbow_up_sub = ros_node.create_subscription(Float32, "elbow_up", self.elbowUp, 10)
@@ -45,6 +47,22 @@ class IndividualControlPos:
 
         self.shoulder_down_sub = ros_node.create_subscription(
             Float32, "shoulder_down", self.shoulderDown, 10
+        )
+
+        self.left_wrist_cw_sub = ros_node.create_subscription(
+            Float32, "left_wrist_cw", self.leftWristCW, 10
+        )
+
+        self.left_wrist_ccw_sub = ros_node.create_subscription(
+            Float32, "left_wrist_ccw", self.leftWristCCW, 10
+        )
+
+        self.right_wrist_cw_sub = ros_node.create_subscription(
+            Float32, "right_wrist_cw", self.rightWristCW, 10
+        )
+
+        self.right_wrist_ccw_sub = ros_node.create_subscription(
+            Float32, "right_wrist_ccw", self.rightWristCCW, 10
         )
 
     def elbowUp(self, msg: Float32) -> None:
@@ -93,6 +111,42 @@ class IndividualControlPos:
         self._ros_node.get_logger().info("shoulder down: " + str(self.target_shoulder_pos))
         self._bot_interface.runMotorPosition(
             MotorConfigs.ARM_SHOULDER_MOTOR, self.target_shoulder_pos
+        )
+
+    def leftWristCW(self, msg: Float32) -> None:
+        if not self.can_send or msg == 0.0:
+            return
+        self.target_left_wrist_pos += 0.01
+        self._ros_node.get_logger().info("left wrist cw: " + str(self.target_left_wrist_pos))
+        self._bot_interface.runMotorPosition(
+            MotorConfigs.ARM_LEFT_WRIST_MOTOR, self.target_left_wrist_pos
+        )
+
+    def leftWristCCW(self, msg: Float32) -> None:
+        if not self.can_send or msg == 0.0:
+            return
+        self.target_left_wrist_pos -= 0.01
+        self._ros_node.get_logger().info("left wrist ccw: " + str(self.target_left_wrist_pos))
+        self._bot_interface.runMotorPosition(
+            MotorConfigs.ARM_LEFT_WRIST_MOTOR, self.target_left_wrist_pos
+        )
+
+    def rightWristCW(self, msg: Float32) -> None:
+        if not self.can_send or msg == 0.0:
+            return
+        self.target_right_wrist_pos += 0.01
+        self._ros_node.get_logger().info("right wrist cw: " + str(self.target_right_wrist_pos))
+        self._bot_interface.runMotorPosition(
+            MotorConfigs.ARM_RIGHT_WRIST_MOTOR, self.target_right_wrist_pos
+        )
+
+    def rightWristCCW(self, msg: Float32) -> None:
+        if not self.can_send or msg == 0.0:
+            return
+        self.target_right_wrist_pos -= 0.01
+        self._ros_node.get_logger().info("right wrist ccw: " + str(self.target_right_wrist_pos))
+        self._bot_interface.runMotorPosition(
+            MotorConfigs.ARM_RIGHT_WRIST_MOTOR, self.target_right_wrist_pos
         )
 
     def getMotorPosition(self, motor: MoteusMotorConfig) -> float:
