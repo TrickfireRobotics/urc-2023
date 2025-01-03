@@ -1,0 +1,163 @@
+<robot name="viator">
+    <link name="base_link">
+		<visual>
+			<geometry>
+				<cylinder length="0.050" radius="0.04"/>
+			</geometry>
+		</visual>	
+	</link>
+
+    <!-- Spinny joint -->
+    <joint name="spinny_joint" type="revolute">
+      <parent link="base_link"/>
+      <child link="base_box"/>
+      <origin xyz="0 0 0.05" rpy="0 0 0" />
+      <axis xyz="0 0 1"/>
+      <limit lower="-3.14" upper="3.14" />
+    </joint>
+
+    <link name="base_box">
+		<visual>
+        <origin xyz="-0.05 0 0" rpy="0 1.57 0" />
+          	<geometry>
+                <!-- <box size="0.25 0.06 0.05" /> -->
+                <cylinder length="0.25" radius="0.03"/>
+			</geometry>
+            <material name="Cyan">
+                <color rgba="0 1 1 1"/>
+            </material>
+		</visual>	
+	</link>
+
+    <!-- Shoulder joint1 -->
+    <joint name="shoulder_joint" type="revolute">
+      <parent link="base_box"/>
+      <child link="shoulder1"/>
+      <origin xyz="0.05 0 0" rpy="0 1 0" />
+      <axis xyz="0 1 0"/>
+      <limit lower="0" upper="1.57" />
+    </joint>
+
+
+    <link name="shoulder1">
+		<visual>
+        <!-- Remember, x origin of an arm should be half the length of the arm -->
+          <origin xyz="-0.0375 0 0" rpy="0 0 0" />
+          	<geometry>
+            <!-- 2.943" = 0.075 meters -->
+            	<box size="0.075 0.06 0.05" />
+			</geometry>
+            <material name="Blue">
+            <color rgba="0 0 1 1"/>
+          </material>
+		</visual>	
+	</link>
+
+    <!-- Shoulder fixed -->
+    <joint name="shoulder_fixed" type="fixed">
+      <parent link="shoulder1"/>
+      <child link="shoulder2"/>
+      <origin xyz="-0.05 0 0" rpy="0 -1 0" />
+    </joint>
+
+
+    <link name="shoulder2">
+		<visual>
+          <origin xyz="-0.179 0 0" rpy="0 0 0" />
+          	<geometry>
+            <!-- 14.085" = 0.358m  -->
+            	<box size="0.358 0.06 0.05" />
+			</geometry>
+            <material name="Blue">
+            <color rgba="0 0 1 1"/>
+          </material>
+		</visual>	
+	</link>
+
+    <!-- Elbow joint -->
+    <joint name="elbow_joint" type="revolute">
+      <parent link="shoulder2"/>
+      <child link="elbow"/>
+      <origin xyz="-0.35 0 0" rpy="0 3 0" />
+      <axis xyz="0 1 0"/>
+      <limit lower="-3.14" upper="0.1" />
+    </joint>
+
+    <link name="elbow">
+		<visual>
+          <origin xyz="-0.01 0 -0.02" rpy="0 2 0" />
+            <geometry>
+            <!-- 2.943" = 0.075 meters -->
+            	<box size="0.075 0.06 0.05" />
+			</geometry>
+            <material name="Magenta">
+            <color rgba="1 0 1 1"/>
+          </material>
+		</visual>	
+	</link>
+
+    <!-- Elbow fixed -->
+    <joint name="elbow_fixed" type="fixed">
+      <parent link="elbow"/>
+      <child link="forearm"/>
+      <origin xyz="-0.02 0 -0.04" rpy="0 0 0" />
+    </joint>
+
+    <link name="forearm">
+		<visual>
+          <origin xyz="-0.152 0 0" rpy="0 0 0" />
+          	<geometry>
+            <!-- 11.974" = 0.304 meters -->
+            	<box size="0.304 0.06 0.05" />
+			</geometry>
+            <material name="Magenta">
+            <color rgba="1 0 1 1"/>
+          </material>
+		</visual>	
+	</link>
+
+
+    <!-- Wrist updown joint -->
+    <joint name="wrist_y_joint" type="revolute">
+      <parent link="forearm"/>
+      <child link="wristbone"/>
+      <origin xyz="-0.304 0 0" rpy="0 0 0" />
+      <axis xyz="0 1 0"/>
+      <limit lower="-1" upper="1" />
+    </joint>
+
+    <link name="wristbone">
+		<visual>
+          <origin xyz="-0.015 0 0" rpy="0 0 0" />
+          	<geometry>
+            	<box size="0.03 0.02 0.02" />
+			</geometry>
+            <material name="Yellow">
+            <color rgba="1 1 0 1"/>
+          </material>
+		</visual>	
+	</link>
+
+        <!-- Wrist rotate joint -->
+    <joint name="wrist_x_joint" type="revolute">
+      <parent link="wristbone"/>
+      <child link="hand"/>
+      <origin xyz="-0.03 0 0" rpy="0 3 0" />
+      <axis xyz="1 0 0"/>
+      <limit lower="-3.14" upper="3.14" />
+    </joint>
+
+
+    <link name="hand">
+		<visual>
+          <origin xyz="0.02 0 0" rpy="0 0 0" />
+          	<geometry>
+            	<box size="0.04 0.06 0.05" />
+			</geometry>
+            <material name="Red">
+            <color rgba="1 0 0 1"/>
+          </material>
+		</visual>	
+	</link>
+
+</robot>
