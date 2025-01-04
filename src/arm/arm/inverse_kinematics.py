@@ -37,6 +37,9 @@ class InverseKinematics:
         self.l_wrist_offset = 0.0
         self.r_wrist_offset = 0.0
 
+        self.setArmJointOffsets()
+        self.getArmAngles()
+
         arm_chain = Chain.from_urdf_file(
             "arm.urdf", active_links_mask=[True, True, True, True, True, True, True, True]
         )
