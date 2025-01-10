@@ -1,13 +1,20 @@
 import math
+from enum import IntEnum
 
-from ikpy.chain import Chain
-from ikpy.link import OriginLink, URDFLink
 from rclpy.node import Node
 from std_msgs.msg import Float32
 
 from lib.configs import MoteusMotorConfig, MotorConfigs
 from lib.interface.robot_info import RobotInfo
 from lib.interface.robot_interface import RobotInterface
+
+
+class ArmMotorsEnum(IntEnum):
+    TURNTABLE = 0
+    SHOULDER = 1
+    ELBOW = 2
+    LEFTWRIST = 3
+    RIGHTWRIST = 4
 
 
 class InverseKinematics:
@@ -18,6 +25,16 @@ class InverseKinematics:
         self._ros_node = ros_node
         self._interface = interface
         self._info = info
+
+        motorConfigList = [
+            MotorConfigs.ARM_TURNTABLE_MOTOR,
+            MotorConfigs.ARM_SHOULDER_MOTOR,
+            MotorConfigs.ARM_ELBOW_MOTOR,
+            MotorConfigs.ARM_LEFT_WRIST_MOTOR,
+            MotorConfigs.ARM_RIGHT_WRIST_MOTOR,
+        ]
+
+        motorOffsetList = [0, 0, 0, 0, 0]
 
         # variables for arm joint angles
         # everything in radians
@@ -39,10 +56,6 @@ class InverseKinematics:
 
         self.setArmJointOffsets()
         self.getArmAngles()
-
-        arm_chain = Chain.from_urdf_file(
-            "arm.urdf", active_links_mask=[True, True, True, True, True, True, True, True]
-        )
 
     def setArmJointOffsets(self) -> None:
         self.shoulder_offset = self.shoulder_angle - self.getMotorPosition(

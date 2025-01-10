@@ -25,7 +25,7 @@ RUN pip3 install moteus
 RUN pip3 install pyusb
 
 # Install inverse kinematics library https://github.com/Phylliade/ikpy 
-RUN pip3 install ikpy
+RUN pip3 install roboticstoolbox-python
 
 # Update pydocstyle to remove a deprecation warning when testing for PEP257
 RUN pip install --upgrade pydocstyle
