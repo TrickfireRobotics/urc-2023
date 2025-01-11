@@ -10,6 +10,9 @@
         "./src",
         "/home/trickfire/urc-2023/install/custom_interfaces/local/lib/python3.10/dist-packages"
     ],
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingModuleSource": "none"
+    },
     "python.defaultInterpreterPath": "python3",
     "pylint.args": [
         "--rcfile=.pylintrc"
