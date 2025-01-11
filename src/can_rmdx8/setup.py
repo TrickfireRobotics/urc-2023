@@ -18,6 +18,6 @@ setup(
     license="TODO: License declaration",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": ["can_rmdx8 = can_rmdx8.rmdx8_motore:main"],
+        "console_scripts": ["can_rmdx8 = can_rmdx8.rmdx8_motor:main"],
     },
 )

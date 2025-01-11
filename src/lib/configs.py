@@ -68,19 +68,9 @@ class MoteusMotorConfig(MotorConfig):
 
 
 @dataclass(frozen=True)
-class RMDx8MotorConfig:
+class RMDx8MotorConfig(MotorConfig):
     """
     TODO: Add comment
-    """
-
-    can_id: int
-    """
-    The can id of the RMDx8.
-    """
-
-    config: dict[str, float | int]
-    """
-    The config of the motor.
     """
 
     def getCanTopicName(self) -> str:
@@ -228,8 +218,6 @@ class MotorConfigs:
             "servopos.position_max": math.nan,
         },
     )
-    # Temporary config variable for testing for RMDx8
-    RMDx8_TESTING_MOTOR = RMDx8MotorConfig(can_id=6, config={})
 
     # Don't allow anyone to change this class's attributes
     def __setattr__(self, _: str, __: Any) -> Any:

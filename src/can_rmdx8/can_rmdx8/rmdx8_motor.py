@@ -5,6 +5,7 @@
 import myactuator_rmd_py as rmd
 import rclpy
 import std_msgs.msg
+from rclpy.executors import ExternalShutdownException
 
 # from moteus.moteus import Result
 from rclpy.node import Node
@@ -37,7 +38,15 @@ class RMDx8Motor(Node):
         The entry point of the node.
         """
 
-        rclpy.init(args=args)
+        # rclpy.init(args=args)
+        # try:
+        #     node = RMDx8Motor()
+        # except KeyboardInterrupt:
+        #     pass
+        # except ExternalShutdownException:
+        #     node.get_logger().info(colorStr("Shutting down can_rmdx8", ColorCodes.BLUE_OK))
+        #     node.destroy_node()
+        #     sys.exit(0)
 
     # create a subscriber
     def _createSubscriber(self) -> Subscription:
