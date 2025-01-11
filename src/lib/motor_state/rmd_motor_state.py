@@ -6,14 +6,13 @@ from dataclasses import dataclass
 
 from myactuator_rmd_py.actuator_state import MotorStatus1, MotorStatus2
 
-from lib.json_msg import JsonMsg
 from lib.motor_state.can_motor_state import CanMotorRunSettings, CANMotorState
 
 DEGS_TO_REVS = 1 / 360
 
 
 @dataclass(frozen=True, kw_only=True)
-class RMDX8MotorState(CANMotorState, JsonMsg["RMDX8MotorState"]):
+class RMDX8MotorState(CANMotorState["RMDX8MotorState"]):
     """
     A dataclass representing the state of the RMD-X8 motor.
     """
@@ -50,7 +49,7 @@ class RMDX8MotorState(CANMotorState, JsonMsg["RMDX8MotorState"]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class RMDX8RunSettings(CanMotorRunSettings, JsonMsg["RMDX8RunSettings"]):
+class RMDX8RunSettings(CanMotorRunSettings["RMDX8RunSettings"]):
     """
     A dataclass representing the different settings while running an RMD-X8 motor.
     """

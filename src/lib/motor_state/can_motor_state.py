@@ -4,12 +4,15 @@ setpoint.
 """
 
 from dataclasses import dataclass
+from typing import TypeVar
 
 from lib.json_msg import JsonMsg
 
+T = TypeVar("T")
+
 
 @dataclass(frozen=True, kw_only=True)
-class CANMotorState(JsonMsg["CANMotorState"]):
+class CANMotorState(JsonMsg[T]):
     """
     A dataclass representing the state of the motor.
     """
@@ -42,7 +45,7 @@ class CANMotorState(JsonMsg["CANMotorState"]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class CanMotorRunSettings(JsonMsg["CanMotorRunSettings"]):
+class CanMotorRunSettings(JsonMsg[T]):
     """
     A dataclass representing the different settings while running a motor.
     """

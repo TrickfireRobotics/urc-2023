@@ -19,7 +19,7 @@ class FooMsg(JsonMsg["FooMsg"]):
 """
 
 import json
-from typing import Any, Generic, TypeVar, get_args
+from typing import Any, Generic, TypeVar
 
 from std_msgs.msg import String
 

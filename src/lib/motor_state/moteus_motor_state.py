@@ -7,11 +7,11 @@ from dataclasses import dataclass
 import moteus
 from moteus.moteus import Result
 
-from lib.json_msg import JsonMsg
+from lib.motor_state.can_motor_state import CanMotorRunSettings, CANMotorState
 
 
 @dataclass(frozen=True, kw_only=True)
-class MoteusMotorState(JsonMsg["MoteusMotorState"]):
+class MoteusMotorState(CANMotorState["MoteusMotorState"]):
     """
     A dataclass representing the state of the moteus motor.
     """
@@ -71,7 +71,7 @@ class MoteusMotorState(JsonMsg["MoteusMotorState"]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class MoteusRunSettings(JsonMsg["MoteusRunSettings"]):
+class MoteusRunSettings(CanMotorRunSettings["MoteusRunSettings"]):
     """
     A dataclass representing the different settings while running a moteus motor.
     """
