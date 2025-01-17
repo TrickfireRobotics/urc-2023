@@ -30,22 +30,6 @@ class RMDx8Motor:
         self._publisher = self._createPublisher()
         self.run_settings: RMDX8RunSettings = RMDX8RunSettings()
 
-    # Main function
-    def main(self, args: list[str] | None = None) -> None:
-        """
-        The entry point of the node.
-        """
-
-        # rclpy.init(args=args)
-        # try:
-        #     node = RMDx8Motor()
-        # except KeyboardInterrupt:
-        #     pass
-        # except ExternalShutdownException:
-        #     node.get_logger().info(colorStr("Shutting down can_rmdx8", ColorCodes.BLUE_OK))
-        #     node.destroy_node()
-        #     sys.exit(0)
-
     # create a subscriber
     def _createSubscriber(self) -> Subscription:
         topic_name = self.config.getInterfaceTopicName()
@@ -65,7 +49,7 @@ class RMDx8Motor:
         topic_name = self.config.getCanTopicName()
         # Size of queue is 1. All additional ones are dropped
         publisher = self._ros_node.create_publisher(std_msgs.msg.String, topic_name, 1)
-        self._ros_node.get_logger().info("Hello World!")
+        self._ros_node.get_logger().info("RMDx8 Publisher Created!!")
         return publisher
 
     def dataInCallback(self, msg: String) -> None:
