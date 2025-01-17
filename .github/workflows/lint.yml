@@ -28,7 +28,7 @@ jobs:
       - name: Run Pylint
         # Ignoring ros packages is unideal, but installing them as packages is not trivial
         run: |
-          pylint --fail-under=8 --ignored-modules=rclpy,std_msgs,ament_copyright,ament_flake8,pytest,launch,vision_opencv --ignore-paths=vision_opencv ./src
+          pylint --fail-under=8 --ignored-modules=rclpy,std_msgs,ament_copyright,ament_flake8,pytest,launch,vision_opencv --ignore-paths=^src/vision_opencv.*$ ./src
       - name: Run Mypy
         run: |
           mypy --exclude /test/ --exclude setup\.py --exclude vision_opencv ./src
