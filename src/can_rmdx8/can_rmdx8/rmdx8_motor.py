@@ -6,8 +6,6 @@ import myactuator_rmd_py as rmd
 import rclpy
 import std_msgs.msg
 from rclpy.executors import ExternalShutdownException
-
-# from moteus.moteus import Result
 from rclpy.node import Node
 from rclpy.publisher import Publisher
 from rclpy.subscription import Subscription
@@ -17,15 +15,15 @@ from lib.configs import RMDx8MotorConfig
 from lib.motor_state.rmd_motor_state import RMDX8MotorState, RMDX8RunSettings
 
 
-class RMDx8Motor(Node):
+class RMDx8Motor:
     """
     A wrapper class to interact with the RMDx8 actuator and the ROS nodes.
     """
 
-    def __init__(self, config: RMDx8MotorConfig) -> None:
-        super().__init__("can_rmdx8_node")
+    def __init__(self, config: RMDx8MotorConfig, ros_node: Node) -> None:
 
         self.config = config
+        self._ros_node = ros_node
         self.driver = rmd.CanDriver("can1")
         self.my_actuator = rmd.ActuatorInterface(self.driver, config.can_id)
         self._subscriber = self._createSubscriber()
@@ -51,7 +49,7 @@ class RMDx8Motor(Node):
     # create a subscriber
     def _createSubscriber(self) -> Subscription:
         topic_name = self.config.getInterfaceTopicName()
-        subscriber = self.create_subscription(
+        subscriber = self._ros_node.create_subscription(
             std_msgs.msg.String,
             topic_name,
             self.dataInCallback,
@@ -66,8 +64,8 @@ class RMDx8Motor(Node):
         """
         topic_name = self.config.getCanTopicName()
         # Size of queue is 1. All additional ones are dropped
-        publisher = self.create_publisher(std_msgs.msg.String, topic_name, 1)
-        self.get_logger().info("Hello World!")
+        publisher = self._ros_node.create_publisher(std_msgs.msg.String, topic_name, 1)
+        self._ros_node.get_logger().info("Hello World!")
         return publisher
 
     def dataInCallback(self, msg: String) -> None:
