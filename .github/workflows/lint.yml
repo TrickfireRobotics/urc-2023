@@ -14,7 +14,7 @@ jobs:
       - name: Run Black
         uses: psf/black@stable
         with:
-          options: "--check --verbose"
+          options: "--check --verbose --exclude vision_opencv"
           src: "./src"
           version: 24.8.0
       - name: Setup Python 
@@ -28,7 +28,7 @@ jobs:
       - name: Run Pylint
         # Ignoring ros packages is unideal, but installing them as packages is not trivial
         run: |
-          pylint --fail-under=8 --ignored-modules=rclpy,std_msgs,ament_copyright,ament_flake8,pytest,launch ./src
+          pylint --fail-under=8 --ignored-modules=rclpy,std_msgs,ament_copyright,ament_flake8,pytest,launch,vision_opencv --ignore-paths=vision_opencv ./src
       - name: Run Mypy
         run: |
-          mypy --exclude /test/ --exclude setup\.py ./src
+          mypy --exclude /test/ --exclude setup\.py --exclude vision_opencv ./src
