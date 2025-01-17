@@ -1,20 +1,25 @@
+""" 
+Localization node responsible for keeping track of the rover's current location, 
+determined by sensor fusion
+"""
+
 import rclpy
-from rclpy.node import Node
-from sensor_msgs.msg import NavSatFix, Imu
 from geometry_msgs.msg import Pose
+from rclpy.node import Node
+from sensor_msgs.msg import Imu, NavSatFix
 
 
 class LocalizationNode(Node):
-    def __init__(self):
+    """Node for localizing the rover using GPS and IMU data"""
+
+    def __init__(self) -> None:
         super().__init__("localization_node")
 
         # Subscriptions for GPS and IMU data
         self.gps_subscription = self.create_subscription(
-            NavSatFix, "/gps/fix", self.gps_callback, 10
+            NavSatFix, "/gps/fix", self.gpsCallback, 10
         )
-        self.imu_subscription = self.create_subscription(
-            Imu, "/imu/data", self.imu_callback, 10
-        )
+        self.imu_subscription = self.create_subscription(Imu, "/imu/data", self.imuCallback, 10)
 
         # Variables to store current position and orientation
         self.current_position = None
@@ -23,19 +28,19 @@ class LocalizationNode(Node):
         # Publisher for combined localization data (position + orientation)
         self.pose_publisher = self.create_publisher(Pose, "/localization/pose", 10)
 
-    def gps_callback(self, msg):
+    def gpsCallback(self, msg: NavSatFix) -> None:
         """Processes GPS data to update current position."""
         self.current_position = (msg.latitude, msg.longitude, msg.altitude)
         self.get_logger().info(f"Updated GPS position: {self.current_position}")
         self.publish_pose()
 
-    def imu_callback(self, msg):
+    def imuCallback(self, msg: Imu) -> None:
         """Processes IMU data to update current orientation."""
         self.current_orientation = (
             msg.orientation.x,
             msg.orientation.y,
             msg.orientation.z,
-            msg.orientation.w,
+            msg.orientation.w,r
         )
         self.get_logger().info(f"Updated orientation: {self.current_orientation}")
         self.publish_pose()
