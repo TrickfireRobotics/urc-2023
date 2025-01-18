@@ -1,73 +1,92 @@
+"""
+Role: This script tracks the rovers position using GNSS, IMU, or other localization sensors.
+
+Functionality: Integrates data from the sensor suite, excluding object detection camera data, to
+track rover position & orientation.
+
+Dependencies:
+    - rclpy: ROS 2 client library for Python.
+    - geometry_msgs.msg: Provides PoseStamped messages for robot localization.
+"""
+
+import sys
+
 import rclpy
+from geometry_msgs.msg import PoseStamped
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-from sensor_msgs.msg import NavSatFix, Imu
-from geometry_msgs.msg import Pose
+
+from lib.color_codes import ColorCodes, colorStr
 
 
 class LocalizationNode(Node):
-    def __init__(self):
+    """
+    A ROS 2 node for handling robot localization.
+
+    This node processes sensor data to estimate the robot's pose (position and
+    orientation) in the environment and publishes the pose to a specified topic.
+
+    Attributes:
+        pose_pub (Publisher): A ROS 2 publisher for the "/robot_pose" topic.
+    """
+
+    def __init__(self) -> None:
         super().__init__("localization_node")
 
-        # Subscriptions for GPS and IMU data
-        self.gps_subscription = self.create_subscription(
-            NavSatFix, "/gps/fix", self.gps_callback, 10
-        )
-        self.imu_subscription = self.create_subscription(
-            Imu, "/imu/data", self.imu_callback, 10
-        )
+        # Publisher for the robot's pose
+        self.pose_pub = self.create_publisher(PoseStamped, "/robot_pose", 10)
 
-        # Variables to store current position and orientation
-        self.current_position = None
-        self.current_orientation = None
+        # Timer to periodically publish the robot's pose
+        self.timer = self.create_timer(0.1, self.publishPose)
 
-        # Publisher for combined localization data (position + orientation)
-        self.pose_publisher = self.create_publisher(Pose, "/localization/pose", 10)
+        # Initialize the robot's pose
+        self.current_pose = PoseStamped()
 
-    def gps_callback(self, msg):
-        """Processes GPS data to update current position."""
-        self.current_position = (msg.latitude, msg.longitude, msg.altitude)
-        self.get_logger().info(f"Updated GPS position: {self.current_position}")
-        self.publish_pose()
+    def publishPose(self) -> None:
+        """
+        Publishes the robot's current pose to the "/robot_pose" topic.
+        """
+        # Example: Update the robot's pose (this would typically come from sensors)
+        self.current_pose.header.stamp = self.get_clock().now().to_msg()
+        self.current_pose.header.frame_id = "map"
+        self.current_pose.pose.position.x += 0.01  # Simulate movement
+        self.current_pose.pose.position.y += 0.01
+        self.current_pose.pose.orientation.w = 1.0
 
-    def imu_callback(self, msg):
-        """Processes IMU data to update current orientation."""
-        self.current_orientation = (
-            msg.orientation.x,
-            msg.orientation.y,
-            msg.orientation.z,
-            msg.orientation.w,
-        )
-        self.get_logger().info(f"Updated orientation: {self.current_orientation}")
-        self.publish_pose()
+        # Publish the pose
+        self.pose_pub.publish(self.current_pose)
+        self.get_logger().info(f"Published pose: {self.current_pose}")
 
-    def publish_pose(self):
-        """Publishes current position and orientation if both are available."""
-        if self.current_position and self.current_orientation:
-            pose = Pose()
-            # Assign position (latitude and longitude as x and y for simplicity;
-            # altitude as z)
-            pose.position.x, pose.position.y, pose.position.z = self.current_position
-            # Assign orientation (quaternion)
-            (
-                pose.orientation.x,
-                pose.orientation.y,
-                pose.orientation.z,
-                pose.orientation.w,
-            ) = self.current_orientation
-            self.pose_publisher.publish(pose)
-            self.get_logger().info("Published updated pose.")
+    def updatePose(self, pose: PoseStamped) -> None:
+        """
+        Updates the robot's current pose based on sensor data.
+
+        Args:
+            pose (PoseStamped): The new pose of the robot.
+        """
+        self.current_pose = pose
+        self.get_logger().info(f"Updated pose to: {pose}")
 
 
-def main(args=None):
+def main(args: list[str] | None = None) -> None:
+    """
+    Main function to initialize the rclpy context and run the LocalizationNode.
+
+    Args:
+        args (Optional[Any]): Command-line arguments passed to rclpy.init().
+    """
     rclpy.init(args=args)
-    localization_node = LocalizationNode()
     try:
+        localization_node = LocalizationNode()
         rclpy.spin(localization_node)
     except KeyboardInterrupt:
         pass
-    finally:
+    except ExternalShutdownException:
+        localization_node.get_logger().info(
+            colorStr("Shutting down example_node node", ColorCodes.BLUE_OK)
+        )
         localization_node.destroy_node()
-        rclpy.shutdown()
+        sys.exit(0)
 
 
 if __name__ == "__main__":
