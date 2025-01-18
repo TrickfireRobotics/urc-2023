@@ -42,7 +42,9 @@ RUN useradd trickfire \
   # Give it a directory in /home
   --create-home \
   # Don't make a giant log file for login data, we don't care about it
-  --no-log-init
+  --no-log-init \
+  # Allow the user to access video cameras.
+  -G video
 
 # Copy all the bash customizations over to the user.
 COPY .devcontainer/trickfire.bashrc /home/trickfire/.bashrc
