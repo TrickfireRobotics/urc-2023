@@ -71,3 +71,15 @@ class RMDx8Motor:
             self.my_actuator.getAcceleration(),
         )
         self._publisher.publish(state.toMsg())
+
+    def stopMotor(self) -> None:
+        """
+        Calls my_actuator_rmd stopMotor
+        """
+        self.my_actuator.stopMotor()
+
+    def shutdownMotor(self) -> None:
+        """
+        Calls my_actuator_rmd shutdownMotor
+        """
+        self.my_actuator.shutdownMotor()

@@ -18,13 +18,13 @@ from .rmdx8_motor import RMDx8Motor
 
 class RMDx8MotorManager(Node):
     """
-    Docsting
+    Class to manage the control and storage of RMDx8 motors in the ROS system.
     """
 
     def __init__(self) -> None:
         super().__init__("can_rmdx8_node")
         self.get_logger().info(colorStr("Launching can_rmdx8 node", ColorCodes.BLUE_OK))
-        self._id_to_rmdx8_motor: dict[int, RMDx8Motor]
+        self._id_to_rmdx8_motor: dict[int, RMDx8Motor] = {}
 
     def addMotor(self, config: RMDx8MotorConfig) -> None:
         """
@@ -34,6 +34,14 @@ class RMDx8MotorManager(Node):
         # Create a motor
         motor = RMDx8Motor(config, self)
         self._id_to_rmdx8_motor[config.can_id] = motor
+
+    def shutdownMotors(self) -> None:
+        """
+        Shutdown all motors
+        """
+
+        for motor in self._id_to_rmdx8_motor.values():
+            motor.shutdownMotor()
 
     def createRMDx8Motors(self) -> None:
         """
@@ -57,13 +65,17 @@ class RMDx8MotorManager(Node):
         rclpy.init(args=args)
         try:
             node = RMDx8MotorManager()
-
+            rclpy.spin(node)  # Keep node active
         except KeyboardInterrupt:
             pass
         except ExternalShutdownException:
-            # This is done when we ctrl-c the progam to shut it down
-            node.get_logger().info(colorStr("Shutting down can_moteus", ColorCodes.BLUE_OK))
-            # if node.thread_manager is not None:
-            # Destroy all motors
-            # node.destroy_node()
-            # sys.exit(0)
+            pass
+        finally:
+            node.shutdownMotors()
+            rclpy.shutdown()
+
+
+# If script is run directly, then create a RMDx8MotorManager object and run the main function
+if __name__ == "__main__":
+    rmdx8_motor_manager = RMDx8MotorManager()
+    rmdx8_motor_manager.main(sys.argv)
