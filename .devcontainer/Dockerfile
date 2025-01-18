@@ -1,6 +1,5 @@
 # Base image: Ubuntu 20.04 with ROS2 Humble installed
 FROM ros:humble
-
 # Install dependencies from apt
 RUN apt-get update && apt-get install -y \
   # To use git in the container
@@ -15,6 +14,12 @@ RUN apt-get update && apt-get install -y \
   can-utils \
   iproute2 \
   kmod \ 
+  # Used for cv_bridge
+  python3-numpy \
+  libboost-python-dev \
+  # OpenCV
+  libopencv-dev \
+  python3-opencv \
   # Clean out the apt lists after `apt-get update`
   && rm -rf /var/lib/apt/lists/*
 
@@ -23,6 +28,9 @@ RUN apt-get update && apt-get install -y \
 RUN pip3 install moteus
 
 RUN pip3 install pyusb
+
+# Install OpenCV for python
+RUN pip3 install opencv-python
 
 # Update pydocstyle to remove a deprecation warning when testing for PEP257
 RUN pip install --upgrade pydocstyle
@@ -34,7 +42,9 @@ RUN useradd trickfire \
   # Give it a directory in /home
   --create-home \
   # Don't make a giant log file for login data, we don't care about it
-  --no-log-init
+  --no-log-init \
+  # Allow the user to access video cameras.
+  -G video
 
 # Copy all the bash customizations over to the user.
 COPY .devcontainer/trickfire.bashrc /home/trickfire/.bashrc
