@@ -3,7 +3,7 @@ from glob import glob
 
 from setuptools import setup
 
-package_name = "autonomous_nav_pkg"
+package_name = "autonomous_nav"
 
 setup(
     name=package_name,
@@ -16,18 +16,18 @@ setup(
     ],
     install_requires=["setuptools"],
     zip_safe=True,
-    maintainer="Your Name",
-    maintainer_email="your_email@example.com",
-    description="Autonomous navigation nodes",
+    maintainer="Trickfire / Jake Kemple",
+    maintainer_email="jakek927@uw.edu",
+    description="Autonomous Navigation Nodes",
     license="Your License",
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "navigation_node = autonomous_nav_pkg.navigation_node:main",
-            "sensor_processing_node = autonomous_nav_pkg.sensor_processing_node:main",
-            "control_node = autonomous_nav_pkg.control_node:main",
-            "localization_node = autonomous_nav_pkg.localization_node:main",
-            "decision_making_node = autonomous_nav_pkg.decision_making_node:main",
+            "navigation_node = autonomous_nav.navigation_node:main",
+            "sensor_processing_node = autonomous_nav.sensor_processing_node:main",
+            "control_node = autonomous_nav.control_node:main",
+            "localization_node = autonomous_nav.localization_node:main",
+            "decision_making_node = autonomous_nav.decision_making_node:main",
         ],
     },
 )
