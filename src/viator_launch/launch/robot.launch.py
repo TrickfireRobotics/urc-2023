@@ -37,6 +37,21 @@ launch_include = IncludeLaunchDescription(
     launch_arguments=[("use_compression", "true")],
 )
 
+# Autonomous navigation nodes
+control_node = Node(package="autonomous_nav", executable="control_node", name="control_node")
+decision_making_node = Node(
+    package="autonomous_nav", executable="decision_making_node", name="decision_making_node"
+)
+localization_node = Node(
+    package="autonomous_nav", executable="localization_node", name="localization_node"
+)
+navigation_node = Node(
+    package="autonomous_nav", executable="navigation_node", name="navigation_node"
+)
+sensor_processing_node = Node(
+    package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
+)
+
 
 def generate_launch_description() -> launch.LaunchDescription:  # pylint: disable=invalid-name
     return launch.LaunchDescription(
@@ -47,6 +62,11 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             arm_node,
             heartbeat_node,
             camera_node,
+            control_node,
+            decision_making_node,
+            localization_node,
+            navigation_node,
+            sensor_processing_node,
             launch_include,
         ]
     )
