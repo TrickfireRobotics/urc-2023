@@ -1,15 +1,98 @@
 import os
 import roboticstoolbox as rtb
+import spatialgeometry as sg
+import spatialmath as sm
 import matplotlib.pyplot
 import numpy as np
 import math
+import time
 
 from matplotlib.widgets import Slider
 
 from roboticstoolbox import ERobot
 
+import swift
 
 # Runs on Python 3.9, websockets 12.0
+
+# Current state: Can individually set positions to IK move the robot to
+# TODO: 
+# test IK more
+#   add realtime controls and such to make this easier
+# figure out rotations
+# add proper dimensions to urdf
+
+# Import robot urdf from the resources folder
+current_dir = os.path.dirname(__file__)
+urdf_file_path = os.path.join(current_dir, "..", "resource", "viator_urdf.urdf")
+urdf_file_path = os.path.normpath(urdf_file_path)
+
+# Initialise model
+viator = ERobot.URDF(urdf_file_path)
+print(viator)
+
+# Remember:
+# viator.q is the robot joint configuration for the current position of the hand
+# viator.q = ... checks and sets the joint configuration
+
+# Give one of the joints some velocity to test moving
+# viator.qd = [0,0.1,0,0,0]
+
+# Elementary transforms, basically rotation and translations in xyz
+ets = viator.ets()
+
+# Make a new Swift environment
+env = swift.Swift()
+env.launch(realtime = True)
+
+# Add the bot to swift
+# viator.plot(viator.q,backend='swift', block=True)
+env.add(viator)
+  
+# Step through the environment simulator 
+# for _ in range(100):
+#     env.step(0.05)
+
+# ######################################################################################################################################################
+# Set goal pose
+# Tep is basically for storing coords & rotation
+# Use spatial math sm to set the xyz relative to the position of the hand (.q), which we got using forward kinematics (fkine) 
+posX = 0.2
+posY = 0
+posZ = 0.1
+Tep = viator.fkine(viator.q) * sm.SE3.Tx(posX) * sm.SE3.Ty(posY) * sm.SE3.Tz(posZ)
+# ######################################################################################################################################################
+
+# Add axes at the coords we just set
+axes = sg.Axes(length=0.1, base=Tep)
+env.add(axes)
+
+
+# Sim controls
+arrived = False # arrived at destination flag
+dt = 0.05 # time step, default 0.01
+
+# Sim loop
+while not arrived:
+    # p_servo Returns the end-effector velocity which will cause the robot to approach the desired pose
+    # starting pose is .q
+    # end pose is Tep
+    # gain is how fast we want to get there
+    # threshold is tolerance for when we are considered "at" the destination pose
+    v, arrived = rtb.p_servo(viator.fkine(viator.q), Tep, gain=1, threshold=0.01)
+
+    # Calculate the jacobean (?)
+    J = viator.jacobe(viator.q)
+
+    # Use both to get the desired velocity of the robot
+    # Multiply the "psuedo-inverse of the jacobian" times the desired end-effector velocity (???)
+    viator.qd = np.linalg.pinv(J) @ v
+
+    # Step through the environment simulator 
+    env.step(dt)
+
+# Use ctrl+C in the terminal to kill the sim, don't just close the tab or you'll have to restart the terminal
+env.hold()
 
 # Past issues were:
 # wheel building matplotlib
@@ -18,109 +101,6 @@ from roboticstoolbox import ERobot
   # Solved by downgrading websockets
 # swift display not finding the viator robot urdf
   # Solution: sod the viator robot, use our own urdf (needed to add effort and velocity properties to the joints)
-
-# Current state: it displays, but completely static
-# TODO: add the IK processing, sliders and such. Copy that from https://github.com/jhavl/dkt/tree/main, 4 Numerical Inverse Kinematics.ipynb
-
-# Import robot urdf from the resources folder
-current_dir = os.path.dirname(__file__)
-urdf_file_path = os.path.join(current_dir, "..", "resource", "viator_urdf.urdf")
-urdf_file_path = os.path.normpath(urdf_file_path)
-viator = ERobot.URDF(urdf_file_path)
-print(viator)
-
-
-fig = matplotlib.pyplot.figure()
-viator.plot(viator.q,backend='swift', block=True)
-
-ax = fig.add_subplot(111, projection='3d')
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-
-# Position sliders
-ax_xslider = fig.add_axes([0.25, 0.1, 0.65, 0.03])
-ax_yslider = fig.add_axes([0.15, 0.25, 0.0225, 0.63])
-ax_zslider = fig.add_axes([0.1, 0.25, 0.0225, 0.63])
-
-# position slider initialisations
-x_slider = Slider(
-  ax=ax_xslider,
-  label='x',
-  valmin=-0.450,
-  valmax=0.450,
-  valinit=0,
-  valstep=0.001,
-)
-y_slider = Slider(
-  ax=ax_yslider,
-  label='y',
-  valmin=-0.450,
-  valmax=0.450,
-  valinit=0,
-  orientation="vertical",
-  valstep=0.001
-)
-z_slider = Slider(
-  ax=ax_zslider,
-  label='z',
-  valmin=-0.050,
-  valmax=0.450,
-  valinit=0.120,
-  orientation="vertical",
-  valstep=0.001
-)
-
-def update(val):
-  global prev_coords
-  x_slider.eventson = False
-  y_slider.eventson = False
-  z_slider.eventson = False
-
-  
-  armGhosts = 0
-  if (len(ax.lines) > (armGhosts * 8)):
-    ax.clear()
-    
-  ax.set_xlabel('X')
-  ax.set_ylabel('Y')
-  ax.set_zlabel('Z')
-
-  # Plot the arm to the target position
-  target_pos = [x_slider.val, y_slider.val, z_slider.val]
-
-#   left_arm_chain.plot(left_arm_chain.inverse_kinematics(target_pos), ax)
-
-  # Feed back the real positions into the sliders; 
-  # equivalent would be feeding back into the rover controls?
-#   x_slider.set_val(np.round(real_pos[0, 3],3))
-#   y_slider.set_val(np.round(real_pos[1, 3],3))
-#   z_slider.set_val(np.round(real_pos[2, 3],3))
-
-  x_slider.eventson = True
-  y_slider.eventson = True
-  z_slider.eventson = True
-
-  # pt_slider.eventson = True
-  # yw_slider.eventson = True
-  # rl_slider.eventson = True
-
-  
-
-# On every slider change
-x_slider.on_changed(update)
-y_slider.on_changed(update)
-z_slider.on_changed(update)
-
-
-# Initial update
-# left_arm_chain.plot(left_arm_chain.inverse_kinematics(init_coords), ax)
-
-# real_pos = left_arm_chain.forward_kinematics(left_arm_chain.inverse_kinematics(init_coords))
-# print("Computed position vector : %s, target coordinates : %s" % (np.round(real_pos[:3, 3],3), np.round(init_coords,3)))
-matplotlib.pyplot.show()
-
-
 
 # Package list + versions:
 # Package                Version
