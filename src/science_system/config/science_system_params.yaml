@@ -1,0 +1,15 @@
+science_hardware_node:
+  ros__parameters:
+    camera_wide_topic: "/science/camera_wide/image_raw"
+    camera_closeup_topic: "/science/camera_closeup/image_raw"
+    gnss_topic: "/science/gnss"
+    soil_moisture_topic: "/science/soil_moisture"
+    subsurface_temp_topic: "/science/subsurface_temp"
+    sample_collection_service: "/science/collect_sample"
+
+science_mission_node:
+  ros__parameters:
+    mission_status_topic: "/science/mission_status"
+    analysis_result_topic: "/science/analysis_result"
+    site_selection_topic: "/science/site_selection"
+    # Additional mission logic parameters go here

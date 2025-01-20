@@ -5,3 +5,6 @@
 
 # Python scripts compiled as bytecode.
 __pycache__/
+
+# MacOS Meta Files
+.DS_Store
