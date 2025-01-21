@@ -2,12 +2,7 @@ import os
 import roboticstoolbox as rtb
 import spatialgeometry as sg
 import spatialmath as sm
-import matplotlib.pyplot
 import numpy as np
-import math
-import time
-
-from matplotlib.widgets import Slider
 
 from roboticstoolbox import ERobot
 
@@ -24,7 +19,7 @@ import swift
 
 # Import robot urdf from the resources folder
 current_dir = os.path.dirname(__file__)
-urdf_file_path = os.path.join(current_dir, "..", "resource", "viator_urdf.urdf")
+urdf_file_path = os.path.join(current_dir, "..", "resource", "arm.urdf")
 urdf_file_path = os.path.normpath(urdf_file_path)
 
 # Initialise model
@@ -56,11 +51,12 @@ env.add(viator)
 # ######################################################################################################################################################
 # Set goal pose
 # Tep is basically for storing coords & rotation
-# Use spatial math sm to set the xyz relative to the position of the hand (.q), which we got using forward kinematics (fkine) 
-posX = 0.2
-posY = 0
+# Use spatial math sm to add the xyz & roll pitch yaw relative to the position of the hand (.q), which we got using forward kinematics (fkine) 
+posX = 0
+posY = 0.1
 posZ = 0.1
-Tep = viator.fkine(viator.q) * sm.SE3.Tx(posX) * sm.SE3.Ty(posY) * sm.SE3.Tz(posZ)
+# Tep = viator.fkine(viator.q) * sm.SE3.Tx(posX) * sm.SE3.Ty(posY) * sm.SE3.Tz(posZ) 
+Tep = viator.fkine(viator.q) * sm.SE3(posX, posY, posZ) * sm.SE3.RPY([0, 0, 0], order='xyz') * sm.SE3.Rz(90, unit='deg')
 # ######################################################################################################################################################
 
 # Add axes at the coords we just set
@@ -79,7 +75,7 @@ while not arrived:
     # end pose is Tep
     # gain is how fast we want to get there
     # threshold is tolerance for when we are considered "at" the destination pose
-    v, arrived = rtb.p_servo(viator.fkine(viator.q), Tep, gain=1, threshold=0.01)
+    v, arrived = rtb.p_servo(viator.fkine(viator.q), Tep, gain=1, threshold=0.05)
 
     # Calculate the jacobean (?)
     J = viator.jacobe(viator.q)
