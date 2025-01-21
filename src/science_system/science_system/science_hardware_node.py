@@ -87,7 +87,9 @@ class ScienceHardwareNode(Node):
         # self.camera_wide_pub.publish(image_msg)
         # etc.
 
-    def handleSampleCollection(self, request, response) -> Empty.Response:
+    def handleSampleCollection(
+        self, request: Empty.Request, response: Empty.Response
+    ) -> Empty.Response:
         """Handles the sample collection service call."""
         self.get_logger().info("Received request to collect a sample.")
         # TODO: Trigger real hardware (e.g. auger, scoop) to collect sample
@@ -96,18 +98,27 @@ class ScienceHardwareNode(Node):
 
 
 def main(args: list[str] | None = None) -> None:
+    """
+    Main function to initialize the rclpy context and run the ScienceHardwareNode.
+
+    Args:
+        args (Optional[Any]): Command-line arguments passed to rclpy.init().
+    """
+
     rclpy.init(args=args)
     try:
-        node = ScienceHardwareNode()
-        rclpy.spin(node)  # prints callbacks
+        science_hardware_node = ScienceHardwareNode()
+        rclpy.spin(science_hardware_node)  # prints callbacks
     except KeyboardInterrupt:
         pass
     except ExternalShutdownException:
         # Destroy the node explicitly
         # (optional - otherwise it will be done automatically
         # when the garbage collector destroys the node object)
-        node.get_logger().info(colorStr("Shutting down Science Hardware Node", ColorCodes.BLUE_OK))
-        node.destroy_node()
+        science_hardware_node.get_logger().info(
+            colorStr("Shutting down Science Hardware Node", ColorCodes.BLUE_OK)
+        )
+        science_hardware_node.destroy_node()
         sys.exit(0)
 
 

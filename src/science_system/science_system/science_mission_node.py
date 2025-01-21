@@ -10,6 +10,7 @@ import sys
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
+from rclpy.task import Future
 from sensor_msgs.msg import Image, NavSatFix
 from std_msgs.msg import Float32, String
 from std_srvs.srv import Empty  # or your custom service
@@ -122,9 +123,9 @@ class ScienceMissionNode(Node):
 
         request = Empty.Request()  # or your custom request
         future = self.sample_collection_cli.call_async(request)
-        future.add_done_callback(self.sample_collection_response_callback)
+        future.add_done_callback(self.sampleCollectionResponseCallback)
 
-    def sampleCollectionResponseCallback(self, future) -> None:
+    def sampleCollectionResponseCallback(self, future: Future) -> None:
         """
         Handle the response from the sample collection service.
         """
@@ -136,18 +137,27 @@ class ScienceMissionNode(Node):
 
 
 def main(args: list[str] | None = None) -> None:
+    """
+    Main function to initialize the rclpy context and run the ScienceMissionNode.
+
+    Args:
+        args (Optional[Any]): Command-line arguments passed to rclpy.init().
+    """
+
     rclpy.init(args=args)
     try:
-        node = ScienceMissionNode()
-        rclpy.spin(node)  # prints callbacks
+        science_mission_node = ScienceMissionNode()
+        rclpy.spin(science_mission_node)  # prints callbacks
     except KeyboardInterrupt:
         pass
     except ExternalShutdownException:
         # Destroy the node explicitly
         # (optional - otherwise it will be done automatically
         # when the garbage collector destroys the node object)
-        node.get_logger().info(colorStr("Shutting down Science Mission Node", ColorCodes.BLUE_OK))
-        node.destroy_node()
+        science_mission_node.get_logger().info(
+            colorStr("Shutting down Science Mission Node", ColorCodes.BLUE_OK)
+        )
+        science_mission_node.destroy_node()
         sys.exit(0)
 
 
