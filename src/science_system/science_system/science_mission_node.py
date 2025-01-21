@@ -45,6 +45,9 @@ class ScienceMissionNode(Node):
             self.get_parameter("site_selection_topic").get_parameter_value().string_value
         )
 
+        # Mission state tracking
+        self.mission_state = "IDLE"
+
         # Subscriptions (camera feeds, GNSS, sensors, etc.)
         self.create_subscription(Image, "/science/camera_wide/image_raw", self.wideCamCallback, 10)
         self.create_subscription(
@@ -63,6 +66,9 @@ class ScienceMissionNode(Node):
         self.sample_collection_cli = self.create_client(Empty, "/science/collect_sample")
         # or self.create_client(CollectSample, '/science/collect_sample') if custom
 
+        # Service to manually pause mission from control interface
+        self.create_service(Empty, "/science/pause_mission", self.handlePauseMission)
+
         # Timer or main loop for mission logic
         self.timer = self.create_timer(1.0, self.controlLoop)
 
@@ -73,15 +79,25 @@ class ScienceMissionNode(Node):
         Periodic control loop for the mission logic.
         Example: check state, publish status, or request sample collection.
         """
-        # Example placeholder:
+        self.get_logger().info(f"Current mission state: {self.mission_state}")
         msg = String()
-        msg.data = "Mission running. (Placeholder)"
+        msg.data = f"Mission state: {self.mission_state}"
         self.mission_status_pub.publish(msg)
+
+    def setMissionState(self, state: str) -> None:
+        """Updates the mission state and logs the change."""
+        self.mission_state = state
+        self.get_logger().info(f"Mission state updated to: {state}")
+
+    def logMissionData(self, event: str) -> None:
+        """Logs mission data and events."""
+        self.get_logger().info(f"[MISSION LOG] {event}")
 
     def wideCamCallback(self, msg: Image) -> None:
         """
         Callback for wide-angle camera data.
         """
+        self.logMissionData("Received wide-angle camera image.")
         # TODO: Possibly process images, detect interesting features, etc.
         pass
 
@@ -89,6 +105,7 @@ class ScienceMissionNode(Node):
         """
         Callback for close-up camera data.
         """
+        self.logMissionData("Received close-up camera image.")
         # TODO: Possibly used for confirming sample collection or analyzing texture.
         pass
 
@@ -96,6 +113,7 @@ class ScienceMissionNode(Node):
         """
         Callback for GNSS data (latitude, longitude, altitude).
         """
+        self.logMissionData(f"GNSS: lat={msg.latitude}, lon={msg.longitude}")
         # TODO: Store or use to decide site location, log it, etc.
         pass
 
@@ -103,6 +121,10 @@ class ScienceMissionNode(Node):
         """
         Callback for soil moisture sensor data.
         """
+        self.logMissionData(f"Soil moisture: {msg.data}")
+        if msg.data > 20.0:
+            self.get_logger().info("High moisture detected, initiating sample collection.")
+            self.requestSampleCollection()
         # TODO: Evaluate if threshold is met to proceed with sampling, etc.
         pass
 
@@ -110,6 +132,7 @@ class ScienceMissionNode(Node):
         """
         Callback for subsurface temperature data.
         """
+        self.logMissionData(f"Subsurface temperature: {msg.data}")
         # TODO: Possibly used in analysis to check for habitable conditions, etc.
         pass
 
@@ -131,9 +154,24 @@ class ScienceMissionNode(Node):
         """
         try:
             response = future.result()
+            if response is None:
+                self.get_logger().error("Sample collection service returned no response.")
+                return
             self.get_logger().info("Sample collection successful.")
+            self.setMissionState("ANALYZING")
         except Exception as e:
             self.get_logger().error(f"Sample collection service call failed: {e}")
+            self.setMissionState("ERROR")
+
+    def handlePauseMission(
+        self, request: Empty.Request, response: Empty.Response
+    ) -> Empty.Response:
+        """
+        Pauses the mission when called via service.
+        """
+        self.get_logger().warn("Mission manually paused.")
+        self.setMissionState("PAUSED")
+        return response
 
 
 def main(args: list[str] | None = None) -> None:
