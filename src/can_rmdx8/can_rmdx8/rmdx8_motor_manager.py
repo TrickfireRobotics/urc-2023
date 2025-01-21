@@ -56,26 +56,26 @@ class RMDx8MotorManager(Node):
         # self.addMotor( some_config)
         # self.addMotor( some_config)
 
-    # Main function
-    def main(self, args: list[str] | None = None) -> None:
-        """
-        The entry point for RMDx8
-        """
 
-        rclpy.init(args=args)
-        try:
-            node = RMDx8MotorManager()
-            rclpy.spin(node)  # Keep node active
-        except KeyboardInterrupt:
-            pass
-        except ExternalShutdownException:
-            pass
-        finally:
-            node.shutdownMotors()
-            rclpy.shutdown()
+# Main function
+def main(args: list[str] | None = None) -> None:
+    """
+    The entry point for RMDx8
+    """
+
+    rclpy.init(args=args)
+    try:
+        node = RMDx8MotorManager()
+        rclpy.spin(node)  # Keep node active
+    except KeyboardInterrupt:
+        pass
+    except ExternalShutdownException:
+        pass
+    finally:
+        node.shutdownMotors()
+        rclpy.shutdown()
 
 
 # If script is run directly, then create a RMDx8MotorManager object and run the main function
 if __name__ == "__main__":
-    rmdx8_motor_manager = RMDx8MotorManager()
-    rmdx8_motor_manager.main(sys.argv)
+    main(sys.argv)
