@@ -93,6 +93,8 @@ class MotorConfigs:
     A constants class that contains motor constants.
     """
 
+    TEST_RMD = RMDx8MotorConfig(can_id=1)
+
     # Drivebase
     REAR_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(
         can_id=20,
