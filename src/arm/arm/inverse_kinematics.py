@@ -1,7 +1,13 @@
 import math
+import os
 from enum import IntEnum
 
+import numpy as np
+import roboticstoolbox as rtb
+import spatialgeometry as sg
+import spatialmath as sm
 from rclpy.node import Node
+from roboticstoolbox import ERobot
 from std_msgs.msg import Float32
 
 from lib.configs import MoteusMotorConfig, MotorConfigs
@@ -62,6 +68,13 @@ class InverseKinematics:
         self.wrist_rot_angle = 0.0
 
         # TODO INITIALIZE IK STUFF HERE -------------
+        # Import robot urdf from the resources folder
+        current_dir = os.path.dirname(__file__)
+        urdf_file_path = os.path.join(current_dir, "..", "resource", "arm.urdf")
+        urdf_file_path = os.path.normpath(urdf_file_path)
+
+        # Initialise model
+        viator = ERobot.URDF(urdf_file_path)
 
         # TODO these values should be initialized calling forward kinematics with the current joint angles
         self.target_x = 0.0
