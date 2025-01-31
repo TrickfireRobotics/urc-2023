@@ -92,5 +92,11 @@ class InverseKinematics:
         measuredAngle = self.getMeasuredMotorAngle(motor)
         return measuredAngle + self.motorOffsetList[motor]
 
-    def runMotorPosition(self, motor: MoteusMotorConfig, targetRadians: float) -> None:
-        self._interface.runMotorPosition(motor, targetRadians)
+    def runMotorPosition(self, motor: int, targetDegrees: float) -> None:
+        targetRadians = targetDegrees * self.DEGREES_TO_RADIANS
+        motorConfig = self.motorConfigList[motor]
+        self._interface.runMotorPosition(motorConfig, targetRadians)
+
+    def runAllMotorsToPosition(self, targetDegreeList: list) -> None:
+        for motorConfig in range(len(targetDegreeList)):
+            self.runMotorPosition(motorConfig, targetDegreeList[motorConfig])
