@@ -19,14 +19,18 @@ class ArmMotorsEnum(IntEnum):
 
 class InverseKinematics:
 
+    # constants
     REVS_TO_RADIANS = math.pi * 2.0
+    DEGREES_TO_RADIANS = math.pi / 180.0
+    RADIANS_TO_DEGREES = 1.0 / DEGREES_TO_RADIANS
 
     def __init__(self, ros_node: Node, interface: RobotInterface, info: RobotInfo):
+
         self._ros_node = ros_node
         self._interface = interface
         self._info = info
 
-        motorConfigList = [
+        self.motorConfigList = [
             MotorConfigs.ARM_TURNTABLE_MOTOR,
             MotorConfigs.ARM_SHOULDER_MOTOR,
             MotorConfigs.ARM_ELBOW_MOTOR,
@@ -34,76 +38,59 @@ class InverseKinematics:
             MotorConfigs.ARM_RIGHT_WRIST_MOTOR,
         ]
 
-        motorOffsetList = [0, 0, 0, 0, 0]
+        self.motorOffsetList = [0.0, 0.0, 0.0, 0.0, 0.0]
+        self.setArmOffsets()
 
-        # variables for arm joint angles
-        # everything in radians
-        self.shoulder_angle = 0.0
-        self.elbow_angle = 0.0
-        self.turntable_angle = 0.0
-        self.l_wrist_angle = 0.0
-        self.r_wrist_angle = 0.0
+        # setting these based on the assumption that when we initialize this class, the arm
+        # is in its default "rest"
+        self.motorStartingAngles = [
+            0,
+            0,
+            0,
+            0,
+            0,
+        ]
 
         # calculated using the l + r wrist positions
         self.wrist_angle = 0.0
         self.wrist_rot_angle = 0.0
 
-        self.shoulder_offset = 0.0
-        self.elbow_offset = 0.0
-        self.turntable_offset = 0.0
-        self.l_wrist_offset = 0.0
-        self.r_wrist_offset = 0.0
+        # TODO INITIALIZE IK STUFF HERE -------------
 
-        self.setArmJointOffsets()
-        self.getArmAngles()
+        # TODO these values should be initialized calling forward kinematics with the current joint angles
+        self.target_x = 0.0
+        self.target_y = 0.0
+        self.target_z = 0.0
 
-    def setArmJointOffsets(self) -> None:
-        self.shoulder_offset = self.shoulder_angle - self.getMotorPosition(
-            MotorConfigs.ARM_SHOULDER_MOTOR
+        self._ros_node.get_logger().info(
+            "Target position:", self.target_x, self.target_y, self.target_z
         )
 
-        self.elbow_offset = self.elbow_angle - self.getMotorPosition(MotorConfigs.ARM_ELBOW_MOTOR)
+    def setArmOffsets(self) -> None:
+        for motorConfig in range(len(self.motorConfigList)):
+            self.motorOffsetList[motorConfig] = self.motorStartingAngles[
+                motorConfig
+            ] - self.getMeasuredMotorAngle(motorConfig)
 
-        self.turntable_offset = self.turntable_angle - self.getMotorPosition(
-            MotorConfigs.ARM_TURNTABLE_MOTOR
-        )
-
-        self.l_wrist_offset = self.l_wrist_angle - self.getMotorPosition(
-            MotorConfigs.ARM_LEFT_WRIST_MOTOR
-        )
-
-        self.r_wrist_offset = self.r_wrist_offset - self.getMotorPosition(
-            MotorConfigs.ARM_RIGHT_WRIST_MOTOR
-        )
-
-    def getArmAngles(self) -> None:
-        self.shoulder_angle = (
-            self.getMotorPosition(MotorConfigs.ARM_ELBOW_MOTOR) + self.shoulder_offset
-        )
-
-        self.elbow_angle = self.getMotorPosition(MotorConfigs.ARM_ELBOW_MOTOR) + self.elbow_offset
-
-        self.turntable_angle = (
-            self.getMotorPosition(MotorConfigs.ARM_TURNTABLE_MOTOR) + self.turntable_offset
-        )
-
-        self.l_wrist_angle = (
-            self.getMotorPosition(MotorConfigs.ARM_LEFT_WRIST_MOTOR) + self.l_wrist_offset
-        )
-
-        self.r_wrist_offset = (
-            self.getMotorPosition(MotorConfigs.ARM_RIGHT_WRIST_MOTOR) + self.r_wrist_offset
-        )
-
-    def getMotorPosition(self, motor: MoteusMotorConfig) -> float:
+    def getMeasuredMotorAngle(self, motor: int) -> float:
         """
-        Returns the current position of the given motor
-
-        Parameters
-        -------
-        motor : MoteusMotorConfig
-            The config of the motor whose position we want
+        Returns the angle of the motor IN DEGREES based on int representing motor config's index
+        in the list of motor configs
         """
-        position = self._info.getMotorState(motor).position
-        position_radians = (position if position is not None else 0.0) * self.REVS_TO_RADIANS
-        return position_radians
+        _position = self._info.getMotorState(self.motorConfigList[motor]).position
+        position_degrees = (
+            (_position if _position is not None else 0.0)
+            * self.REVS_TO_RADIANS
+            * self.RADIANS_TO_DEGREES
+        )
+        return position_degrees
+
+    def getPerceivedMotorAngle(self, motor: int) -> float:
+        """
+        Returns what the angle of the arm is in our IK representation of the arm
+        """
+        measuredAngle = self.getMeasuredMotorAngle(motor)
+        return measuredAngle + self.motorOffsetList[motor]
+
+    def runMotorPosition(self, motor: MoteusMotorConfig, targetRadians: float) -> None:
+        self._interface.runMotorPosition(motor, targetRadians)
