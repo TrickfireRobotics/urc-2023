@@ -70,8 +70,12 @@ class MoteusMotorConfig(MotorConfig):
 @dataclass(frozen=True)
 class RMDx8MotorConfig(MotorConfig):
     """
-    TODO: Add comment
+    A data class that contains config values relating to rmdx8 motors.
     """
+
+    # Set the value of motor_type
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "motor_type", "rmdx8")
 
     def getCanTopicName(self) -> str:
         """
