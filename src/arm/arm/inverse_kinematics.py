@@ -34,11 +34,17 @@ class InverseKinematics:
             MotorConfigs.ARM_TURNTABLE_MOTOR,
             MotorConfigs.ARM_SHOULDER_MOTOR,
             MotorConfigs.ARM_ELBOW_MOTOR,
-            MotorConfigs.ARM_LEFT_WRIST_MOTOR,
-            MotorConfigs.ARM_RIGHT_WRIST_MOTOR,
+            # MotorConfigs.ARM_LEFT_WRIST_MOTOR,
+            # MotorConfigs.ARM_RIGHT_WRIST_MOTOR,
         ]
 
-        self.motorOffsetList = [0.0, 0.0, 0.0, 0.0, 0.0]
+        self.motorOffsetList = [
+            0.0,
+            0.0,
+            0.0,
+            # 0.0,
+            # 0.0
+        ]
         self.setArmOffsets()
 
         # setting these based on the assumption that when we initialize this class, the arm
@@ -47,8 +53,8 @@ class InverseKinematics:
             0,
             0,
             0,
-            0,
-            0,
+            # 0,
+            # 0,
         ]
 
         # calculated using the l + r wrist positions
