@@ -7,6 +7,7 @@ import numpy as np
 from roboticstoolbox import ERobot
 
 import swift
+import time
 
 # Runs on Python 3.9, websockets 12.0
 
@@ -30,23 +31,8 @@ print(viator)
 # viator.q is the robot joint configuration for the current position of the hand
 # viator.q = ... checks and sets the joint configuration
 
-# Give one of the joints some velocity to test moving
-# viator.qd = [0,0.1,0,0,0]
-
 # Elementary transforms, basically rotation and translations in xyz
 ets = viator.ets()
-
-# Make a new Swift environment
-env = swift.Swift()
-env.launch(realtime = True)
-
-# Add the bot to swift
-# viator.plot(viator.q,backend='swift', block=True)
-env.add(viator)
-  
-# Step through the environment simulator 
-# for _ in range(100):
-#     env.step(0.05)
 
 # ######################################################################################################################################################
 # Set goal pose
@@ -54,41 +40,48 @@ env.add(viator)
 # Use spatial math sm to add the xyz & roll pitch yaw relative to the position of the hand (.q), which we got using forward kinematics (fkine) 
 posX = 0
 posY = 0.1
-posZ = 0.1
+posZ = 0.2
 # Tep = viator.fkine(viator.q) * sm.SE3.Tx(posX) * sm.SE3.Ty(posY) * sm.SE3.Tz(posZ) 
 Tep = viator.fkine(viator.q) * sm.SE3(posX, posY, posZ) * sm.SE3.RPY([0, 0, 0], order='xyz') * sm.SE3.Rz(90, unit='deg')
 # ######################################################################################################################################################
 
-# Add axes at the coords we just set
-axes = sg.Axes(length=0.1, base=Tep)
-env.add(axes)
+jointDict = {}
+    
+
+print(jointDict)
 
 
-# Sim controls
-arrived = False # arrived at destination flag
-dt = 0.05 # time step, default 0.01
+# Make our solver
+solver = rtb.IK_LM()
 
-# Sim loop
-while not arrived:
-    # p_servo Returns the end-effector velocity which will cause the robot to approach the desired pose
-    # starting pose is .q
-    # end pose is Tep
-    # gain is how fast we want to get there
-    # threshold is tolerance for when we are considered "at" the destination pose
-    v, arrived = rtb.p_servo(viator.fkine(viator.q), Tep, gain=1, threshold=0.05)
+# Solve the IK problem
+solver.solve(ets, Tep)
 
-    # Calculate the jacobean (?)
-    J = viator.jacobe(viator.q)
+def printPose():
+    print("End-Effector Pose:")
+    print(viator.fkine(viator.q))
 
-    # Use both to get the desired velocity of the robot
-    # Multiply the "psuedo-inverse of the jacobian" times the desired end-effector velocity (???)
-    viator.qd = np.linalg.pinv(J) @ v
+    print("\Joint Positions in SE(3) Format:")
+    print("┌──────┬───────────┬───────────────────────────────────────────────┐")
+    print("│ link │   joint   │              SE(3) Pose                      │")
+    print("├──────┼───────────┼───────────────────────────────────────────────┤")
 
-    # Step through the environment simulator 
-    env.step(dt)
+    for i, link in enumerate(viator.links):
+        joint_name = link.name if link.name else f"Joint {i}"
+        pose = viator.fkine(viator.q, end=joint_name)  # FK up to joint i
 
-# Use ctrl+C in the terminal to kill the sim, don't just close the tab or you'll have to restart the terminal
-env.hold()
+        pos = pose.t  # Translation (x, y, z)
+        rpy = pose.rpy(order='xyz', unit='deg')  # Rotation in roll-pitch-yaw (degrees)
+        
+        jointDict[joint_name] = (pos,rpy)
+        print(f"│ {i:^4} │ {joint_name:^9} │ SE3({pos[0]:.3f}, {pos[1]:.3f}, {pos[2]:.3f}; "
+            f"{rpy[0]:.1f}°, {rpy[1]:.1f}°, {rpy[2]:.1f}°) │")
+
+    print("└──────┴───────────┴───────────────────────────────────────────────┘")
+
+printPose()
+# Visualise the solver
+# visualise_ik(solver, env)
 
 # Past issues were:
 # wheel building matplotlib
