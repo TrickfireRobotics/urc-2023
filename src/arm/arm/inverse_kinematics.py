@@ -74,9 +74,19 @@ class InverseKinematics:
         urdf_file_path = os.path.normpath(urdf_file_path)
 
         # Initialise model
-        viator = ERobot.URDF(urdf_file_path)
+        self.viator = ERobot.URDF(urdf_file_path)
 
-        # TODO these values should be initialized calling forward kinematics with the current joint angles
+        # Elementary transforms, basically rotation and translations in xyz
+        self.ets = self.viator.ets()
+
+        # #########################################################################################
+        # Set goal pose
+        # Tep is basically for storing coords & rotation
+        # Use spatial math sm to add the xyz & roll pitch yaw relative to the position of the hand
+        # (.q), which we got using forward kinematics (fkine)
+
+        # TODO these values should be initialized calling forward kinematics with the current joint
+        # angles
         self.target_x = 0.0
         self.target_y = 0.0
         self.target_z = 0.0
@@ -84,6 +94,18 @@ class InverseKinematics:
         self._ros_node.get_logger().info(
             "Target position:", self.target_x, self.target_y, self.target_z
         )
+
+        self.Tep = (
+            self.viator.fkine(self.viator.q)
+            * sm.SE3(self.target_x, self.target_y, self.target_z)
+            * sm.SE3.RPY([0, 0, 0], order="xyz")
+            * sm.SE3.Rz(90, unit="deg")
+        )
+
+        self.jointDict: dict[str, tuple] = {}
+
+        # Make our solver
+        self.solver = rtb.IK_LM()
 
     def setArmOffsets(self) -> None:
         for motorConfig in range(len(self.motorConfigList)):
@@ -119,3 +141,27 @@ class InverseKinematics:
     def runAllMotorsToPosition(self, targetDegreeList: list) -> None:
         for motorConfig in range(len(targetDegreeList)):
             self.runMotorPosition(motorConfig, targetDegreeList[motorConfig])
+
+    def solve(self) -> None:
+        self.Tep = (
+            self.viator.fkine(self.viator.q)
+            * sm.SE3(self.target_x, self.target_y, self.target_z)
+            * sm.SE3.RPY([0, 0, 0], order="xyz")
+            * sm.SE3.Rz(90, unit="deg")
+        )
+
+        # Solve the IK problem
+        self.solver.solve(self.ets, self.Tep)
+
+        for i, link in enumerate(self.viator.links):
+            joint_name = link.name if link.name else f"Joint {i}"
+            pose = self.viator.fkine(self.viator.q, end=joint_name)  # FK up to joint i
+
+            pos = pose.t  # Translation (x, y, z)
+            rpy = pose.rpy(order="xyz", unit="deg")  # Rotation in roll-pitch-yaw (degrees)
+
+            self.jointDict[joint_name] = (pos, rpy)
+            self._ros_node.get_logger().info(
+                f"│ {i:^4} │ {joint_name:^9} │ SE3({pos[0]:.3f}, {pos[1]:.3f}, {pos[2]:.3f}; "
+                f"{rpy[0]:.1f}°, {rpy[1]:.1f}°, {rpy[2]:.1f}°) │"
+            )
