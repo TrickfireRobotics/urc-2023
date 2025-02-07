@@ -25,23 +25,33 @@ class RMDx8MotorManager(Node):
         super().__init__("can_rmdx8_node")
         self.get_logger().info(colorStr("Launching can_rmdx8 node", ColorCodes.BLUE_OK))
         self._id_to_rmdx8_motor: dict[int, RMDx8Motor] = {}
+        self.createRMDx8Motors()
+        self.timer = self.create_timer(0.02, self.updateMotors)
 
-    def addMotor(self, config: RMDx8MotorConfig) -> None:
+    def updateMotors(self) -> None:
         """
-        Adds new rmdx8 motor to the motor dictionary
+        Update all motors in dictionary
         """
-
-        # Create a motor
-        motor = RMDx8Motor(config, self)
-        self._id_to_rmdx8_motor[config.can_id] = motor
+        for motor in self._id_to_rmdx8_motor.values():
+            try:
+                motor.updateSettings()
+            except Exception as e:
+                self.get_logger().error(f"Error updating motor: {e}")
 
     def shutdownMotors(self) -> None:
         """
         Shutdown all motors
         """
-
         for motor in self._id_to_rmdx8_motor.values():
             motor.shutdownMotor()
+
+    def addMotor(self, config: RMDx8MotorConfig) -> None:
+        """
+        Adds new rmdx8 motor to the motor dictionary
+        """
+        # Create a motor
+        motor = RMDx8Motor(config, self)
+        self._id_to_rmdx8_motor[config.can_id] = motor
 
     def createRMDx8Motors(self) -> None:
         """
