@@ -51,17 +51,18 @@ class InverseKinematics:
             # 0.0,
             # 0.0
         ]
-        self.setArmOffsets()
 
         # setting these based on the assumption that when we initialize this class, the arm
         # is in its default "rest"
         self.motorStartingAngles = [
-            0,
-            0,
-            0,
+            0.0,
+            57.3,
+            8.113,
             # 0,
             # 0,
         ]
+
+        self.setArmOffsets()
 
         # calculated using the l + r wrist positions
         self.wrist_angle = 0.0
@@ -107,6 +108,14 @@ class InverseKinematics:
         # Make our solver
         self.solver = rtb.IK_LM()
 
+        self.up_x_sub = ros_node.create_subscription(Float32, "shoulder_up", self.xUp, 10)
+
+        self.down_x_sub = ros_node.create_subscription(Float32, "shoulder_down", self.xDown, 10)
+
+        self.up_z_sub = ros_node.create_subscription(Float32, "elbow_up", self.xUp, 10)
+
+        self.down_z_sub = ros_node.create_subscription(Float32, "elbow_down", self.xDown, 10)
+
     def setArmOffsets(self) -> None:
         for motorConfig in range(len(self.motorConfigList)):
             self.motorOffsetList[motorConfig] = self.motorStartingAngles[
@@ -143,6 +152,9 @@ class InverseKinematics:
             self.runMotorPosition(motorConfig, targetDegreeList[motorConfig])
 
     def solve(self) -> None:
+        self._ros_node.get_logger().info(
+            "Target position:", self.target_x, self.target_y, self.target_z
+        )
         self.Tep = (
             self.viator.fkine(self.viator.q)
             * sm.SE3(self.target_x, self.target_y, self.target_z)
@@ -165,3 +177,19 @@ class InverseKinematics:
                 f"│ {i:^4} │ {joint_name:^9} │ SE3({pos[0]:.3f}, {pos[1]:.3f}, {pos[2]:.3f}; "
                 f"{rpy[0]:.1f}°, {rpy[1]:.1f}°, {rpy[2]:.1f}°) │"
             )
+
+    def xUp(self, msg: Float32) -> None:
+        self.target_x += 0.5
+        self.solve()
+
+    def xDown(self, msg: Float32) -> None:
+        self.target_x -= 0.5
+        self.solve()
+
+    def zUp(self, msg: Float32) -> None:
+        self.target_z += 0.5
+        self.solve()
+
+    def zDown(self, msg: Float32) -> None:
+        self.target_x -= 0.5
+        self.solve()
