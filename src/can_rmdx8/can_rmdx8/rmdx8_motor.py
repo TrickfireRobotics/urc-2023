@@ -27,7 +27,13 @@ class RMDx8Motor:
         self.driver = rmd.CanDriver("can1")
         self.my_actuator = rmd.ActuatorInterface(self.driver, config.can_id)
         self._subscriber = self._createSubscriber()
+
         self._publisher = self._createPublisher()
+
+        # Publish a message every 0.05 seconds
+        timer_period = 0.05
+        self.timer = ros_node.create_timer(timer_period, self.publishData)
+
         self.run_settings: RMDX8RunSettings = RMDX8RunSettings()
 
     # create a subscriber
@@ -62,7 +68,6 @@ class RMDx8Motor:
         """
         Publishes data from the rmdx8 controller
         """
-        # TODO Replace None with the Result that Saharsh creates
         state = RMDX8MotorState.fromRMDX8Data(
             self.config.can_id,
             self.my_actuator.getMotorStatus1(),

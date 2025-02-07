@@ -13,6 +13,8 @@ from std_msgs.msg import String
 from lib.configs import MotorConfig, MotorConfigs
 from lib.motor_state.can_motor_state import CanMotorRunSettings
 
+# from lib.motor_state.rmd_motor_state import RMDX8RunSettings
+
 REVS_TO_RADIANS = math.pi * 2
 RADIANS_TO_REVS = 1 / REVS_TO_RADIANS
 
@@ -32,6 +34,7 @@ class RobotInterface:
             )
 
     def runMotor(self, motor: MotorConfig, run_settings: CanMotorRunSettings) -> None:
+        # def runMotor(self, motor: MotorConfig, run_settings: RMDX8RunSettings) -> None:
         """
         Runs the specified motor with the specified settings.
 
@@ -39,7 +42,7 @@ class RobotInterface:
         -------
         motor : MotorConfig
             The config of the motor to run.
-        run_settings : CanMotorRunSettings
+        run_settings : RMDX8RunSettings
             The settings to run the motor with.
         """
         self._publishers[motor.motor_type][motor.can_id].publish(run_settings.toMsg())
@@ -63,6 +66,10 @@ class RobotInterface:
                 set_stop=False,
             ),
         )
+        # self.runMotor(
+        #     motor,
+        #     RMDX8RunSettings(),  # TODO: Add default parameters
+        # )
 
     def runMotorPosition(self, motor: MotorConfig, target_radians: float) -> None:
         """
@@ -78,6 +85,7 @@ class RobotInterface:
         self.runMotor(
             motor, CanMotorRunSettings(position=target_radians * RADIANS_TO_REVS, set_stop=False)
         )
+        # self.runMotor(motor, RMDX8RunSettings())  # TODO: Add default parameters
 
     def stopMotor(self, motor: MotorConfig) -> None:
         """
@@ -90,6 +98,7 @@ class RobotInterface:
             The config of the motor to stop.
         """
         self.runMotor(motor, CanMotorRunSettings(position=math.nan, velocity=0, set_stop=False))
+        # self.runMotor(motor, RMDX8RunSettings())  # TODO: Add default parameters
 
     def disableMotor(self, motor: MotorConfig) -> None:
         """
@@ -102,3 +111,4 @@ class RobotInterface:
             The config of the motor to disable.
         """
         self.runMotor(motor, CanMotorRunSettings(velocity=0, set_stop=True))
+        # self.runMotor(motor, RMDX8RunSettings())  # TODO: Add default parameters
