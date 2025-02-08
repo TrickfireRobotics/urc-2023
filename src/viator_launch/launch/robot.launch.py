@@ -1,76 +1,52 @@
+import os
+
 import launch
-from launch_ros.actions import ComposableNodeContainer
-from launch_ros.descriptions import ComposableNode
+from ament_index_python import get_package_share_directory
+from launch.actions import IncludeLaunchDescription
 from launch_ros.actions import Node
+from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 
-hello_node = ComposableNode(
-    package='hello_world',
-    plugin='hello_world::hello_node',
-    name='hello_node'
+can_moteus_node = Node(package="can_moteus", executable="can_moteus", name="can_moteus_node")
+
+
+drivebase_node = Node(package="drivebase", executable="drivebase", name="drivebase_node")
+
+
+mission_control_updater_node = Node(
+    package="mission_control_updater",
+    executable="mission_control_updater",
+    name="mission_control_updater_node",
 )
 
-can_moteus_node = Node(
-    package='can_moteus',
-    executable='can_moteus',
-    name='can_moteus_node'
-)
+arm_node = Node(package="arm", executable="arm", name="arm_node")
 
-robot_info_node = Node(
-    package='robot_info',
-    executable='listener',
-    name='TestSubscriber'
-)
+heartbeat_node = Node(package="heartbeat", executable="heartbeat", name="heartbeat_node")
 
-robot_info_node_talker = Node(
-    package='robot_info',
-    executable='talker',
-    name='TestPublisher'
-)
+camera_node = Node(package="camera", executable="roscamera", name="camera_node")
 
-drivebase_node = Node(
-    package='drivebase',
-    executable='drivebase',
-    name='drivebase_node'
-)
+# This is the example node. It will show ROS timers, subscribers, and publishers
+# To include it in the startup, add it to the array in the generate_launch_description() method
+example_node = Node(package="example_node", executable="myExampleNode", name="my_example_node")
 
-
-# -----------------------
-heartbeat_node = Node(
-    package='heartbeat',
-    executable='heartbeat',
-    name='heartbeat_node'
-)
-
-# dummy_node = Node(
-#     package='dummy_node',
-#     executable='dummy_node',
-#     name='dummy_node'
-# )
-
-
-# Composable Nodes launched in a Composable Node container will share a process
-# and can use very fast inter-process communication instead of publishing
-# messages over a network socket.
-# Note: "Composable Node container" does not mean "Docker-like container".
-robot_container = ComposableNodeContainer(
-    name='robot',
-    package='rclcpp_components',
-    namespace='',
-    executable='component_container',
-    composable_node_descriptions=[
-        hello_node
-    ],
-    output='screen',
-    emulate_tty=True
+launch_include = IncludeLaunchDescription(
+    XMLLaunchDescriptionSource(
+        os.path.join(
+            get_package_share_directory("rosbridge_server"), "launch/rosbridge_websocket_launch.xml"
+        ),
+    ),
+    launch_arguments=[("use_compression", "true")],
 )
 
 
-def generate_launch_description():
-    return launch.LaunchDescription([
-        robot_container,
-        can_moteus_node,
-        #testing_node,
-        drivebase_node,
-        heartbeat_node
-    ])
-        
+def generate_launch_description() -> launch.LaunchDescription:  # pylint: disable=invalid-name
+    return launch.LaunchDescription(
+        [
+            can_moteus_node,
+            drivebase_node,
+            mission_control_updater_node,
+            arm_node,
+            heartbeat_node,
+            camera_node,
+            launch_include,
+        ]
+    )

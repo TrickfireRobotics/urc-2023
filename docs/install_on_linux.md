@@ -80,3 +80,6 @@ If you close VS Code and reopen it later, it will try to reopen `urc-2023` in a 
 To leave the container (to work on other projects), run **Remote: Close Remote Connection** from the Command Palette or click the green Remote button in the bottom-left and select **Close Remote Connection**.
 
 You can always re-enter the container with that green button (**Open Folder in container** > `urc-2023`).
+
+### Building and Testing
+To build you can simply run the `./build.sh` command in the Visual Studio Code console. Similarly to launch the code or run tests you can run the `./test.sh` and `./launch.sh`.

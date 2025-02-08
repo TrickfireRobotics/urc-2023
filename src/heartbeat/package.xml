@@ -3,10 +3,20 @@
 <package format="3">
   <name>heartbeat</name>
   <version>0.0.0</version>
+<<<<<<< HEAD
   <description>TODO: Package description</description>
   <maintainer email="agrach@uw.edu">trickfire</maintainer>
   <license>TODO: License declaration</license>
 
+=======
+  <description>Heartbeat Node Package</description>
+  <maintainer email="hongkng5@uw.edu">trickfire</maintainer>
+  <license>TODO: License declaration</license>
+
+  <depend>rclpy</depend>
+  <depend>std_msgs</depend>
+
+>>>>>>> origin/main
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>

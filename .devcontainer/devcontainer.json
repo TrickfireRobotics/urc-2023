@@ -7,16 +7,24 @@
     "workspaceFolder": "/home/trickfire/${localWorkspaceFolderBasename}",
     "runArgs": [
         "--cap-add=SYS_PTRACE",
-        //"--device=/dev/ttyUSB0",
+        // "--device=/dev/video0",
         "--security-opt", "seccomp=unconfined"
     ],
-    "extensions": [
-		"ms-azuretools.vscode-docker",
-		"ms-python.python",
-		"ms-python.vscode-pylance",
-		"ms-vscode.cmake-tools",
-		"ms-vscode.cpptools",
-		"twxs.cmake",
-		"yzhang.markdown-all-in-one"
-	]
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-azuretools.vscode-docker",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.pylint",
+                "ms-python.mypy-type-checker",
+                "ms-python.isort",
+                "ms-python.black-formatter",
+                "ms-vscode.cmake-tools",
+                "ms-vscode.cpptools",
+                "twxs.cmake",
+                "yzhang.markdown-all-in-one"
+            ]
+        }
+    }
 }

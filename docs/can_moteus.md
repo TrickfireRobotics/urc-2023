@@ -2,101 +2,52 @@
 
 
 ## **What is it?**
-This is a **ROS Node** that is responsible for communication between the [**Moteus motor controllers**](https://github.com/mjbots/moteus) (via a FDCAN/CAN Bus) and **ROS** that the rest of the codebase is written in. 
+This is a **ROS Node** that is responsible for communication between the [**Moteus motor controllers**](https://github.com/mjbots/moteus) (via a CAN-FD Bus) and **ROS**, which the rest of the codebase is written in. 
 
-Motors are created that represent their real-life counterparts. Each motor subscribes to a topic that contains  data for the motors to use depending on the motor's mode; i.e. a motor in  VELOCITY mode would subscribe to data that would set that motor's velocity. Each motor can publish data to the ROS network that it reads from the Moteus controllers depending on what data the programmer wanted that motor to publish. 
+Motors are created that represent their real-life counterparts that are connected to a Moteus controller. Each motor has both a subscriber that gets data from the rest of the codebase (position, velocity, etc), and a publisher that sends data from the motor to the rest of the codebase (torque, power usage, voltage, etc). The data contained in these topics is a String in the format of a JSON.
 
-The only structure in the whole codebase that should be directly sending data for these motors to subscribe to is the [`RobotInterface`](../src/interface); see [`code_overview.md`](./code_overview.md) for a diagram. 
+The only two structures in the whole codebase that should be directly sending and reading JSONs to the `can_moteus` are `RobotInterface` and `RobotInfo`. See [`code_overview.md`](./code_overview.md) for a diagram.
+
 
 ## **How to use it**
-
-### **Adding a Motor in Code**
-As each Moteus controller is connected to **only a single** motor, each motor is represented as a [`MoteusMotor`](../src/can_moteus/can_moteus/moteus_motor.py) object. However, the [`MoteusMultiprocess`](../src/can_moteus/can_moteus/moteus_multiprocess.py) object, of which only one should exist, handles these `MoteusMotors`. As such, motors are added via the `MoteusMultiprocess` object inside [`ros_moteus_bridge.py`](../src/can_moteus/can_moteus/ros_moteus_bridge.py).
-
-To create a motor, we need to pass in the following parameters in this order:
-- The CAN ID of the motor. This is an **integer**
-- The name of the motor. This is a **String**
-- The motor mode. This is a **moteus_motor.Mode**
-- A list of data to publish to the ROS network. This is an **array of moteus.Register**
-
-Here is an example of adding a motor
+In order to add a new motor, make sure that the motor has a Moteus controller connected to it and is on the same CAN-FD bus. Modify `ros_moteus_bridge.py` in order to add a motor under the `createMoteusMotors()` method - see the following example:
 
 ```
-moteusPubList = [moteus.Register.VELOCITY, moteus.Register.POSITION]
-
-moteusMultiprocess.addMotor(
-    3,
-    "topmotor",
-    moteus_motor.Mode.VELOCITY,
-    moteusPubList,
-)
+self.threadManager.addMotor(<CANID>, "NAME OF MOTOR")
 ```
-This motor has a CAN ID of **three** with the name **"topmotor"**. The motor is running in **VELOCITY** mode, and as such expects incoming data intended for the motor to set its velocity in Moteus units. Each time the motor reads data from the Moteus controller, it will publish its **VELOCITY** and **POSITION** values to the ROS network in Moteus units. 
 
+That's it. Simple as. Simple is.
 
-### **Inputs**
+## **JSON Data**
+There are two ways to communicate to the Moteus controllers using JSON, one for input and one for output.
 
-When a motor is created, it will create a ROS subscriber to the following topic:
+### Input [`moteus_data_in_json_helper.py`](../src/utility/moteus_data_in_json_helper.py)
+The data contained here is used to set the data that the motor should be sending to the Moteus controller. By default, everything is set to `None` with the exception of `setStop`, which is set to `True`. The parameter `setStop` disables the controller, thus allowing the motor to freely spin.  
 
-```<name of the motor>_<the data being recieved as per the mode>_from_robot_interface``` 
+### Output [`moteus_data_out_json_helper.py`](../src/utility/moteus_data_out_json_helper.py)
+The data contained here is used to set the results from the Moteus motors. By default, all variables are set to `None`. This should be used by the `RobotInfo` to process the raw data.
 
-For example, using the motor above, it would subscribe to the topic of: 
-
-```/topmotor_velocity_from_robot_interface```
-
-The data sent to this topic will control the particular motor that it is sent to. Keep in mind that this data has to be formatted in Moteus units. 
-
-Every cycle (every 0.02 seconds), the motor will send the last recieved data to send to the Moteus controller. The default is a value of **zero.** 
-
-**NOTE: All subscribers and publishers handle data in std_msgs.msg.Float32**
-
-### **Outputs**
-When a motor is created, it will publish to the following topic(s) depending on the **moteus.Register array** that was passed in. The topic is in the following format:
-
-```<name of the motor>_<the data being sent via moteus.register>_from_can```
-
-For example, using the motor above, it would publish to the topics of:
-
-```/topmotor_velocity_from_can```
-
-```/topmotor_position_from_can```
-
-Every cycle (every 0.02 seconds), the motor would read data it recieved from the Moteus controller and publish it. 
-
-**NOTE: All subscribers and publishers handle data in std_msgs.msg.Float32**
-
-**NOTE: The data that can be sent must match up exactly to the data that the Moteus controllers send back; which is precisely the values from [`moteus.Register`](https://github.com/mjbots/moteus/blob/38d688a933ce1584ee09f2628b5849d5e758ac21/lib/python/moteus/moteus.py#L148)!**
-
-## **What is a Moteus Unit?**
-
-The documentation for the Moteus units are found [here](https://github.com/mjbots/moteus/blob/main/docs/reference.md#a2-register-usage). Each type of data has different units, so keep that in mind.
+Note: All data **must** be in the units that the Moteus controller expects. Reference the Moteus documentation on their Github to find these units. 
 
 
 ## **Deep Dive - How is `can_moteus` Implemented?**
+The Moteus library uses Python's [asynchronous I/O](https://docs.python.org/3/library/asyncio.html) features, but ROS does not work well with Python's async. As such, we make a new thread ([`moteus_thread`](../src/can_moteus/can_moteus/moteus_thread_manager.py)) to handle the async functions in parallel with the ROS thread. 
 
-### **Overview**
-The core idea is that there are two distinct Python processes running that communicate with each other via several different multiprocess queues. The first process is the "main" process where ROS lives and does whatever it needs to do. The second process is started by us and is used to send and read data to the Moteus controllers. 
+The user adds new motors by calling the `addMotor()` method in the `MoteusThreadManager` class. `MoteusThreadManager` then creates a `MoteusMotor` object that is mapped to the name given to the motor by `addMotor()`. 
 
-### **Queue From Motors to Moteus Multiprocess**
+When the user calls `self.threadManager.start()`, the `MoteusThreadManager` creates a new `Thread` object with the name `"moteus_thread"`. This thread points to the method `threadEntry` which creates and executes the asynchronous loop. 
 
-Each motor's callback function for their subscribers writes to the `_queueToMoteus` queue (created in `moteus_multiprocess.py`), where only one such queue exists. As such, all motors share this queue. The data that is enqueued is an array of length two in the following format:
+The main async loop initially calls the method `connectToMoteusControllers()` in order
+to connect to the Moteus controllers. Inside of this method we create a `moteus.Controller` object which comes from the Moteus library allowing us to interact with the motor controller. We call the controller's `query()` method with a timeout - if it takes longer for the method to return than the timeout, we assume that we do not have connection to the controller. If it does return, we map this `moteus.controller` object to the motor name given in `addMotor()`. 
 
-```
-[0] = CANID
-[1] = data (position, velocity, etc)
-```
+In the main async loop, we go through each key-value pair of the `_nameToMoteusController` dictionary. We try to `query()` the motor, and if a timeout occurs we remove this motor from the dictionary and notify the user in the cmd. If it passes this, we check for any faults from the result of this query. When a fault does exist, we print it out and try to `set_stop()` the motor. If stopping the motor fails, we remove the motor from the dictionary. After these checks pass, we send the data found in the `_nameToMoteusMotor` dictionary to the Moteus controller. The results returned are then published to the ROS network via the shared `MoteusMotor` object.
 
-### **Queue From Multiprocess to Each Motor**
-Each motor has its own multiprocess queue, `toPublisherQueue` that is created in `moteus_multiprocess.py`, which is then populated by the Moteus multiprocess for each corresponding motor. The type of data that is sent is dictated by the `moteusPubList` array as seen earlier in the example motor. The data that is enqueued is an array of length two in the following format:
+The way we exit the async loop is having the ROS thread set the `_shouldMoteusThreadLoop` flag to false. We then go through the `_nameToMoteusController` one more time to call `set_stop()` on each of the motors. We can attempt to reconnect to the moteus motors by setting the `_shouldReconnect` flag to false as well. 
 
-```
-[0] = moteus.Register
-[1] = data (position, velocity, voltage, current, etc)
-```
+Here is a diagram showing off the structure of this package.
 
-### **The Multiprocess Cycle**
-Each cycle, 0.02 seconds, the Moteus multiprocess reads the head of the `_queueToMoteus` and updates the set value for the target motor. It then goes through each motor that was succesfully connected to the CAN/CANFD bus and sends their set data. At the same time, it recieves information about the Moteus controller and populates each motor's `toPublisherQueue`.
+Note 7/2/2024: The mutex is not implemented correctly - as in it protects nothing and essentially does nothing. 
 
-Here is a diagram of the process:
 
-![what](./resources/moteus_docs.png)
+![Can Moteus Overview](can_moteus_overview.png)
+
