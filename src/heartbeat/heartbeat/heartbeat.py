@@ -2,7 +2,7 @@ import time
 
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Float32
 
 from lib import configs
 from lib.color_codes import ColorCodes, colorStr
@@ -58,6 +58,12 @@ class Heartbeat(Node):
             10,  # Quality of Service (QoS) profile
         )
 
+        self.ping_publisher = self.create_publisher(
+            Float32,  # message type
+            "/ping",  # topic name
+            10,  # Quality of Service (QoS)
+        )
+
         # store the most recent hearbeat time
         self._last_heartbeat_time = time.time()
 
@@ -100,8 +106,13 @@ class Heartbeat(Node):
         lost, then it will shut down all motors.
         """
 
+        # Get the difference in time since the last heartbeat
+        time_diff = Float32()
+        time_diff.data = time.time() - self._last_heartbeat_time
+        self.ping_publisher.publish(time_diff)
+
         # Check if the last heartbeat was received more than a threshold ago
-        if time.time() - self._last_heartbeat_time > 2:  # threshold = 2 seconds
+        if time_diff.data > 2:  # threshold = 2 seconds
             # if already shut down motor, don't have to do this again
             if self._connection_lost:
                 return
