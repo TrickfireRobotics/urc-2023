@@ -88,9 +88,11 @@ class InverseKinematics:
 
         # TODO these values should be initialized calling forward kinematics with the current joint
         # angles
-        self.target_x = 0.0
-        self.target_y = 0.0
-        self.target_z = 0.0
+        position = self.viator.fkine(self.viator.q).t
+
+        self.target_x = position[0]
+        self.target_y = position[1]
+        self.target_z = position[2]
 
         self._ros_node.get_logger().info(
             "Target position:", self.target_x, self.target_y, self.target_z
