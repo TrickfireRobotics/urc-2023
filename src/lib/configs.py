@@ -73,6 +73,8 @@ class RMDx8MotorConfig(MotorConfig):
     A data class that contains config values relating to rmdx8 motors.
     """
 
+    config: dict[str, float | int]
+
     # Set the value of motor_type
     def __post_init__(self) -> None:
         object.__setattr__(self, "motor_type", "rmdx8")
@@ -97,7 +99,7 @@ class MotorConfigs:
     A constants class that contains motor constants.
     """
 
-    TEST_RMD = RMDx8MotorConfig(can_id=1)
+    TEST_RMD = RMDx8MotorConfig(can_id=1, config={"Test": 0})
 
     # Drivebase
     REAR_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(

@@ -63,6 +63,12 @@ class RMDx8Motor:
         Updates the RMDx8 motor state
         """
         self.run_settings = RMDX8RunSettings.fromJsonMsg(msg)
+        self.my_actuator.sendPositionAbsoluteSetpoint(
+            self.run_settings.position, self.run_settings.velocity_limit
+        )
+        self.my_actuator.sendVelocitySetpoint(self.run_settings.velocity)
+        if self.run_settings.set_stop:
+            self.my_actuator.stopMotor()
 
     def publishData(self) -> None:
         """
