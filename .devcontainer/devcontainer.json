@@ -6,26 +6,26 @@
     "workspaceMount": "source=${localWorkspaceFolder},target=/home/trickfire/${localWorkspaceFolderBasename},type=bind",
     "workspaceFolder": "/home/trickfire/${localWorkspaceFolderBasename}",
     "runArgs": [
+        "--privileged",
         "--cap-add=SYS_PTRACE",
-        // "--device=/dev/video0",
+        "--device=/dev",
         "--security-opt", "seccomp=unconfined"
     ],
     "customizations": {
         "vscode": {
             "extensions": [
+                "ms-azuretools.vscode-docker",
                 "ms-python.python",
                 "ms-python.vscode-pylance",
                 "ms-python.pylint",
                 "ms-python.mypy-type-checker",
                 "ms-python.isort",
-                "ms-python.black-formatter"
+                "ms-python.black-formatter",
+                "ms-vscode.cmake-tools",
+                "ms-vscode.cpptools",
+                "twxs.cmake",
+                "yzhang.markdown-all-in-one"
             ]
-        },
-        "settings": {
-        "python.analysis.extraPaths": [
-          "/opt/ros/humble/lib/python3.10/site-packages"
-        ]
-        } 
+        }
     }
-    
 }
