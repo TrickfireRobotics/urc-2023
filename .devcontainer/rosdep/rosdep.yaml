@@ -1,0 +1,24 @@
+zed_sdk:
+  ubuntu:
+    apt:
+      packages: [libzed-sdk4.0]
+
+ublox_gps:
+  ubuntu:
+    apt:
+      packages: [ros-humble-ublox-gps, ros-humble-ublox-msgs, ros-humble-nmea-msgs, ros-humble-geographic-msgs, python3-serial]
+
+opencv_python:
+  ubuntu:
+    apt:
+      packages: [python3-opencv]
+
+numpy:
+  ubuntu:
+    apt:
+      packages: [python3-numpy]
+
+requests:
+  ubuntu:
+    apt:
+      packages: [python3-requests]

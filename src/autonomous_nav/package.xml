@@ -6,13 +6,39 @@
   <maintainer email="jakek927@uw.edu">Jake Kemple</maintainer>
   <license>MIT</license>
 
+  <!-- Build dependencies -->
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_python</buildtool_depend>
 
+  <!-- Exec (runtime) dependencies -->
   <exec_depend>rclpy</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
 
+  <!-- Ublox GPS dependencies -->
+  <exec_depend>ublox_gps</exec_depend>
+  <exec_depend>ublox_msgs</exec_depend>
+  <exec_depend>nmea_msgs</exec_depend>
+  <exec_depend>geographic_msgs</exec_depend>
+
+  <!-- TF / image transport / OpenCV bridging -->
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
+  <exec_depend>image_transport</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+
+  <!-- ZED wrapper and interfaces -->
+  <exec_depend>zed_wrapper</exec_depend>
+  <exec_depend>zed_interfaces</exec_depend>
+
+  <!-- Python-specific dependencies -->
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <exec_depend>python3-requests</exec_depend>
+  <exec_depend>python3-serial</exec_depend>
+
+  <!-- Testing dependencies -->
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>

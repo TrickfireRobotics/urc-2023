@@ -52,6 +52,38 @@ sensor_processing_node = Node(
     package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
 )
 
+gps_node = Node(
+    package="ublox_gps",
+    executable="ublox_gps_node",
+    name="gps_node",
+    output="screen",
+    parameters=[
+        {
+            "frame_id": "gps",
+            "rate": 4,  # GNSS data update rate in Hz
+            "dynamic_model": 0,  # Model for stationary/moving applications
+            "nav_rate": 1,
+            "enable_pps": True,  # Enable Pulse-Per-Second (PPS) if needed
+        }
+    ],
+)
+
+# --------------------
+# Add the ZED wrapper node
+# --------------------
+zed_node = Node(
+    package="zed_wrapper",
+    executable="zed_wrapper",
+    name="zed2i_camera",
+    output="screen",
+    parameters=[
+        {"general.camera_model": "zed2i"},
+        # Example additional params:
+        # {"video.resolution": 2},  # 2 for HD1080, 3 for HD720, etc.
+        # {"video.fps": 30},
+    ],
+)
+
 
 def generate_launch_description() -> launch.LaunchDescription:  # pylint: disable=invalid-name
     return launch.LaunchDescription(
@@ -68,5 +100,7 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             navigation_node,
             sensor_processing_node,
             launch_include,
+            gps_node,
+            zed_node,
         ]
     )
