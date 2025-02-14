@@ -5,6 +5,7 @@ from ament_index_python import get_package_share_directory
 from launch.actions import IncludeLaunchDescription
 from launch_ros.actions import Node
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 can_moteus_node = Node(package="can_moteus", executable="can_moteus", name="can_moteus_node")
 
@@ -68,24 +69,20 @@ gps_node = Node(
     ],
 )
 
-# --------------------
-# Add the ZED wrapper node
-# --------------------
-zed_node = Node(
-    package="zed_wrapper",
-    executable="zed_wrapper",
-    name="zed2i_camera",
-    output="screen",
-    parameters=[
-        {"general.camera_model": "zed2i"},
-        # Example additional params:
-        # {"video.resolution": 2},  # 2 for HD1080, 3 for HD720, etc.
-        # {"video.fps": 30},
-    ],
-)
-
 
 def generate_launch_description() -> launch.LaunchDescription:  # pylint: disable=invalid-name
+    # Include the ZED camera launch file from zed_wrapper
+    zed_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('zed_wrapper'),
+                'launch',
+                'zed_camera.launch.py'
+            )
+        ),
+        launch_arguments={'camera_model': 'zed2i'}.items()
+    )
+    
     return launch.LaunchDescription(
         [
             can_moteus_node,
@@ -101,6 +98,6 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             sensor_processing_node,
             launch_include,
             gps_node,
-            zed_node,
+            zed_launch,
         ]
     )
