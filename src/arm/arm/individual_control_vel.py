@@ -7,7 +7,8 @@ from lib.interface.robot_interface import RobotInterface
 
 class IndividualControlVel:
     WRIST_VEL = 0.3
-    VEL = 1.0
+    VEL = 0.4
+    SHOULDER_VEL = 0.3
 
     def __init__(self, ros_node: Node, interface: RobotInterface):
         self._ros_node = ros_node
@@ -118,9 +119,9 @@ class IndividualControlVel:
 
         data = msg.data
 
-        if data > 0:
+        if data != 0:
             self._ros_node.get_logger().info("Elbow up" + str(data))
-            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_ELBOW_MOTOR, -self.VEL)
+            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_ELBOW_MOTOR, -self.VEL * -data)
 
         else:
             self._ros_node.get_logger().info("Elbow down STOP")
@@ -146,9 +147,11 @@ class IndividualControlVel:
 
         data = msg.data
 
-        if data > 0:
+        if data != 0:
             self._ros_node.get_logger().info("Shoulder up" + str(data))
-            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_SHOULDER_MOTOR, -self.VEL)
+            self.bot_interface.runMotorSpeed(
+                MotorConfigs.ARM_SHOULDER_MOTOR, -self.SHOULDER_VEL * -data
+            )
 
         else:
             self._ros_node.get_logger().info("Shoulder STOP")
