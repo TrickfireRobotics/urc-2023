@@ -65,17 +65,7 @@ gps_node = Node(
             "dynamic_model": "portable",  # Model for stationary/moving applications
             "nav_rate": 1,              # Must be 1 Hz for HPG Ref devices
             "enable_pps": True,         # Enable Pulse-Per-Second (PPS) if needed
-            "tmode3": {
-                "enabled": True,        # Must be enabled for HPG devices
-                "mode": 0,              # 0 is a common default mode (survey-in disabled)
-                "flags": 0,             # No flags set
-                "reserved0": 0,         # Reserved field (default 0)
-                "reserved1": 0,         # Reserved field (default 0)
-                "ecefX": 0.0,           # ECEF X coordinate (set appropriately if needed)
-                "ecefY": 0.0,           # ECEF Y coordinate
-                "ecefZ": 0.0,           # ECEF Z coordinate
-                "posAcc": 1000.0,       # Position accuracy (in mm, adjust as needed)
-            },
+            "tmode3": 1,
         }
     ],
 )
