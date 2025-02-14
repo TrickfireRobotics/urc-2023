@@ -61,10 +61,11 @@ gps_node = Node(
     parameters=[
         {
             "frame_id": "gps",
-            "rate": 4,  # GNSS data update rate in Hz
-            "dynamic_model": 0,  # Model for stationary/moving applications
-            "nav_rate": 1,
+            "rate": 4.0,  # GNSS data update rate in Hz (float)
+            "dynamic_model": "portable",  # Use "portable" for a stationary/moving model
+            "nav_rate": 1,  # Navigation rate in Hz (should be 1 for HPG Ref devices)
             "enable_pps": True,  # Enable Pulse-Per-Second (PPS) if needed
+            "tmode3": {"enabled": False},  # Disable TMODE3 to avoid errors
         }
     ],
 )
