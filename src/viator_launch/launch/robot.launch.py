@@ -45,11 +45,9 @@ gps_node = Node(
     parameters=[
         {
             "frame_id": "gps",
-            "rate": 4.0,  # GNSS data update rate in Hz
-            "dynamic_model": "portable",  # Model for stationary/moving applications
-            "nav_rate": 1,  # Must be 1 Hz for HPG Ref devices
-            "enable_pps": True,  # Enable Pulse-Per-Second (PPS) if needed
-            "tmode3": 1,
+            "config_on_startup": False,
+            "device": "/dev/ttyACM0",
+            "uart1": {"baudrate": 38400},
         }
     ],
 )
