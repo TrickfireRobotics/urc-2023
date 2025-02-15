@@ -13,7 +13,17 @@
   <exec_depend>arm</exec_depend>
   <exec_depend>camera</exec_depend>
   <exec_depend>example_node</exec_depend>
-  
+
+  <!-- TODO: Remove this when autonomous is merged -->
+  <!-- Ublox GPS dependencies -->
+  <exec_depend>ublox_gps</exec_depend>
+  <exec_depend>ublox_msgs</exec_depend>
+  <exec_depend>nmea_msgs</exec_depend>
+  <exec_depend>geographic_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
+  <exec_depend>python3-serial</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

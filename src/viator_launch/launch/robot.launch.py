@@ -37,6 +37,23 @@ launch_include = IncludeLaunchDescription(
     launch_arguments=[("use_compression", "true")],
 )
 
+gps_node = Node(
+    package="ublox_gps",
+    executable="ublox_gps_node",
+    name="gps_node",
+    output="screen",
+    parameters=[
+        {
+            "frame_id": "gps",
+            "rate": 4.0,  # GNSS data update rate in Hz
+            "dynamic_model": "portable",  # Model for stationary/moving applications
+            "nav_rate": 1,  # Must be 1 Hz for HPG Ref devices
+            "enable_pps": True,  # Enable Pulse-Per-Second (PPS) if needed
+            "tmode3": 1,
+        }
+    ],
+)
+
 
 def generate_launch_description() -> launch.LaunchDescription:  # pylint: disable=invalid-name
     return launch.LaunchDescription(
@@ -48,5 +65,6 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             heartbeat_node,
             camera_node,
             launch_include,
+            gps_node,
         ]
     )

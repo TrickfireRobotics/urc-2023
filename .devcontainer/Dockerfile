@@ -9,6 +9,15 @@ RUN apt-get update && apt-get install -y \
   # To let us sync with GitHub over SSH
   ssh-client \
   ros-humble-rosbridge-server \
+  # To use rosdep for installing system dependencies
+  python3-rosdep \
+  python3-colcon-common-extensions \
+  # Install packages for autonomous
+  ros-humble-ublox-gps \
+  ros-humble-ublox-msgs \
+  ros-humble-nmea-msgs \
+  ros-humble-geographic-msgs \
+  python3-serial \
   # Install usb utilities
   usbutils \ 
   can-utils \
@@ -48,3 +57,7 @@ RUN useradd trickfire \
 
 # Copy all the bash customizations over to the user.
 COPY .devcontainer/trickfire.bashrc /home/trickfire/.bashrc
+
+# Initialize rosdep
+RUN rm -rf /etc/ros/rosdep/sources.list.d/20-default.list && \
+  rosdep init

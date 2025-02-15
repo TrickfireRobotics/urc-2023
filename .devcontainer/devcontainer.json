@@ -6,8 +6,9 @@
     "workspaceMount": "source=${localWorkspaceFolder},target=/home/trickfire/${localWorkspaceFolderBasename},type=bind",
     "workspaceFolder": "/home/trickfire/${localWorkspaceFolderBasename}",
     "runArgs": [
+        "--privileged",
         "--cap-add=SYS_PTRACE",
-        // "--device=/dev/video0",
+        "--device=/dev",
         "--security-opt", "seccomp=unconfined"
     ],
     "customizations": {
