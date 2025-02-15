@@ -43,6 +43,7 @@ class MoteusMotorConfig:
         """
         return f"moteusmotor_{self.can_id}_from_interface"
 
+
 @dataclass(frozen=True)
 class LightConfig:
     """
@@ -106,9 +107,9 @@ class StepperConfig:
 
     config: dict[str, float | int]
 
-    ms1: int 
-    ms2: int 
-    ms3: int 
+    ms1: int
+    ms2: int
+    ms3: int
 
     """
     The config of the stepper motor.
@@ -128,6 +129,7 @@ class MotherboardConfig:
     """
     A dataclass that contains variable names and configuration IDs for motherboard components.
     """
+
     # Light configurations
     LIGHT_RED = "red"
     LIGHT_GREEN = "green"
@@ -368,7 +370,6 @@ class MotorConfigs:
             MotherboardConfig.STEPPER_MAX_STEPS: 200,
             MotherboardConfig.STEPPER_STEP_RATE: 1000,
         },
-
         ms1=0,
         ms2=0,
         ms3=0,
@@ -379,7 +380,6 @@ class MotorConfigs:
             MotherboardConfig.STEPPER_MAX_STEPS: 200,
             MotherboardConfig.STEPPER_STEP_RATE: 1000,
         },
-
         ms1=0,
         ms2=0,
         ms3=0,
@@ -390,7 +390,6 @@ class MotorConfigs:
             MotherboardConfig.STEPPER_MAX_STEPS: 200,
             MotherboardConfig.STEPPER_STEP_RATE: 1000,
         },
-
         ms1=0,
         ms2=0,
         ms3=0,
@@ -401,7 +400,6 @@ class MotorConfigs:
             MotherboardConfig.STEPPER_MAX_STEPS: 200,
             MotherboardConfig.STEPPER_STEP_RATE: 1000,
         },
-
         ms1=0,
         ms2=0,
         ms3=0,
@@ -412,7 +410,6 @@ class MotorConfigs:
             MotherboardConfig.STEPPER_MAX_STEPS: 200,
             MotherboardConfig.STEPPER_STEP_RATE: 1000,
         },
-
         ms1=0,
         ms2=0,
         ms3=0,
@@ -423,12 +420,10 @@ class MotorConfigs:
             MotherboardConfig.STEPPER_MAX_STEPS: 200,
             MotherboardConfig.STEPPER_STEP_RATE: 1000,
         },
-
         ms1=0,
         ms2=0,
         ms3=0,
     )
-
 
     # Don't allow anyone to change this class's attributes
     def __setattr__(self, _: str, __: Any) -> Any:
@@ -445,9 +440,9 @@ class MotorConfigs:
             for key, value in cls.__dict__.items()
             if not key.startswith("_") and key != "getAllMotors"
         ]
-    
+
     @classmethod
-    def getAllLights(cls) -> list[LightConfig]:     
+    def getAllLights(cls) -> list[LightConfig]:
         """
         Returns a list of every light in this constants class.
         """

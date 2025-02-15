@@ -142,7 +142,7 @@ class RobotInterface:
             str_msg.data = state
             self._publishers[light.can_id].publish(str_msg)
             return True
-        return False
+        return False 
 
     # ------ Steppers ------
     def setStepperMotorState(self, stepper: StepperConfig, command: str, position: float = math.nan, speed: float = math.nan) -> bool:
