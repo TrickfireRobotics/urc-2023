@@ -9,7 +9,7 @@ from rclpy.node import Node
 from rclpy.publisher import Publisher
 from std_msgs.msg import String
 
-from lib.configs import MoteusMotorConfig, MotorConfigs, LightConfig, ServoConfig, StepperConfig
+from lib.configs import LightConfig, MoteusMotorConfig, MotorConfigs, ServoConfig, StepperConfig
 from lib.moteus_motor_state import MoteusRunSettings
 
 REVS_TO_RADIANS = math.pi * 2
@@ -47,7 +47,7 @@ class RobotInterface:
             self._publishers[stepper_config.can_id] = self._ros_node.create_publisher(
                 String, stepper_config.getCanTopicName(), 10
             )
-            
+
     def runMotor(self, motor: MoteusMotorConfig, run_settings: MoteusRunSettings) -> None:
         """
         Runs the specified motor with the specified settings.
@@ -142,10 +142,16 @@ class RobotInterface:
             str_msg.data = state
             self._publishers[light.can_id].publish(str_msg)
             return True
-        return False 
+        return False
 
     # ------ Steppers ------
-    def setStepperMotorState(self, stepper: StepperConfig, command: str, position: float = math.nan, speed: float = math.nan) -> bool:
+    def setStepperMotorState(
+        self,
+        stepper: StepperConfig,
+        command: str,
+        position: float = math.nan,
+        speed: float = math.nan,
+    ) -> bool:
         """
         Sets the state of the specified stepper motor.
 
@@ -165,7 +171,13 @@ class RobotInterface:
         bool
             True if the command was sent successfully, False otherwise.
         """
-        if stepper.can_id in self._publishers and command in ["RUN", "SPEED", "POSITION", "STOP", "DISABLE"]:
+        if stepper.can_id in self._publishers and command in [
+            "RUN",
+            "SPEED",
+            "POSITION",
+            "STOP",
+            "DISABLE",
+        ]:
             str_msg = String()
             if command == "SPEED" and not math.isnan(speed):
                 str_msg.data = f"{command}:{speed}"
@@ -178,7 +190,9 @@ class RobotInterface:
         return False
 
     # ------ Servos ------
-    def setServoMotorState(self, servo: ServoConfig, command: str, position: float = math.nan, speed: float = math.nan) -> bool:
+    def setServoMotorState(
+        self, servo: ServoConfig, command: str, position: float = math.nan, speed: float = math.nan
+    ) -> bool:
         """
         Sets the state of the specified servo motor.
 
@@ -198,7 +212,13 @@ class RobotInterface:
         bool
             True if the command was sent successfully, False otherwise.
         """
-        if servo.can_id in self._publishers and command in ["RUN", "SPEED", "POSITION", "STOP", "DISABLE"]:
+        if servo.can_id in self._publishers and command in [
+            "RUN",
+            "SPEED",
+            "POSITION",
+            "STOP",
+            "DISABLE",
+        ]:
             str_msg = String()
             if command == "SPEED" and not math.isnan(speed):
                 str_msg.data = f"{command}:{speed}"
@@ -209,4 +229,3 @@ class RobotInterface:
             self._publishers[servo.can_id].publish(str_msg)
             return True
         return False
-    
