@@ -44,6 +44,7 @@ gps_node = Node(
     output="screen",
     parameters=[
         {
+            "device": "/dev/ttyACM0",
             "frame_id": "gps",
             "config_on_startup": False,
             "device": "/dev/ttyACM0",

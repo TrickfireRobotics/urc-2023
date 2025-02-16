@@ -9,6 +9,7 @@
         "--privileged",
         "--cap-add=SYS_PTRACE",
         "--device=/dev",
+        "--device=/dev/ttyACM0:/dev/ttyACM0",
         "--security-opt", "seccomp=unconfined"
     ],
     "customizations": {
