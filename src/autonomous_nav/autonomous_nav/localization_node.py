@@ -89,7 +89,7 @@ class LocalizationNode(Node):
 
         # Publish the pose
         self.pose_pub.publish(self.current_pose)
-        self.get_logger().info(f"Published pose: {self.current_pose}")
+        # self.get_logger().info(f"Published pose: {self.current_pose}")
 
     def updatePose(self, pose: PoseStamped) -> None:
         """
