@@ -31,6 +31,7 @@ from cv2 import aruco
 from lib.color_codes import ColorCodes, colorStr
 
 
+
 class SensorProcessingNode(Node):
     """
     A ROS 2 node for processing sensor data.
@@ -88,10 +89,10 @@ class SensorProcessingNode(Node):
         Args:
             msg (CameraInfo): Camera intrinsic parameters message.
         """
-        self.get_logger().info("Received camera_info message. Updating intrinsics.")
+        # self.get_logger().info("Received camera_info message. Updating intrinsics.")
         self.camera_matrix = np.array(msg.k, dtype=np.float64).reshape(3, 3)
         self.dist_coeffs = np.array(msg.d, dtype=np.float64)
-        self.get_logger().info("Camera calibration parameters have been set.")
+        # self.get_logger().info("Camera calibration parameters have been set.")
 
     def processCameraImage(self, msg: Image) -> None:
         """
@@ -113,7 +114,7 @@ class SensorProcessingNode(Node):
         gray_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
 
         # Initialize ArUco dictionary and detector
-        aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_4X4_50)
+        aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
         parameters = aruco.DetectorParameters()
         aruco_detector = aruco.ArucoDetector(aruco_dict, parameters)
 
@@ -133,35 +134,71 @@ class SensorProcessingNode(Node):
 
             # Draw the detected markers on the original image
             aruco.drawDetectedMarkers(cv_image, corners, ids)
+
+            # We'll define the 3D coordinates for a 0.2m marker (adjust if needed).
+            tag_size = 0.2  # meters
+            half_size = tag_size / 2.0
+            # 4 corners in the marker's local 3D space, lying on Z=0
+            object_points = np.array([
+                [-half_size,  half_size, 0.0],
+                [ half_size,  half_size, 0.0],
+                [ half_size, -half_size, 0.0],
+                [-half_size, -half_size, 0.0],
+            ], dtype=np.float32)
+
             for i in range(len(ids)):
                 marker_id = int(ids[i][0])
-                pos_x, pos_y, pos_z = tvecs[i][0]
+                # corners[i][0] is shape (4,2)
+                corners_2d = corners[i][0].astype(np.float32)
 
-                # Draw the coordinate axes on the marker (for visualization)
-                aruco.drawAxis(
-                    cv_image,
+                # Solve for pose with solvePnP
+                ret, rvec, tvec = cv2.solvePnP(
+                    object_points,
+                    corners_2d,
                     self.camera_matrix,
                     self.dist_coeffs,
-                    rvecs[i],
-                    tvecs[i],
-                    0.1,  # axis length in meters
+                    flags=cv2.SOLVEPNP_ITERATIVE
                 )
+                if not ret:
+                    self.get_logger().warning(f"SolvePnP failed for marker {marker_id}")
+                    continue
 
-                # Publish marker data to /aruco_marker_data
+                # Draw axes with cv2.drawFrameAxes (NOT aruco.drawAxis)
+                # axis_length can be smaller or bigger to see them clearly
+                axis_length = 0.1
+                cv2.drawFrameAxes(cv_image, self.camera_matrix, self.dist_coeffs, rvec, tvec, axis_length, 2)
+
+                pos_x, pos_y, pos_z = tvec.reshape(-1)
+                # Publish to /aruco_marker_data
                 marker_msg = Float32MultiArray()
-                marker_msg.data = [marker_id, pos_x, pos_y, pos_z]
+                marker_msg.data = [float(marker_id), pos_x, pos_y, pos_z]
                 self.aruco_pub.publish(marker_msg)
 
                 self.get_logger().info(
-                    f"Marker {marker_id}: Position -> x={pos_x:.2f}, y={pos_y:.2f}, z={pos_z:.2f}"
+                    f"Marker {marker_id}: Position -> x={pos_x:.3f}, y={pos_y:.3f}, z={pos_z:.3f}"
                 )
 
         else:
             # Log that no markers were found for this frame
             self.get_logger().debug("No ArUco markers detected in this frame.")
 
-        # Display the image with drawn markers (requires a valid GUI environment)
-        cv2.imshow("ArUco Detection", cv_image)
+        # 1) Choose how much bigger you want the image:
+        scale_factor = 6.0  # e.g., 2.0 = double size
+
+        # 2) Resize the annotated image:
+        resized_image = cv2.resize(
+            cv_image,
+            None,  # no explicit output size
+            fx=scale_factor,
+            fy=scale_factor,
+            interpolation=cv2.INTER_LINEAR
+        )
+
+        # 3) Make window resizable (optional)
+        cv2.namedWindow("ArUco Detection", cv2.WINDOW_NORMAL)
+
+        # 4) Display the upscaled annotated image:
+        cv2.imshow("ArUco Detection", resized_image)
         cv2.waitKey(1)
 
     def processLidar(self, msg: LaserScan) -> None:
