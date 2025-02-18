@@ -20,7 +20,7 @@ import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from sensor_msgs.msg import Imu, LaserScan, Image, CameraInfo
-from std_msgs.msg import Float32, Int32, Float32MultiArray
+from std_msgs.msg import Float32, Float32MultiArray
 from typing import Optional
 
 import numpy as np
@@ -62,7 +62,7 @@ class SensorProcessingNode(Node):
             CameraInfo, "/zed/zed_node/rgb/camera_info", self.processCameraInfo, 10
         )
 
-        # Publisher for detected ArUco marker data
+        # Publisher for detected ArUco marker data (Float32MultiArray)
         self.aruco_pub = self.create_publisher(Float32MultiArray, "/aruco_marker_data", 10)
 
         # OpenCV bridge
@@ -121,6 +121,7 @@ class SensorProcessingNode(Node):
         corners, ids, rejected = aruco_detector.detectMarkers(gray_image)
 
         if ids is not None and len(ids) > 0:
+            # Example: if you see "[17]", that means one marker with ID=17 was detected
             self.get_logger().info(f"Detected ArUco markers: {ids.flatten()}")
 
             # Estimate pose for each detected marker
@@ -143,12 +144,12 @@ class SensorProcessingNode(Node):
                     self.dist_coeffs,
                     rvecs[i],
                     tvecs[i],
-                    0.1,  # axis length in meters (smaller or bigger as needed)
+                    0.1,  # axis length in meters
                 )
 
-                # Publish marker data
+                # Publish marker data to /aruco_marker_data
                 marker_msg = Float32MultiArray()
-                marker_msg.data = [marker_id, pos_x, pos_y, pos_z]  # Marker ID and 3D position
+                marker_msg.data = [marker_id, pos_x, pos_y, pos_z]
                 self.aruco_pub.publish(marker_msg)
 
                 self.get_logger().info(
@@ -161,7 +162,6 @@ class SensorProcessingNode(Node):
 
         # Display the image with drawn markers (requires a valid GUI environment)
         cv2.imshow("ArUco Detection", cv_image)
-        # This small wait is important so that the image display is updated
         cv2.waitKey(1)
 
     def processLidar(self, msg: LaserScan) -> None:
@@ -219,11 +219,11 @@ def main(args: list[str] | None = None) -> None:
             )
         )
     finally:
-        # Proper cleanup
+        # Clean up OpenCV windows and destroy the node
         cv2.destroyAllWindows()
         sensor_processing_node.destroy_node()
         rclpy.shutdown()
-        sys.exit(0)
+        # Removed any direct call to sys.exit(0) so it won’t forcibly exit on detection.
 
 
 if __name__ == "__main__":
