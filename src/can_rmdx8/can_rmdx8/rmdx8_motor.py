@@ -2,9 +2,13 @@
 # the other RMD task is finished. Make sure to mimic the behaviour of
 # the current Moteus node, but not necessarily copy the code.
 
-import myactuator_rmd_py as rmd
+
+from threading import Lock
+
 import rclpy
+import myactuator_rmd_py as rmd
 import std_msgs.msg
+import math
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.publisher import Publisher
@@ -19,6 +23,8 @@ class RMDx8Motor:
     """
     A wrapper class to interact with the RMDx8 actuator and the ROS nodes.
     """
+    mutex_lock = Lock()
+
 
     def __init__(self, config: RMDx8MotorConfig, ros_node: Node) -> None:
 
@@ -27,6 +33,7 @@ class RMDx8Motor:
         self.driver = rmd.CanDriver("can1")
         self.my_actuator = rmd.ActuatorInterface(self.driver, config.can_id)
         self._subscriber = self._createSubscriber()
+
 
         self._publisher = self._createPublisher()
 
@@ -63,34 +70,38 @@ class RMDx8Motor:
         Updates the RMDx8 motor state
         """
         self.run_settings = RMDX8RunSettings.fromJsonMsg(msg)
-        self.my_actuator.sendPositionAbsoluteSetpoint(
-            self.run_settings.position, self.run_settings.velocity_limit
-        )
-        self.my_actuator.sendVelocitySetpoint(self.run_settings.velocity)
-        if self.run_settings.set_stop:
-            self.my_actuator.stopMotor()
+        with self.mutex_lock:
+            if(not math.isnan(self.run_settings.position)):
+                self.my_actuator.sendPositionAbsoluteSetpoint(
+                    self.run_settings.position, self.run_settings.velocity_limit)
+            self.my_actuator.sendVelocitySetpoint(self.run_settings.velocity)
+            if (self.run_settings.set_stop | math.isnan(self.run_settings.position)):
+                self.my_actuator.stopMotor()
 
     def publishData(self) -> None:
         """
         Publishes data from the rmdx8 controller
         """
-        state = RMDX8MotorState.fromRMDX8Data(
-            self.config.can_id,
-            self.my_actuator.getMotorStatus1(),
-            self.my_actuator.getMotorStatus2(),
-            self.my_actuator.getMotorPower(),
-            self.my_actuator.getAcceleration(),
-        )
+        with self.mutex_lock:   
+            state = RMDX8MotorState.fromRMDX8Data(
+                self.config.can_id,
+                self.my_actuator.getMotorStatus1(),
+                self.my_actuator.getMotorStatus2(),
+                self.my_actuator.getMotorPower(),
+                self.my_actuator.getAcceleration(),
+            )
         self._publisher.publish(state.toMsg())
 
     def stopMotor(self) -> None:
         """
         Calls my_actuator_rmd stopMotor
         """
-        self.my_actuator.stopMotor()
+        with self.mutex_lock:
+            self.my_actuator.stopMotor()
 
     def shutdownMotor(self) -> None:
         """
         Calls my_actuator_rmd shutdownMotor
         """
-        self.my_actuator.shutdownMotor()
+        with self.mutex_lock:
+            self.my_actuator.shutdownMotor()
