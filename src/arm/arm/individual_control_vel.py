@@ -7,7 +7,7 @@ from lib.interface.robot_interface import RobotInterface
 
 class IndividualControlVel:
     WRIST_VEL = 0.3
-    VEL = 0.4
+    VEL = 0.2
     SHOULDER_VEL = 0.3
 
     def __init__(self, ros_node: Node, interface: RobotInterface):
@@ -177,9 +177,9 @@ class IndividualControlVel:
 
         data = msg.data
 
-        if data > 0:
+        if data != 0:
             self._ros_node.get_logger().info("Turntable clock wise")
-            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_TURNTABLE_MOTOR, self.VEL)
+            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_TURNTABLE_MOTOR, self.VEL * data)
 
         else:
             self._ros_node.get_logger().info("Turntable STOP")
