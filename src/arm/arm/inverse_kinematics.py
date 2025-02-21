@@ -23,6 +23,12 @@ class ArmMotorsEnum(IntEnum):
     RIGHTWRIST = 4
 
 
+class IKState(IntEnum):
+    ARRIVED = 0
+    MOVING = 1
+    ESTOP = 2
+
+
 class InverseKinematics:
 
     # constants
@@ -31,6 +37,8 @@ class InverseKinematics:
     RADIANS_TO_DEGREES = 1.0 / DEGREES_TO_RADIANS
 
     def __init__(self, ros_node: Node, interface: RobotInterface, info: RobotInfo):
+
+        self.arrived = True
 
         self._ros_node = ros_node
         self._interface = interface
@@ -95,7 +103,7 @@ class InverseKinematics:
         self.target_z = position[2]
 
         self._ros_node.get_logger().info(
-            "Target position:", self.target_x, self.target_y, self.target_z
+            "Target position:", str(self.target_x), str(self.target_y), str(self.target_z)
         )
 
         self.Tep = (
@@ -135,6 +143,9 @@ class InverseKinematics:
             * self.REVS_TO_RADIANS
             * self.RADIANS_TO_DEGREES
         )
+        if motor == 0 or motor == 1:
+            position_degrees = -position_degrees
+
         return position_degrees
 
     def getPerceivedMotorAngle(self, motor: int) -> float:
@@ -149,9 +160,44 @@ class InverseKinematics:
         motorConfig = self.motorConfigList[motor]
         self._interface.runMotorPosition(motorConfig, targetRadians)
 
-    def runAllMotorsToPosition(self, targetDegreeList: list) -> None:
-        for motorConfig in range(len(targetDegreeList)):
-            self.runMotorPosition(motorConfig, targetDegreeList[motorConfig])
+    def setQ(self) -> None:
+        # TODO fix ?????
+        self.viator.q = np.array(
+            [
+                self.getPerceivedMotorAngle(ArmMotorsEnum.TURNTABLE),
+                self.getPerceivedMotorAngle(ArmMotorsEnum.SHOULDER),
+                self.getPerceivedMotorAngle(ArmMotorsEnum.ELBOW),
+                0,
+                0,
+            ]
+        )
+
+    def runArmToTarget(self) -> None:
+        while not self.arrived:
+
+            # set the joint angles
+            self.setQ()
+
+            # check if arrived and get target velocity of end effector
+            v, arrived = rtb.p_servo(
+                self.viator.fkine(self.viator.q), self.Tep, gain=1, threshold=0.01
+            )
+            if arrived:
+                self.arrived = True
+                break
+            J = self.viator.jacobe(self.viator.q)
+
+            self.viator.qd = np.linalg.pinv(J) @ v
+
+            self._interface.runMotorSpeed(
+                MotorConfigs.ARM_TURNTABLE_MOTOR, self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS
+            )
+            self._interface.runMotorSpeed(
+                MotorConfigs.ARM_SHOULDER_MOTOR, self.viator.qd[1] * -1 * self.DEGREES_TO_RADIANS
+            )
+            self._interface.runMotorSpeed(
+                MotorConfigs.ARM_ELBOW_MOTOR, self.viator.qd[2] * self.DEGREES_TO_RADIANS
+            )
 
     def solve(self) -> None:
         self._ros_node.get_logger().info(
