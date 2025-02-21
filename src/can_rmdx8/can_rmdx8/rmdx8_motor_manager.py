@@ -26,17 +26,6 @@ class RMDx8MotorManager(Node):
         self.get_logger().info(colorStr("Launching can_rmdx8 node", ColorCodes.BLUE_OK))
         self._id_to_rmdx8_motor: dict[int, RMDx8Motor] = {}
         self.createRMDx8Motors()
-        self.timer = self.create_timer(0.02, self.updateMotors)
-
-    def updateMotors(self) -> None:
-        """
-        Update all motors in dictionary
-        """
-        for motor in self._id_to_rmdx8_motor.values():
-            try:
-                motor.updateSettings()
-            except Exception as e:
-                self.get_logger().error(f"Error updating motor: {e}")
 
     def shutdownMotors(self) -> None:
         """

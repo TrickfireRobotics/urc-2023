@@ -3,12 +3,13 @@
 # the current Moteus node, but not necessarily copy the code.
 
 
+import math
 from threading import Lock
 
-import rclpy
 import myactuator_rmd_py as rmd
+import numpy as np
+import rclpy
 import std_msgs.msg
-import math
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.publisher import Publisher
@@ -23,8 +24,8 @@ class RMDx8Motor:
     """
     A wrapper class to interact with the RMDx8 actuator and the ROS nodes.
     """
-    mutex_lock = Lock()
 
+    mutex_lock = Lock()
 
     def __init__(self, config: RMDx8MotorConfig, ros_node: Node) -> None:
 
@@ -33,7 +34,6 @@ class RMDx8Motor:
         self.driver = rmd.CanDriver("can1")
         self.my_actuator = rmd.ActuatorInterface(self.driver, config.can_id)
         self._subscriber = self._createSubscriber()
-
 
         self._publisher = self._createPublisher()
 
@@ -70,19 +70,23 @@ class RMDx8Motor:
         Updates the RMDx8 motor state
         """
         self.run_settings = RMDX8RunSettings.fromJsonMsg(msg)
+        self.run_settings = RMDX8RunSettings.fromJsonMsg(msg)
         with self.mutex_lock:
-            if(not math.isnan(self.run_settings.position)):
+            if np.isscalar(self.run_settings.position) and not np.isnan(self.run_settings.position):
                 self.my_actuator.sendPositionAbsoluteSetpoint(
-                    self.run_settings.position, self.run_settings.velocity_limit)
+                    self.run_settings.position, self.run_settings.velocity_limit
+                )
             self.my_actuator.sendVelocitySetpoint(self.run_settings.velocity)
-            if (self.run_settings.set_stop | math.isnan(self.run_settings.position)):
+            if self.run_settings.set_stop or (
+                np.isscalar(self.run_settings.position) and np.isnan(self.run_settings.position)
+            ):
                 self.my_actuator.stopMotor()
 
     def publishData(self) -> None:
         """
         Publishes data from the rmdx8 controller
         """
-        with self.mutex_lock:   
+        with self.mutex_lock:
             state = RMDX8MotorState.fromRMDX8Data(
                 self.config.can_id,
                 self.my_actuator.getMotorStatus1(),
