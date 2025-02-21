@@ -127,6 +127,8 @@ class InverseKinematics:
 
         self.down_z_sub = ros_node.create_subscription(Float32, "elbow_down", self.zDown, 10)
 
+        self.e_stop_sub = ros_node.create_subscription(Float32, "e_stop", self.eStop, 10)
+
     def setArmOffsets(self) -> None:
         for motorConfig in range(len(self.motorConfigList)):
             self.motorOffsetList[motorConfig] = self.motorStartingAngles[
@@ -172,6 +174,11 @@ class InverseKinematics:
             ]
         )
 
+    def eStop(self, msg: Float32) -> None:
+        self.stopAllMotors()
+        self.state = IKState.ESTOP
+        self._ros_node.get_logger().info("emergency stopping")
+
     def runArmToTarget(self) -> None:
         while not self.arrived:
 
@@ -183,6 +190,7 @@ class InverseKinematics:
                 self.viator.fkine(self.viator.q), self.Tep, gain=1, threshold=0.05
             )
             if arrived:
+                self._ros_node.get_logger().info("arrived at destination")
                 self.arrived = True
                 self.state = IKState.ARRIVED
                 break
