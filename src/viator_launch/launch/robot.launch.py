@@ -3,9 +3,9 @@ import os
 import launch
 from ament_index_python import get_package_share_directory
 from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 can_moteus_node = Node(package="can_moteus", executable="can_moteus", name="can_moteus_node")
 
@@ -61,29 +61,29 @@ gps_node = Node(
     parameters=[
         {
             "frame_id": "gps",
-            "rate": 4.0,                # GNSS data update rate in Hz
+            "rate": 4.0,  # GNSS data update rate in Hz
             "dynamic_model": "portable",  # Model for stationary/moving applications
-            "nav_rate": 1,              # Must be 1 Hz for HPG Ref devices
-            "enable_pps": True,         # Enable Pulse-Per-Second (PPS) if needed
+            "nav_rate": 1,  # Must be 1 Hz for HPG Ref devices
+            "enable_pps": True,  # Enable Pulse-Per-Second (PPS) if needed
             "tmode3": 1,
         }
     ],
 )
 
+temp_light_node = Node(package="temp_light", executable="temp_light", name="temp_light_node")
+
 
 def generate_launch_description() -> launch.LaunchDescription:  # pylint: disable=invalid-name
     # Include the ZED camera launch file from zed_wrapper
-    zed_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('zed_wrapper'),
-                'launch',
-                'zed_camera.launch.py'
-            )
-        ),
-        launch_arguments={'camera_model': 'zed2i'}.items()
-    )
-    
+    # zed_launch = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource(
+    #         os.path.join(
+    #             get_package_share_directory("zed_wrapper"), "launch", "zed_camera.launch.py"
+    #         )
+    #     ),
+    #     launch_arguments={"camera_model": "zed2i"}.items(),
+    # )
+
     return launch.LaunchDescription(
         [
             can_moteus_node,
@@ -93,12 +93,13 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             heartbeat_node,
             camera_node,
             control_node,
-            decision_making_node,
-            localization_node,
-            navigation_node,
-            sensor_processing_node,
+            # decision_making_node,
+            # localization_node,
+            # navigation_node,
+            # sensor_processing_node,
             launch_include,
-            gps_node,
-            zed_launch,
+            # gps_node,
+            # zed_launch,
+            temp_light_node,
         ]
     )

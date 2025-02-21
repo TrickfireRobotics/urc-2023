@@ -7,9 +7,9 @@
     "workspaceFolder": "/home/trickfire/${localWorkspaceFolderBasename}",
     "runArgs": [
         "--privileged",
-        "--cap-add=SYS_PTRACE",
-        "--device=/dev",
-        "--security-opt", "seccomp=unconfined"
+        //"--cap-add=SYS_PTRACE",
+        //"--device=/dev",
+        //"--security-opt", "seccomp=unconfined"
     ],
     "customizations": {
         "vscode": {
