@@ -3,6 +3,7 @@ This module just contains the RobotInterface class. It provides utility function
 motors on the robot. 
 """
 
+import json
 import math
 
 from rclpy.node import Node
@@ -24,6 +25,9 @@ class RobotInterface:
     def __init__(self, ros_node: Node) -> None:
         self._ros_node = ros_node
         self._publishers: dict[int, Publisher] = {}
+        self._temp_light_publisher = self._ros_node.create_publisher(
+            String, "temp_light_from_interface", 10
+        )
 
         for motor_config in MotorConfigs.getAllMotors():
             self._publishers[motor_config.can_id] = self._ros_node.create_publisher(
@@ -101,3 +105,28 @@ class RobotInterface:
             The config of the motor to disable.
         """
         self.runMotor(motor, MoteusRunSettings(velocity=0, set_stop=True))
+
+    def setTempLight(self, target: String, state: int) -> None:
+        """
+        Used for the SAR autonav code to demonstrate the different states of the rover's autonomous code.
+
+        Parameters
+        -------
+        target : String
+            What light to set the LED string.
+            Valid options are:
+            'RED'
+            'BLUE'
+            'GREEN'
+
+        state : int
+            Sets the state of the LED strip. Will override previous target states
+            0 -> OFF
+            1 -> ON
+        """
+
+        temp = {"target": target, "state": state}
+
+        msg = String()
+        msg.data = "" + json.dumps(temp)
+        self._temp_light_publisher.publish(msg)
