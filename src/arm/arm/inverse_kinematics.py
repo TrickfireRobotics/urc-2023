@@ -39,6 +39,7 @@ class InverseKinematics:
     def __init__(self, ros_node: Node, interface: RobotInterface, info: RobotInfo):
 
         self.arrived = True
+        self.state = IKState.ARRIVED
 
         self._ros_node = ros_node
         self._interface = interface
@@ -98,9 +99,9 @@ class InverseKinematics:
         # angles
         position = self.viator.fkine(self.viator.q).t
 
-        self.target_x = position[0]
-        self.target_y = position[1]
-        self.target_z = position[2]
+        self.target_x = 0.0
+        self.target_y = 0.0
+        self.target_z = 0.0
 
         self._ros_node.get_logger().info(
             "Target position:", str(self.target_x), str(self.target_y), str(self.target_z)
@@ -122,9 +123,9 @@ class InverseKinematics:
 
         self.down_x_sub = ros_node.create_subscription(Float32, "shoulder_down", self.xDown, 10)
 
-        self.up_z_sub = ros_node.create_subscription(Float32, "elbow_up", self.xUp, 10)
+        self.up_z_sub = ros_node.create_subscription(Float32, "elbow_up", self.zUp, 10)
 
-        self.down_z_sub = ros_node.create_subscription(Float32, "elbow_down", self.xDown, 10)
+        self.down_z_sub = ros_node.create_subscription(Float32, "elbow_down", self.zDown, 10)
 
     def setArmOffsets(self) -> None:
         for motorConfig in range(len(self.motorConfigList)):
@@ -161,7 +162,6 @@ class InverseKinematics:
         self._interface.runMotorPosition(motorConfig, targetRadians)
 
     def setQ(self) -> None:
-        # TODO fix ?????
         self.viator.q = np.array(
             [
                 self.getPerceivedMotorAngle(ArmMotorsEnum.TURNTABLE),
@@ -180,64 +180,112 @@ class InverseKinematics:
 
             # check if arrived and get target velocity of end effector
             v, arrived = rtb.p_servo(
-                self.viator.fkine(self.viator.q), self.Tep, gain=1, threshold=0.01
+                self.viator.fkine(self.viator.q), self.Tep, gain=1, threshold=0.05
             )
             if arrived:
                 self.arrived = True
+                self.state = IKState.ARRIVED
                 break
             J = self.viator.jacobe(self.viator.q)
 
             self.viator.qd = np.linalg.pinv(J) @ v
 
-            self._interface.runMotorSpeed(
-                MotorConfigs.ARM_TURNTABLE_MOTOR, self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS
-            )
-            self._interface.runMotorSpeed(
-                MotorConfigs.ARM_SHOULDER_MOTOR, self.viator.qd[1] * -1 * self.DEGREES_TO_RADIANS
-            )
-            self._interface.runMotorSpeed(
-                MotorConfigs.ARM_ELBOW_MOTOR, self.viator.qd[2] * self.DEGREES_TO_RADIANS
-            )
-
-    def solve(self) -> None:
-        self._ros_node.get_logger().info(
-            "Target position:", self.target_x, self.target_y, self.target_z
-        )
-        self.Tep = (
-            self.viator.fkine(self.viator.q)
-            * sm.SE3(self.target_x, self.target_y, self.target_z)
-            * sm.SE3.RPY([0, 0, 0], order="xyz")
-            * sm.SE3.Rz(90, unit="deg")
-        )
-
-        # Solve the IK problem
-        self.solver.solve(self.ets, self.Tep)
-
-        for i, link in enumerate(self.viator.links):
-            joint_name = link.name if link.name else f"Joint {i}"
-            pose = self.viator.fkine(self.viator.q, end=joint_name)  # FK up to joint i
-
-            pos = pose.t  # Translation (x, y, z)
-            rpy = pose.rpy(order="xyz", unit="deg")  # Rotation in roll-pitch-yaw (degrees)
-
-            self.jointDict[joint_name] = (pos, rpy)
+            self._ros_node.get_logger().info("qd: ", str(self.viator.qd))
             self._ros_node.get_logger().info(
-                f"│ {i:^4} │ {joint_name:^9} │ SE3({pos[0]:.3f}, {pos[1]:.3f}, {pos[2]:.3f}; "
-                f"{rpy[0]:.1f}°, {rpy[1]:.1f}°, {rpy[2]:.1f}°) │"
+                "turntable speed: ",
+                str(self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS),
             )
+            self._ros_node.get_logger().info(
+                "shoulder speed: ",
+                str(self.viator.qd[1] * -1 * self.DEGREES_TO_RADIANS),
+            )
+            self._ros_node.get_logger().info(
+                "elbow speed: ", str(self.viator.qd[2] * self.DEGREES_TO_RADIANS)
+            )
+
+            # check if any of the velocities exceed cool number
+            if abs(self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS) > 0.5:
+                self._ros_node.get_logger().info(
+                    "turntable speed too fast ",
+                    str(self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS),
+                )
+                self.stopAllMotors()
+
+            elif abs(self.viator.qd[1] * -1 * self.DEGREES_TO_RADIANS) > 0.5:
+                self._ros_node.get_logger().info(
+                    "shoulder speed too fast ",
+                    str(self.viator.qd[1] * -1 * self.DEGREES_TO_RADIANS),
+                )
+                self.stopAllMotors()
+
+            elif abs(self.viator.qd[2] * self.DEGREES_TO_RADIANS) > 0.5:
+                self._ros_node.get_logger().info(
+                    "elbow speed too fast ", str(self.viator.qd[2] * self.DEGREES_TO_RADIANS)
+                )
+                self.stopAllMotors()
+
+            else:
+                self._interface.runMotorSpeed(
+                    MotorConfigs.ARM_TURNTABLE_MOTOR,
+                    self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS,
+                )
+                self._interface.runMotorSpeed(
+                    MotorConfigs.ARM_SHOULDER_MOTOR,
+                    self.viator.qd[1] * -1 * self.DEGREES_TO_RADIANS,
+                )
+                self._interface.runMotorSpeed(
+                    MotorConfigs.ARM_ELBOW_MOTOR, self.viator.qd[2] * self.DEGREES_TO_RADIANS
+                )
+
+    def stopAllMotors(self) -> None:
+        self._interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
+        self._interface.stopMotor(MotorConfigs.ARM_SHOULDER_MOTOR)
+        self._interface.stopMotor(MotorConfigs.ARM_ELBOW_MOTOR)
 
     def xUp(self, msg: Float32) -> None:
+        if self.state == IKState.MOVING:
+            self._ros_node.get_logger().info("arm still moving")
+            return
+        self.state = IKState.MOVING
+        self.arrived = False
         self.target_x += 0.5
-        self.solve()
+        self._ros_node.get_logger().info(
+            "Target position:", str(self.target_x), str(self.target_y), str(self.target_z)
+        )
+        self.runArmToTarget()
 
     def xDown(self, msg: Float32) -> None:
+        if self.state == IKState.MOVING:
+            self._ros_node.get_logger().info("arm still moving")
+            return
+        self.state = IKState.MOVING
+        self.arrived = False
         self.target_x -= 0.5
-        self.solve()
+        self._ros_node.get_logger().info(
+            "Target position:", str(self.target_x), str(self.target_y), str(self.target_z)
+        )
+        self.runArmToTarget()
 
     def zUp(self, msg: Float32) -> None:
+        if self.state == IKState.MOVING:
+            self._ros_node.get_logger().info("arm still moving")
+            return
+        self.state = IKState.MOVING
+        self.arrived = False
         self.target_z += 0.5
-        self.solve()
+        self._ros_node.get_logger().info(
+            "Target position:", str(self.target_x), str(self.target_y), str(self.target_z)
+        )
+        self.runArmToTarget()
 
     def zDown(self, msg: Float32) -> None:
+        if self.state == IKState.MOVING:
+            self._ros_node.get_logger().info("arm still moving")
+            return
+        self.state = IKState.MOVING
+        self.arrived = False
         self.target_x -= 0.5
-        self.solve()
+        self._ros_node.get_logger().info(
+            "Target position:", str(self.target_x), str(self.target_y), str(self.target_z)
+        )
+        self.runArmToTarget()
