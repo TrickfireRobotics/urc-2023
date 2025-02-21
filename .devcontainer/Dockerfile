@@ -41,6 +41,8 @@ RUN apt-get update && apt-get install -y \
 #Install moteus python library https://github.com/mjbots/moteus/tree/main/lib/python
 RUN pip3 install moteus
 
+RUN sudo pip install Jetson.GPIO
+
 # Install additional Python dependencies
 RUN pip3 install pyusb opencv-python
 
