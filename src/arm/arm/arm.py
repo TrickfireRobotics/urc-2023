@@ -10,9 +10,11 @@ from std_msgs.msg import Int32
 from custom_interfaces.srv import ArmMode
 from lib.color_codes import ColorCodes, colorStr
 from lib.configs import MotorConfigs
+from lib.interface.robot_info import RobotInfo
 from lib.interface.robot_interface import RobotInterface
 
 from .individual_control_vel import IndividualControlVel
+from .inverse_kinematics import InverseKinematics
 
 
 class ArmModeEnum(IntEnum):
@@ -36,8 +38,11 @@ class Arm(Node):
         self.mode_service = self.create_service(ArmMode, "get_arm_mode", self.modeServiceHandler)
 
         self.bot_interface = RobotInterface(self)
+        self.bot_info = RobotInfo(self)
 
         self.individual_control_vel = IndividualControlVel(self, self.bot_interface)
+
+        self.ik_controls = InverseKinematics(self, self.bot_interface, self.bot_info)
 
     def modeServiceHandler(self, _: Any, response: ArmMode.Response) -> ArmMode.Response:
         response.current_mode = int(self.current_mode)
@@ -54,12 +59,16 @@ class Arm(Node):
             self.bot_interface.disableMotor(MotorConfigs.ARM_RIGHT_WRIST_MOTOR)
 
             self.individual_control_vel.can_send = False
+            self.ik_controls.can_send = False
         elif self.current_mode == 1:
             self.individual_control_vel.can_send = True
+            self.ik_controls.can_send = False
         elif self.current_mode == 2:
             self.individual_control_vel.can_send = False
+            self.ik_controls.can_send = False
         elif self.current_mode == 3:
             self.individual_control_vel.can_send = False
+            self.ik_controls.can_send = True
 
 
 def main(args: list[str] | None = None) -> None:

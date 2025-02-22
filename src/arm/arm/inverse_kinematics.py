@@ -38,6 +38,8 @@ class InverseKinematics:
 
     def __init__(self, ros_node: Node, interface: RobotInterface, info: RobotInfo):
 
+        self.can_send = False
+
         self.arrived = True
         self.state = IKState.ARRIVED
 
@@ -79,9 +81,9 @@ class InverseKinematics:
 
         # TODO INITIALIZE IK STUFF HERE -------------
         # Import robot urdf from the resources folder
-        current_dir = os.path.dirname(__file__)
-        urdf_file_path = os.path.join(current_dir, "..", "resource", "arm.urdf")
-        urdf_file_path = os.path.normpath(urdf_file_path)
+        # current_dir = os.path.dirname(__file__)
+        urdf_file_path = os.path.abspath("/home/trickfire/urc-2023/src/arm/resource/arm.urdf")
+        # urdf_file_path = os.path.normpath(urdf_file_path)
 
         # Initialise model
         self.viator = ERobot.URDF(urdf_file_path)
@@ -210,7 +212,7 @@ class InverseKinematics:
             self._ros_node.get_logger().info(
                 "elbow speed: ", str(self.viator.qd[2] * self.DEGREES_TO_RADIANS)
             )
-
+            """
             # check if any of the velocities exceed cool number
             if abs(self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS) > 0.5:
                 self._ros_node.get_logger().info(
@@ -243,7 +245,7 @@ class InverseKinematics:
                 )
                 self._interface.runMotorSpeed(
                     MotorConfigs.ARM_ELBOW_MOTOR, self.viator.qd[2] * self.DEGREES_TO_RADIANS
-                )
+                )"""
 
     def stopAllMotors(self) -> None:
         self._interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
@@ -251,7 +253,7 @@ class InverseKinematics:
         self._interface.stopMotor(MotorConfigs.ARM_ELBOW_MOTOR)
 
     def xUp(self, msg: Float32) -> None:
-        if self.state == IKState.MOVING:
+        if self.state == IKState.MOVING or not self.can_send:
             self._ros_node.get_logger().info("arm still moving")
             return
         self.state = IKState.MOVING
@@ -263,7 +265,7 @@ class InverseKinematics:
         self.runArmToTarget()
 
     def xDown(self, msg: Float32) -> None:
-        if self.state == IKState.MOVING:
+        if self.state == IKState.MOVING or not self.can_send:
             self._ros_node.get_logger().info("arm still moving")
             return
         self.state = IKState.MOVING
@@ -275,7 +277,7 @@ class InverseKinematics:
         self.runArmToTarget()
 
     def zUp(self, msg: Float32) -> None:
-        if self.state == IKState.MOVING:
+        if self.state == IKState.MOVING or not self.can_send:
             self._ros_node.get_logger().info("arm still moving")
             return
         self.state = IKState.MOVING
@@ -287,7 +289,7 @@ class InverseKinematics:
         self.runArmToTarget()
 
     def zDown(self, msg: Float32) -> None:
-        if self.state == IKState.MOVING:
+        if self.state == IKState.MOVING or not self.can_send:
             self._ros_node.get_logger().info("arm still moving")
             return
         self.state = IKState.MOVING

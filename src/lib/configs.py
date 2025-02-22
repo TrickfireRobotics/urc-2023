@@ -164,8 +164,8 @@ class MotorConfigs:
     ARM_TURNTABLE_MOTOR = MoteusMotorConfig(
         can_id=5,
         config={
-            "motor_position.rotor_to_output_ratio": 0.030581,
-            "servo.pid_position.kp": 16.0,
+            # "motor_position.rotor_to_output_ratio": 0.030581,
+            "servo.pid_position.kp": 30.0,
             "servo.pid_position.ki": 0.0,
             "servo.pid_position.kd": 1.0,
             "servo.max_current_A": 10.0,
