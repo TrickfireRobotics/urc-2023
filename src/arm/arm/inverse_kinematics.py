@@ -105,10 +105,6 @@ class InverseKinematics:
         self.target_y = 0.0
         self.target_z = 0.0
 
-        self._ros_node.get_logger().info(
-            "Target position:", str(self.target_x), str(self.target_y), str(self.target_z)
-        )
-
         self.Tep = (
             self.viator.fkine(self.viator.q)
             * sm.SE3(self.target_x, self.target_y, self.target_z)
@@ -172,9 +168,10 @@ class InverseKinematics:
                 self.getPerceivedMotorAngle(ArmMotorsEnum.SHOULDER),
                 self.getPerceivedMotorAngle(ArmMotorsEnum.ELBOW),
                 0,
-                0,
+                8.113,
             ]
         )
+        self._ros_node.get_logger().info("current q: " + str(self.viator.q))
 
     def eStop(self, msg: Float32) -> None:
         self.stopAllMotors()
@@ -196,23 +193,24 @@ class InverseKinematics:
                 self.arrived = True
                 self.state = IKState.ARRIVED
                 break
+
             J = self.viator.jacobe(self.viator.q)
 
             self.viator.qd = np.linalg.pinv(J) @ v
 
-            self._ros_node.get_logger().info("qd: ", str(self.viator.qd))
+            self._ros_node.get_logger().info("qd: " + str(self.viator.qd))
             self._ros_node.get_logger().info(
-                "turntable speed: ",
+                "turntable speed: " +
                 str(self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS),
             )
             self._ros_node.get_logger().info(
-                "shoulder speed: ",
+                "shoulder speed: " +
                 str(self.viator.qd[1] * -1 * self.DEGREES_TO_RADIANS),
             )
             self._ros_node.get_logger().info(
-                "elbow speed: ", str(self.viator.qd[2] * self.DEGREES_TO_RADIANS)
+                "elbow speed: " + str(self.viator.qd[2] * self.DEGREES_TO_RADIANS)
             )
-            """
+            
             # check if any of the velocities exceed cool number
             if abs(self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS) > 0.5:
                 self._ros_node.get_logger().info(
@@ -245,7 +243,7 @@ class InverseKinematics:
                 )
                 self._interface.runMotorSpeed(
                     MotorConfigs.ARM_ELBOW_MOTOR, self.viator.qd[2] * self.DEGREES_TO_RADIANS
-                )"""
+                )
 
     def stopAllMotors(self) -> None:
         self._interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
@@ -260,7 +258,13 @@ class InverseKinematics:
         self.arrived = False
         self.target_x += 0.5
         self._ros_node.get_logger().info(
-            "Target position:", str(self.target_x), str(self.target_y), str(self.target_z)
+            "Target x: " + str(self.target_x)
+        )
+        self._ros_node.get_logger().info(
+            "Target y: " + str(self.target_y)
+        )
+        self._ros_node.get_logger().info(
+            "Target z: " + str(self.target_z)
         )
         self.runArmToTarget()
 
@@ -272,7 +276,13 @@ class InverseKinematics:
         self.arrived = False
         self.target_x -= 0.5
         self._ros_node.get_logger().info(
-            "Target position:", str(self.target_x), str(self.target_y), str(self.target_z)
+            "Target x: " + str(self.target_x)
+        )
+        self._ros_node.get_logger().info(
+            "Target y: " + str(self.target_y)
+        )
+        self._ros_node.get_logger().info(
+            "Target z: " + str(self.target_z)
         )
         self.runArmToTarget()
 
@@ -284,7 +294,13 @@ class InverseKinematics:
         self.arrived = False
         self.target_z += 0.5
         self._ros_node.get_logger().info(
-            "Target position:", str(self.target_x), str(self.target_y), str(self.target_z)
+            "Target x: " + str(self.target_x)
+        )
+        self._ros_node.get_logger().info(
+            "Target y: " + str(self.target_y)
+        )
+        self._ros_node.get_logger().info(
+            "Target z: " + str(self.target_z)
         )
         self.runArmToTarget()
 
@@ -296,6 +312,12 @@ class InverseKinematics:
         self.arrived = False
         self.target_x -= 0.5
         self._ros_node.get_logger().info(
-            "Target position:", str(self.target_x), str(self.target_y), str(self.target_z)
+            "Target x: " + str(self.target_x)
+        )
+        self._ros_node.get_logger().info(
+            "Target y: " + str(self.target_y)
+        )
+        self._ros_node.get_logger().info(
+            "Target z: " + str(self.target_z)
         )
         self.runArmToTarget()

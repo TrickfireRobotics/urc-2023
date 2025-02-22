@@ -155,8 +155,8 @@ class MotorConfigs:
             "servo.default_timeout_s": 1.0,
             "servo.max_current_A": 6.0,
             "servo.max_velocity": 0.1,
-            "servopos.position_min": -0.5,
-            "servopos.position_max": 0.0,
+            "servopos.position_min": math.nan,
+            "servopos.position_max": math.nan,
         },
     )
     ARM_LEFT_WRIST_MOTOR = MoteusMotorConfig(can_id=3, config={})
