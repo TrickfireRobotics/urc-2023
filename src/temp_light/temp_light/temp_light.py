@@ -32,7 +32,7 @@ class TempLight(Node):
 
         self.bot_interface = RobotInterface(self)
         self.hello = 1
-        self.timer = self.create_timer(2, self.timer_callback)
+        #self.timer = self.create_timer(2, self.timer_callback)
 
     def _handle_temp_light(self, msg: String) -> None:
         light_result = json.loads(msg.data)
