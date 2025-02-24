@@ -61,13 +61,24 @@ gps_node = Node(
     parameters=[
         {
             "frame_id": "gps",
-            "rate": 4.0,                # GNSS data update rate in Hz
+            "rate": 4.0,  # GNSS data update rate in Hz
             "dynamic_model": "portable",  # Model for stationary/moving applications
-            "nav_rate": 1,              # Must be 1 Hz for HPG Ref devices
-            "enable_pps": True,         # Enable Pulse-Per-Second (PPS) if needed
+            "nav_rate": 1,  # Must be 1 Hz for HPG Ref devices
+            "enable_pps": True,  # Enable Pulse-Per-Second (PPS) if needed
             "tmode3": 1,
         }
     ],
+)
+
+# Path to your configuration YAML for localization ekf_node
+config_file_path = os.path.join(get_package_share_directory("autonomous_nav"), "config", "ekf.yaml")
+
+ekf_node = Node(
+    package="robot_localization",
+    executable="ekf_node",
+    name="ekf_filter_node",
+    output="screen",
+    parameters=[config_file_path],
 )
 
 
@@ -76,14 +87,12 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
     zed_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory('zed_wrapper'),
-                'launch',
-                'zed_camera.launch.py'
+                get_package_share_directory("zed_wrapper"), "launch", "zed_camera.launch.py"
             )
         ),
-        launch_arguments={'camera_model': 'zed2i'}.items()
+        launch_arguments={"camera_model": "zed2i"}.items(),
     )
-    
+
     return launch.LaunchDescription(
         [
             can_moteus_node,
@@ -100,5 +109,6 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             launch_include,
             gps_node,
             zed_launch,
+            ekf_node,
         ]
     )

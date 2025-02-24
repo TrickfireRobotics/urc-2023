@@ -32,6 +32,9 @@
   <exec_depend>zed_wrapper</exec_depend>
   <exec_depend>zed_interfaces</exec_depend>
 
+  <!-- Localization -->
+  <depend>robot_localization</depend>
+
   <!-- Python-specific dependencies -->
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend>python3-opencv</exec_depend>
