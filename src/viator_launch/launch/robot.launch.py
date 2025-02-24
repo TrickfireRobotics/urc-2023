@@ -73,15 +73,15 @@ gps_node = Node(
             "dynamic_model": "portable",  # Model for stationary/moving applications
             "nav_rate": 1,  # Must be 1 Hz for HPG Ref devices
             "enable_pps": True,  # Enable Pulse-Per-Second (PPS) if needed
-            "tmode3": 1,
+            "tmode3": 0,  # Set to Rover mode (Instead of fixed mode)
             # RTK/NTRIP settings (Local to your current location):
-            "publish_rtcm": True,  # Ensure RTCM messages are published
             "rtcm_caster_timeout": 10,  # Allow some buffer for NTRIP timeout
             "rtcm_caster_address": "nrtkcors.ngs.noaa.gov",
             "rtcm_caster_port": 2101,
             "mount_point": "WACORS",
             "username": "",  # Leave blank if no login is required
             "password": "",
+            "publish_rtcm": True,  # Ensure RTCM messages are published
         }
     ],
 )
