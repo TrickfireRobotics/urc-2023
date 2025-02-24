@@ -74,6 +74,12 @@ gps_node = Node(
             "nav_rate": 1,  # Must be 1 Hz for HPG Ref devices
             "enable_pps": True,  # Enable Pulse-Per-Second (PPS) if needed
             "tmode3": 1,
+            # RTK/NTRIP settings (Local to your current location):
+            "rtcm_caster_address": "nrtkcors.ngs.noaa.gov",
+            "rtcm_caster_port": 2101,
+            "mount_point": "WACORS",
+            "username": "",  # Leave blank if no login is required
+            "password": "",
         }
     ],
 )
