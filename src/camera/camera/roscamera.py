@@ -1,3 +1,4 @@
+import os
 import cv2  # OpenCV library
 import rclpy  # Python Client Library for ROS 2
 from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Images
@@ -5,27 +6,75 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node  # Handles the creation of nodes
 from sensor_msgs.msg import CompressedImage  # Image is the message type
 
+ZED_VENDOR_ID = "2b03"
+ZED_PRODUCT_ID = "f880"
+
+
+def isZedCamera(video_index: int) -> bool:
+    """
+    Checks if the /dev/video{video_index} is a ZED camera by reading Vendor/Product IDs in sysfs.
+    Returns True if it's the ZED, False otherwise.
+    """
+    # Path to the sysfs directory for this video device
+    dev_path = f"/sys/class/video4linux/video{video_index}/device"
+
+    if not os.path.exists(dev_path):
+        return False
+
+    # We walk upwards to find "usb" device info
+    # e.g. /sys/class/video4linux/video{X}/device/../..
+    # Might have multiple symlinks so we climb up until we find "idVendor" or we run out of path.
+    path = dev_path
+    for _ in range(5):  # limit climbing to 5 levels
+        # Check if idVendor/idProduct exist here
+        vendor_file = os.path.join(path, "idVendor")
+        product_file = os.path.join(path, "idProduct")
+
+        if os.path.isfile(vendor_file) and os.path.isfile(product_file):
+            with open(vendor_file, "r") as vf:
+                vendor_id = vf.read().strip()
+            with open(product_file, "r") as pf:
+                product_id = pf.read().strip()
+
+            if vendor_id.lower() == ZED_VENDOR_ID and product_id.lower() == ZED_PRODUCT_ID:
+                return True
+
+        # Move one directory up
+        path = os.path.join(path, "..")
+
+    return False
+
 
 def getCameras() -> list[int]:
     """
-    Function returns a list of working camera IDs to capture every camera connected to the robot
+    Returns a list of working camera IDs for all cameras EXCEPT the ZED 2i.
     """
 
     non_working_ports = 0
     dev_port = 0
     working_ports = []
 
-    while non_working_ports < 6:
+    max_checks = 10  # total number of /dev/video ports we'll probe
+
+    while non_working_ports < 6 and dev_port < max_checks:
+        # Check if this is a ZED
+        if isZedCamera(dev_port):
+            print(f"Skipping ZED device at /dev/video{dev_port}")
+            dev_port += 1
+            continue
+
         camera = cv2.VideoCapture(dev_port)
         if not camera.isOpened():
             non_working_ports += 1
         else:
-            is_reading, img = camera.read()
+            # Try reading a frame to confirm it’s valid
+            is_reading, _ = camera.read()
             _ = camera.get(3)
             _ = camera.get(4)
             if is_reading:
                 working_ports.append(dev_port)
 
+        camera.release()
         dev_port += 1
 
     return working_ports

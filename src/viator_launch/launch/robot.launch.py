@@ -90,7 +90,7 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
                 get_package_share_directory("zed_wrapper"), "launch", "zed_camera.launch.py"
             )
         ),
-        launch_arguments={"camera_model": "zed2i"}.items(),
+        launch_arguments={"camera_model": "zed2i", "composable_node": "False"}.items(),
     )
 
     return launch.LaunchDescription(
