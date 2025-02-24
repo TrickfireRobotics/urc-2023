@@ -1,8 +1,7 @@
 navsat_transform_node:
   ros__parameters:
-    frequency: 30.0  # how fast to produce transforms/odometry
-    use_odometry_yaw: false
-    # If you have a magnetometer or want IMU heading, set false, else true
+    frequency: 20.0  # how fast to produce transforms/odometry
+    use_odometry_yaw: false # Use IMU yaw, corrected by GPS velocity
     use_manual_datum: false
     wait_for_datum: false
 
@@ -33,5 +32,10 @@ navsat_transform_node:
     # If you want to fuse altitude from GPS as well, set "use_altitude: true"
     use_altitude: true
 
-    # If your IMU is NED or any other orientation differences, you can set yaw_offset, etc.
-    # ...
+    # Yaw correction using GPS velocity
+    # If your IMU frame differs from GPS (e.g., NED vs ENU), adjust this
+    yaw_offset: 0.0  # Optional: Set to 1.5708 (90°) if IMU is rotated relative to GPS
+
+    # Additional params for tuning
+    magnetic_declination: 0.0  # Set if you know your local declination, though no magnetometer here
+    zero_altitude: false       # Keep false since you want real altitude
