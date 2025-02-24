@@ -75,7 +75,7 @@ gps_node = Node(
             "enable_pps": True,  # Enable Pulse-Per-Second (PPS) if needed
             "tmode3": 0,  # Set to Rover mode (Instead of fixed mode)
             # RTK/NTRIP settings for RTK2Go
-            "rtcm_caster_address": "rtk2go.com",
+            "rtcm_caster_address": "3.143.243.81",
             "rtcm_caster_port": 2101,
             "mount_point": "BOTHWA",  # Case-sensitive!
             "username": "jakek927@gmail.com",  # Replace with your actual email
