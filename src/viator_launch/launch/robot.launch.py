@@ -109,6 +109,14 @@ ekf_node = Node(
 )
 
 
+static_tf = Node(
+    package="tf2_ros",
+    executable="static_transform_publisher",
+    name="gps_tf_broadcaster",
+    arguments=["-0.45", "-0.12", "0", "0", "0", "0", "1", "zed_camera_link", "gps"],
+)
+
+
 def generate_launch_description() -> launch.LaunchDescription:  # pylint: disable=invalid-name
     return launch.LaunchDescription(
         [
@@ -128,5 +136,6 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             zed_launch,
             navsat_transform,
             ekf_node,
+            static_tf,
         ]
     )
