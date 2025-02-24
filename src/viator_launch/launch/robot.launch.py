@@ -88,6 +88,12 @@ navsat_transform = Node(
     executable="navsat_transform_node",
     name="navsat_transform_node",
     output="screen",
+    # Remap /imu -> /zed/zed_node/imu/data
+    # Remap /gps/fix -> /fix
+    remappings=[
+        ("/imu", "/zed/zed_node/imu/data"),
+        ("/gps/fix", "/fix"),  # if needed
+    ],
     parameters=[navsat_config_path],  # Load config
 )
 
