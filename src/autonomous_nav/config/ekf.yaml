@@ -4,7 +4,7 @@ ekf_filter_node:
     two_d_mode: false
     map_frame: map
     odom_frame: odom
-    base_link_frame: base_link
+    base_link_frame: zed_camera_link
     world_frame: map
 
     # GPS odometry topic
