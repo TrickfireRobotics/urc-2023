@@ -7,26 +7,28 @@ ekf_filter_node:
     base_link_frame: zed_camera_link
     world_frame: map
 
-    # GPS odometry topic
+    # GPS odometry topic (from navsat_transform_node)
     odom0: "/odometry/gps"
-    odom0_config: [true,  true, true,
-                   false, false, false,
-                   true,  true,  false,
-                   false, false, false]
+    odom0_config: [true,  true,  true,   # x, y, z (altitude enabled)
+                   false, false, false,  # roll, pitch, yaw (from IMU, not GPS)
+                   true,  true,  false,  # x_vel, y_vel, z_vel
+                   false, false, false]  # roll_vel, pitch_vel, yaw_vel
     odom0_queue_size: 10
+    odom0_differential: false  # Absolute measurements from GPS
 
-    # IMU topic
+    # IMU topic (ZED 2i)
     imu0: "/zed/zed_node/imu/data"
     imu0_config: [
-      false, false, false,   # x, y, z
-      true,  true,  true,    # roll, pitch, yaw (orientation)
-      false, false, false,   # x_vel, y_vel, z_vel (linear velocity)
+      false, false, false,   # x, y, z (position not from IMU)
+      true,  true,  true,    # roll, pitch, yaw (orientation from IMU)
+      false, false, false,   # x_vel, y_vel, z_vel (velocity from GPS)
       true,  true,  true     # roll_vel, pitch_vel, yaw_vel (angular velocity)
     ]
     imu0_differential: false
     imu0_queue_size: 5
-
-    # Remove gravity from IMU data
     imu0_remove_gravitational_acceleration: true
 
-    # ...additional advanced params...
+    # Tuning for robustness
+    transform_time_offset: 0.0
+    transform_timeout: 0.1     # Allow 100ms tolerance for stale data
+    print_diagnostics: true    # Enable diagnostics for debugging

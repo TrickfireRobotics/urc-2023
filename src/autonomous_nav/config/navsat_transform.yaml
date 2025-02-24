@@ -1,41 +1,27 @@
 navsat_transform_node:
   ros__parameters:
-    frequency: 20.0  # how fast to produce transforms/odometry
-    use_odometry_yaw: false # Use IMU yaw, corrected by GPS velocity
+    frequency: 20.0            # Reduced to 20 Hz to match your working setup
+    use_odometry_yaw: false    # Use IMU yaw, corrected by GPS velocity
     use_manual_datum: false
     wait_for_datum: false
 
-    # The frame in which your final odometry will be published
-    # often "map" or "odom"
-    world_frame: "map"
-
-    # The robot's body frame (e.g., "base_link")
-    base_link_frame: "zed_camera_link"
-
-    # The coordinate frame that will be attached to the navsat transform
-    # typically a new "gps" or "utm" or "odom" frame
-    frame_id: "gps_link"
+    # Frame configuration
+    world_frame: "map"         # Final odometry frame
+    base_link_frame: "zed_camera_link"  # Rover’s base frame
+    frame_id: "gps"            # GPS sensor frame (matches TF and /fix)
 
     # Topics
-    # Raw lat/lon data from GPS
-    gps_topic: "/fix"
+    gps_topic: "/fix"          # Raw GPS data (lat, lon, alt)
+    imu_topic: "/zed/zed_node/imu/data"  # IMU for yaw
+    odom_topic: "/odometry/gps"  # Output for EKF
 
-    # IMU data (used for yaw heading if you have one)
-    # This can be the same IMU the EKF uses, or a different one
-    imu_topic: "/zed/zed_node/imu/data"
+    # Altitude and yaw settings
+    use_altitude: true         # Fuse GPS altitude
+    yaw_offset: 0.0            # Adjust if IMU/GPS frames misalign (e.g., 1.5708 for 90°)
+    magnetic_declination: 0.0  # Set if known (no magnetometer, so likely unused)
+    zero_altitude: false       # Use real altitude
 
-    # The published topic for local odom
-    # e.g. /odometry/gps or /gps/odom
-    # This is what you'll feed into the EKF node as an "odom" source
-    odom_topic: "/odometry/gps"
-
-    # If you want to fuse altitude from GPS as well, set "use_altitude: true"
-    use_altitude: true
-
-    # Yaw correction using GPS velocity
-    # If your IMU frame differs from GPS (e.g., NED vs ENU), adjust this
-    yaw_offset: 0.0  # Optional: Set to 1.5708 (90°) if IMU is rotated relative to GPS
-
-    # Additional params for tuning
-    magnetic_declination: 0.0  # Set if you know your local declination, though no magnetometer here
-    zero_altitude: false       # Keep false since you want real altitude
+    # Tuning
+    transform_time_offset: 0.0
+    transform_timeout: 0.1     # Match EKF tolerance
+    broadcast_utm_transform: false  # Optional: Set true if you need UTM frame
