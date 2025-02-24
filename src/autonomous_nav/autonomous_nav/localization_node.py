@@ -1,126 +1,121 @@
 """
-Role: This script tracks the rover's position using GNSS, IMU, or other localization sensors.
-
-Functionality: Integrates data from the sensor suite, excluding object detection camera data, to
-track rover position & orientation.
+Role: This script captures the first valid GPS fix (the "anchor" position)
+but waits 15 seconds from startup before accepting any fix.
+Once captured, it publishes the anchor lat/lon/alt on a transient local topic.
 
 Dependencies:
     - rclpy: ROS 2 client library for Python.
-    - geometry_msgs.msg: Provides PoseStamped messages for robot localization.
+    - sensor_msgs.msg: NavSatFix for reading GPS data.
+    - std_msgs.msg: Float64MultiArray for publishing anchor data.
 """
 
 import sys
-
 import rclpy
-from geometry_msgs.msg import PoseStamped
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-from sensor_msgs.msg import Imu, NavSatFix
-
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSHistoryPolicy
+from sensor_msgs.msg import NavSatFix
+from std_msgs.msg import Float64MultiArray
 from lib.color_codes import ColorCodes, colorStr
 
 
-class LocalizationNode(Node):
+class GpsAnchorNode(Node):
     """
-    A ROS 2 node for handling robot localization.
+    A ROS 2 node for handling the initial GPS anchor.
 
-    This node processes sensor data to estimate the robot's pose (position and
-    orientation) in the environment and publishes the pose to a specified topic.
-
-    Attributes:
-        pose_pub (Publisher): A ROS 2 publisher for the "/robot_pose" topic.
-        current_position (tuple): Stores the latest GPS position (latitude, longitude, altitude).
-        current_orientation (tuple): Stores the latest IMU orientation (x, y, z, w).
+    This node:
+      - Subscribes to the /fix topic (GPS).
+      - Ignores any fixes for 15s after startup to allow GPS to stabilize.
+      - Captures the first valid fix after that 15s window.
+      - Publishes the anchor lat/lon/alt on a transient local topic,
+        ensuring late subscribers still receive the message.
     """
 
     def __init__(self) -> None:
-        super().__init__("localization_node")
+        super().__init__("gps_anchor_node")
 
-        # Subscriptions for GPS and IMU data
-        self.gps_subscription = self.create_subscription(
-            NavSatFix, "/gps/fix", self.gpsCallback, 10
+        # State to track whether we've set the anchor yet
+        self.anchor_set = False
+        self.anchor_lat = 0.0
+        self.anchor_lon = 0.0
+        self.anchor_alt = 0.0
+
+        # Record the node's start time for the 15s warm-up
+        self.start_time = self.get_clock().now()
+
+        # Set up subscriber for GPS
+        self.gps_sub = self.create_subscription(NavSatFix, "/fix", self.gpsCallback, 10)
+
+        # Create a transient local QoS profile so late subscribers get the last message
+        transient_local_qos = QoSProfile(
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1,
+            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
         )
-        self.imu_subscription = self.create_subscription(Imu, "/imu/data", self.imuCallback, 10)
 
-        # Publisher for the robot's pose
-        self.pose_pub = self.create_publisher(PoseStamped, "/robot_pose", 10)
+        # Publisher for the anchor data
+        self.anchor_pub = self.create_publisher(
+            Float64MultiArray, "/anchor_position", transient_local_qos
+        )
 
-        # Timer to periodically publish the robot's pose
-        self.timer = self.create_timer(0.1, self.publishPose)
-
-        # Initialize the robot's pose
-        self.current_pose = PoseStamped()
-        self.current_position = (0.0, 0.0, 0.0)
-        self.current_orientation = (0.0, 0.0, 0.0, 1.0)
+        self.get_logger().info(
+            "GpsAnchorNode initialized. Waiting for first valid GPS fix after 15s..."
+        )
 
     def gpsCallback(self, msg: NavSatFix) -> None:
-        """Processes GPS data to update current position."""
-        self.current_position = (msg.latitude, msg.longitude, msg.altitude)
-        self.get_logger().info(f"Updated GPS position: {self.current_position}")
-        self.publishPose()
+        # If we've already set an anchor, do nothing
+        if self.anchor_set:
+            return
 
-    def imuCallback(self, msg: Imu) -> None:
-        """Processes IMU data to update current orientation."""
-        self.current_orientation = (
-            msg.orientation.x,
-            msg.orientation.y,
-            msg.orientation.z,
-            msg.orientation.w,
-        )
-        self.get_logger().info(f"Updated orientation: {self.current_orientation}")
-        self.publishPose()
+        # Check how long it's been since startup
+        time_passed = (self.get_clock().now() - self.start_time).nanoseconds / 1e9
+        if time_passed < 15.0:
+            # Not yet 15 seconds, skip any fix
+            return
 
-    def publishPose(self) -> None:
-        """
-        Publishes the robot's current pose to the "/robot_pose" topic.
-        """
-        self.current_pose.header.stamp = self.get_clock().now().to_msg()
-        self.current_pose.header.frame_id = "map"
+        # Now we are beyond 15s, check if there's a valid fix
+        if msg.status.status >= 0:
+            self.anchor_lat = msg.latitude
+            self.anchor_lon = msg.longitude
+            self.anchor_alt = msg.altitude
+            self.anchor_set = True
 
-        # Simulated movement (this would typically come from sensor data)
-        self.current_pose.pose.position.x = self.current_position[0]
-        self.current_pose.pose.position.y = self.current_position[1]
-        self.current_pose.pose.position.z = self.current_position[2]
+            self.get_logger().info(
+                f"Anchor lat/lon set to: {self.anchor_lat:.6f}, {self.anchor_lon:.6f} "
+                f"(alt: {self.anchor_alt:.2f}) after {time_passed:.1f}s"
+            )
 
-        self.current_pose.pose.orientation.x = self.current_orientation[0]
-        self.current_pose.pose.orientation.y = self.current_orientation[1]
-        self.current_pose.pose.orientation.z = self.current_orientation[2]
-        self.current_pose.pose.orientation.w = self.current_orientation[3]
+            # Publish the anchor as a Float64MultiArray [lat, lon, alt]
+            anchor_msg = Float64MultiArray()
+            anchor_msg.data = [self.anchor_lat, self.anchor_lon, self.anchor_alt]
+            self.anchor_pub.publish(anchor_msg)
 
-        # Publish the pose
-        self.pose_pub.publish(self.current_pose)
-        # self.get_logger().info(f"Published pose: {self.current_pose}")
-
-    def updatePose(self, pose: PoseStamped) -> None:
-        """
-        Updates the robot's current pose based on sensor data.
-
-        Args:
-            pose (PoseStamped): The new pose of the robot.
-        """
-        self.current_pose = pose
-        self.get_logger().info(f"Updated pose to: {pose}")
+            # Optionally stop subscribing if you only want the first valid fix
+            self.destroy_subscription(self.gps_sub)
+            self.get_logger().info("Stopped GPS subscription after setting anchor.")
 
 
 def main(args: list[str] | None = None) -> None:
     """
-    Main function to initialize the rclpy context and run the LocalizationNode.
+    Main function to initialize the rclpy context and run the GpsAnchorNode.
 
     Args:
         args (Optional[Any]): Command-line arguments passed to rclpy.init().
     """
     rclpy.init(args=args)
     try:
-        localization_node = LocalizationNode()
-        rclpy.spin(localization_node)
+        gps_anchor_node = GpsAnchorNode()
+        rclpy.spin(gps_anchor_node)
     except KeyboardInterrupt:
         pass
     except ExternalShutdownException:
-        localization_node.get_logger().info(
-            colorStr("Shutting down localization node", ColorCodes.BLUE_OK)
+        gps_anchor_node.get_logger().info(
+            colorStr("Shutting down gps anchor node", ColorCodes.BLUE_OK)
         )
-        localization_node.destroy_node()
+        gps_anchor_node.destroy_node()
         sys.exit(0)
+    finally:
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":
