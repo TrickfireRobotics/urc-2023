@@ -74,14 +74,13 @@ gps_node = Node(
             "nav_rate": 1,  # Must be 1 Hz for HPG Ref devices
             "enable_pps": True,  # Enable Pulse-Per-Second (PPS) if needed
             "tmode3": 0,  # Set to Rover mode (Instead of fixed mode)
-            # RTK/NTRIP settings (Local to your current location):
-            "rtcm_caster_timeout": 10,  # Allow some buffer for NTRIP timeout
-            "rtcm_caster_address": "nrtkcors.ngs.noaa.gov",
+            # RTK/NTRIP settings for RTK2Go
+            "rtcm_caster_address": "rtk2go.com",
             "rtcm_caster_port": 2101,
-            "mount_point": "WACORS",
-            "username": "",  # Leave blank if no login is required
-            "password": "",
-            "publish_rtcm": True,  # Ensure RTCM messages are published
+            "mount_point": "BOTHWA",  # Case-sensitive!
+            "username": "jakek927@gmail.com",  # Replace with your actual email
+            "password": "none",  # Required but ignored
+            "publish_rtcm": True,  # Ensure RTCM corrections are published
         }
     ],
 )
