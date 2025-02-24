@@ -11,7 +11,7 @@ navsat_transform_node:
     world_frame: "map"
 
     # The robot's body frame (e.g., "base_link")
-    base_link_frame: "base_link"
+    base_link_frame: "zed_camera_link"
 
     # The coordinate frame that will be attached to the navsat transform
     # typically a new "gps" or "utm" or "odom" frame
