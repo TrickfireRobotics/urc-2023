@@ -9,22 +9,26 @@ ekf_filter_node:
 
     # IMU topic
     imu0: "/imu/data"
-    imu0_config: [false, false, false,  # x, y, z positions
-                  false, false, false,  # x, y, z velocities
-                  true,  true,  true,   # orientation
-                  false, false, false]  # angular velocities
+    imu0_config: [
+      false, false, false,   # x, y, z
+      true,  true,  true,    # roll, pitch, yaw (orientation)
+      false, false, false,   # x_vel, y_vel, z_vel (linear velocity)
+      true,  true,  true     # roll_vel, pitch_vel, yaw_vel (angular velocity)
+    ]
     imu0_differential: false
     imu0_queue_size: 5
 
-    # GPS topic
-    gps0: "/gps/fix"
-    gps0_config: [true,  true,  false,  # x, y, z positions (z is false if we trust alt less)
-                  false, false, false,  # x, y, z velocities
-                  false, false, false,  # orientation
-                  false, false, false]  # angular velocities
-    gps0_queue_size: 5
-
-    # Covariance
+    # Remove gravity from IMU data
     imu0_remove_gravitational_acceleration: true
 
-    # (Other advanced parameters like process_noise_covariance, etc.)
+    # GPS topic
+    gps0: "/gps/fix"
+    gps0_config: [
+      true,  true,  false,   # x, y, z positions
+      false, false, false,   # roll, pitch, yaw
+      false, false, false,   # linear velocity
+      false, false, false    # angular velocity
+    ]
+    gps0_queue_size: 5
+
+    # ...additional advanced params...
