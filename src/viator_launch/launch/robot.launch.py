@@ -53,6 +53,14 @@ sensor_processing_node = Node(
     package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
 )
 
+# Include the ZED camera launch file from zed_wrapper
+zed_launch = IncludeLaunchDescription(
+    PythonLaunchDescriptionSource(
+        os.path.join(get_package_share_directory("zed_wrapper"), "launch", "zed_camera.launch.py")
+    ),
+    launch_arguments={"camera_model": "zed2i", "composable_node": "False"}.items(),
+)
+
 gps_node = Node(
     package="ublox_gps",
     executable="ublox_gps_node",
@@ -70,6 +78,19 @@ gps_node = Node(
     ],
 )
 
+# Path to your navsat_transform config
+navsat_config_path = os.path.join(
+    get_package_share_directory("autonomous_nav"), "config", "navsat_transform.yaml"
+)
+
+navsat_transform = Node(
+    package="robot_localization",
+    executable="navsat_transform_node",
+    name="navsat_transform_node",
+    output="screen",
+    parameters=[navsat_config_path],  # Load config
+)
+
 # Path to your configuration YAML for localization ekf_node
 config_file_path = os.path.join(get_package_share_directory("autonomous_nav"), "config", "ekf.yaml")
 
@@ -83,16 +104,6 @@ ekf_node = Node(
 
 
 def generate_launch_description() -> launch.LaunchDescription:  # pylint: disable=invalid-name
-    # Include the ZED camera launch file from zed_wrapper
-    zed_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory("zed_wrapper"), "launch", "zed_camera.launch.py"
-            )
-        ),
-        launch_arguments={"camera_model": "zed2i", "composable_node": "False"}.items(),
-    )
-
     return launch.LaunchDescription(
         [
             can_moteus_node,
@@ -109,6 +120,7 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             launch_include,
             gps_node,
             zed_launch,
+            navsat_transform,
             ekf_node,
         ]
     )
