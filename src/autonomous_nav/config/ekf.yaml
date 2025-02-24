@@ -1,0 +1,30 @@
+ekf_filter_node:
+  ros__parameters:
+    frequency: 30.0
+    two_d_mode: false
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: map
+
+    # IMU topic
+    imu0: "/imu/data"
+    imu0_config: [false, false, false,  # x, y, z positions
+                  false, false, false,  # x, y, z velocities
+                  true,  true,  true,   # orientation
+                  false, false, false]  # angular velocities
+    imu0_differential: false
+    imu0_queue_size: 5
+
+    # GPS topic
+    gps0: "/gps/fix"
+    gps0_config: [true,  true,  false,  # x, y, z positions (z is false if we trust alt less)
+                  false, false, false,  # x, y, z velocities
+                  false, false, false,  # orientation
+                  false, false, false]  # angular velocities
+    gps0_queue_size: 5
+
+    # Covariance
+    imu0_remove_gravitational_acceleration: true
+
+    # (Other advanced parameters like process_noise_covariance, etc.)
