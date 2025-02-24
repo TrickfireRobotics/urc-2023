@@ -75,6 +75,8 @@ gps_node = Node(
             "enable_pps": True,  # Enable Pulse-Per-Second (PPS) if needed
             "tmode3": 1,
             # RTK/NTRIP settings (Local to your current location):
+            "publish_rtcm": True,  # Ensure RTCM messages are published
+            "rtcm_caster_timeout": 10,  # Allow some buffer for NTRIP timeout
             "rtcm_caster_address": "nrtkcors.ngs.noaa.gov",
             "rtcm_caster_port": 2101,
             "mount_point": "WACORS",
