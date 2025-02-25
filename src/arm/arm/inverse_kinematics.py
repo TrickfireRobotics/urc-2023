@@ -4,11 +4,11 @@ import time
 from enum import IntEnum
 
 import numpy as np
+import rclpy
 import roboticstoolbox as rtb
 import spatialgeometry as sg
 import spatialmath as sm
 from rclpy.node import Node
-import rclpy
 from roboticstoolbox import ERobot
 from std_msgs.msg import Float32
 
@@ -46,6 +46,8 @@ class InverseKinematics:
         self.state = IKState.ARRIVED
 
         self._ros_node = ros_node
+        ros_node.create_timer(0.02, self.runArmToTarget)
+
         self._interface = interface
         self._info = info
 
@@ -170,10 +172,15 @@ class InverseKinematics:
         self._ros_node.get_logger().info("emergency stopping")
 
     def runArmToTarget(self) -> None:
-        while not self.arrived:
+        if not self.arrived:
             self.stopAllMotors()
-            self._ros_node.get_logger().info("SHOULDER: " + str(self._info.getMotorState(MotorConfigs.ARM_SHOULDER_MOTOR).position))
-            self._ros_node.get_logger().info("ELBOW: " + str(self._info.getMotorState(MotorConfigs.ARM_ELBOW_MOTOR).position))
+            self._ros_node.get_logger().info(
+                "SHOULDER: "
+                + str(self._info.getMotorState(MotorConfigs.ARM_SHOULDER_MOTOR).position)
+            )
+            self._ros_node.get_logger().info(
+                "ELBOW: " + str(self._info.getMotorState(MotorConfigs.ARM_ELBOW_MOTOR).position)
+            )
             # set the joint angles
             self.setQ()
 
@@ -186,10 +193,10 @@ class InverseKinematics:
                 self.arrived = True
                 self.state = IKState.ARRIVED
                 self.stopAllMotors()
-                break
+                return
             elif self.state == IKState.ESTOP:
                 self.stopAllMotors()
-                break
+                return
             J = self.viator.jacobe(self.viator.q)
 
             self.viator.qd = np.linalg.pinv(J) @ v
