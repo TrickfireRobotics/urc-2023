@@ -8,6 +8,7 @@ import roboticstoolbox as rtb
 import spatialgeometry as sg
 import spatialmath as sm
 from rclpy.node import Node
+import rclpy
 from roboticstoolbox import ERobot
 from std_msgs.msg import Float32
 
@@ -52,16 +53,12 @@ class InverseKinematics:
             MotorConfigs.ARM_TURNTABLE_MOTOR,
             MotorConfigs.ARM_SHOULDER_MOTOR,
             MotorConfigs.ARM_ELBOW_MOTOR,
-            # MotorConfigs.ARM_LEFT_WRIST_MOTOR,
-            # MotorConfigs.ARM_RIGHT_WRIST_MOTOR,
         ]
 
         self.motorOffsetList = [
             0.0,
             0.0,
             0.0,
-            # 0.0,
-            # 0.0
         ]
 
         # setting these based on the assumption that when we initialize this class, the arm
@@ -70,8 +67,6 @@ class InverseKinematics:
             0.0,
             57.3,
             8.113,
-            # 0,
-            # 0,
         ]
 
         self.setArmOffsets()
@@ -157,11 +152,6 @@ class InverseKinematics:
         measuredAngle = self.getMeasuredMotorAngle(motor)
         return measuredAngle + self.motorOffsetList[motor]
 
-    def runMotorPosition(self, motor: int, targetDegrees: float) -> None:
-        targetRadians = targetDegrees * self.DEGREES_TO_RADIANS
-        motorConfig = self.motorConfigList[motor]
-        self._interface.runMotorPosition(motorConfig, targetRadians)
-
     def setQ(self) -> None:
         self.viator.q = np.array(
             [
@@ -181,7 +171,9 @@ class InverseKinematics:
 
     def runArmToTarget(self) -> None:
         while not self.arrived:
-
+            self.stopAllMotors()
+            self._ros_node.get_logger().info("SHOULDER: " + str(self._info.getMotorState(MotorConfigs.ARM_SHOULDER_MOTOR).position))
+            self._ros_node.get_logger().info("ELBOW: " + str(self._info.getMotorState(MotorConfigs.ARM_ELBOW_MOTOR).position))
             # set the joint angles
             self.setQ()
 
@@ -193,6 +185,7 @@ class InverseKinematics:
                 self._ros_node.get_logger().info("arrived at destination")
                 self.arrived = True
                 self.state = IKState.ARRIVED
+                self.stopAllMotors()
                 break
             elif self.state == IKState.ESTOP:
                 self.stopAllMotors()
@@ -245,7 +238,8 @@ class InverseKinematics:
                 self._interface.runMotorSpeed(
                     MotorConfigs.ARM_ELBOW_MOTOR, self.viator.qd[2] * self.DEGREES_TO_RADIANS
                 )
-                time.sleep(0.5)
+            time.sleep(1)
+            rclpy.spin_once(self._ros_node, timeout_sec=0.1)
 
     def stopAllMotors(self) -> None:
         self._interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
@@ -262,6 +256,12 @@ class InverseKinematics:
         self._ros_node.get_logger().info("Target x: " + str(self.target_x))
         self._ros_node.get_logger().info("Target y: " + str(self.target_y))
         self._ros_node.get_logger().info("Target z: " + str(self.target_z))
+        self.Tep = (
+            self.viator.fkine(self.viator.q)
+            * sm.SE3(self.target_x, self.target_y, self.target_z)
+            * sm.SE3.RPY([0, 0, 0], order="xyz")
+            * sm.SE3.Rz(90, unit="deg")
+        )
         self.runArmToTarget()
 
     def xDown(self, msg: Float32) -> None:
@@ -274,6 +274,12 @@ class InverseKinematics:
         self._ros_node.get_logger().info("Target x: " + str(self.target_x))
         self._ros_node.get_logger().info("Target y: " + str(self.target_y))
         self._ros_node.get_logger().info("Target z: " + str(self.target_z))
+        self.Tep = (
+            self.viator.fkine(self.viator.q)
+            * sm.SE3(self.target_x, self.target_y, self.target_z)
+            * sm.SE3.RPY([0, 0, 0], order="xyz")
+            * sm.SE3.Rz(90, unit="deg")
+        )
         self.runArmToTarget()
 
     def zUp(self, msg: Float32) -> None:
@@ -286,6 +292,12 @@ class InverseKinematics:
         self._ros_node.get_logger().info("Target x: " + str(self.target_x))
         self._ros_node.get_logger().info("Target y: " + str(self.target_y))
         self._ros_node.get_logger().info("Target z: " + str(self.target_z))
+        self.Tep = (
+            self.viator.fkine(self.viator.q)
+            * sm.SE3(self.target_x, self.target_y, self.target_z)
+            * sm.SE3.RPY([0, 0, 0], order="xyz")
+            * sm.SE3.Rz(90, unit="deg")
+        )
         self.runArmToTarget()
 
     def zDown(self, msg: Float32) -> None:
@@ -298,4 +310,10 @@ class InverseKinematics:
         self._ros_node.get_logger().info("Target x: " + str(self.target_x))
         self._ros_node.get_logger().info("Target y: " + str(self.target_y))
         self._ros_node.get_logger().info("Target z: " + str(self.target_z))
+        self.Tep = (
+            self.viator.fkine(self.viator.q)
+            * sm.SE3(self.target_x, self.target_y, self.target_z)
+            * sm.SE3.RPY([0, 0, 0], order="xyz")
+            * sm.SE3.Rz(90, unit="deg")
+        )
         self.runArmToTarget()
