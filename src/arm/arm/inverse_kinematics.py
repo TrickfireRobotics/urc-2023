@@ -1,5 +1,6 @@
 import math
 import os
+import time
 from enum import IntEnum
 
 import numpy as np
@@ -193,24 +194,24 @@ class InverseKinematics:
                 self.arrived = True
                 self.state = IKState.ARRIVED
                 break
-
+            elif self.state == IKState.ESTOP:
+                self.stopAllMotors()
+                break
             J = self.viator.jacobe(self.viator.q)
 
             self.viator.qd = np.linalg.pinv(J) @ v
 
             self._ros_node.get_logger().info("qd: " + str(self.viator.qd))
             self._ros_node.get_logger().info(
-                "turntable speed: " +
-                str(self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS),
+                "turntable speed: " + str(self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS),
             )
             self._ros_node.get_logger().info(
-                "shoulder speed: " +
-                str(self.viator.qd[1] * -1 * self.DEGREES_TO_RADIANS),
+                "shoulder speed: " + str(self.viator.qd[1] * -1 * self.DEGREES_TO_RADIANS),
             )
             self._ros_node.get_logger().info(
                 "elbow speed: " + str(self.viator.qd[2] * self.DEGREES_TO_RADIANS)
             )
-            
+
             # check if any of the velocities exceed cool number
             if abs(self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS) > 0.5:
                 self._ros_node.get_logger().info(
@@ -244,6 +245,7 @@ class InverseKinematics:
                 self._interface.runMotorSpeed(
                     MotorConfigs.ARM_ELBOW_MOTOR, self.viator.qd[2] * self.DEGREES_TO_RADIANS
                 )
+                time.sleep(0.5)
 
     def stopAllMotors(self) -> None:
         self._interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
@@ -257,15 +259,9 @@ class InverseKinematics:
         self.state = IKState.MOVING
         self.arrived = False
         self.target_x += 0.5
-        self._ros_node.get_logger().info(
-            "Target x: " + str(self.target_x)
-        )
-        self._ros_node.get_logger().info(
-            "Target y: " + str(self.target_y)
-        )
-        self._ros_node.get_logger().info(
-            "Target z: " + str(self.target_z)
-        )
+        self._ros_node.get_logger().info("Target x: " + str(self.target_x))
+        self._ros_node.get_logger().info("Target y: " + str(self.target_y))
+        self._ros_node.get_logger().info("Target z: " + str(self.target_z))
         self.runArmToTarget()
 
     def xDown(self, msg: Float32) -> None:
@@ -275,15 +271,9 @@ class InverseKinematics:
         self.state = IKState.MOVING
         self.arrived = False
         self.target_x -= 0.5
-        self._ros_node.get_logger().info(
-            "Target x: " + str(self.target_x)
-        )
-        self._ros_node.get_logger().info(
-            "Target y: " + str(self.target_y)
-        )
-        self._ros_node.get_logger().info(
-            "Target z: " + str(self.target_z)
-        )
+        self._ros_node.get_logger().info("Target x: " + str(self.target_x))
+        self._ros_node.get_logger().info("Target y: " + str(self.target_y))
+        self._ros_node.get_logger().info("Target z: " + str(self.target_z))
         self.runArmToTarget()
 
     def zUp(self, msg: Float32) -> None:
@@ -293,15 +283,9 @@ class InverseKinematics:
         self.state = IKState.MOVING
         self.arrived = False
         self.target_z += 0.5
-        self._ros_node.get_logger().info(
-            "Target x: " + str(self.target_x)
-        )
-        self._ros_node.get_logger().info(
-            "Target y: " + str(self.target_y)
-        )
-        self._ros_node.get_logger().info(
-            "Target z: " + str(self.target_z)
-        )
+        self._ros_node.get_logger().info("Target x: " + str(self.target_x))
+        self._ros_node.get_logger().info("Target y: " + str(self.target_y))
+        self._ros_node.get_logger().info("Target z: " + str(self.target_z))
         self.runArmToTarget()
 
     def zDown(self, msg: Float32) -> None:
@@ -311,13 +295,7 @@ class InverseKinematics:
         self.state = IKState.MOVING
         self.arrived = False
         self.target_x -= 0.5
-        self._ros_node.get_logger().info(
-            "Target x: " + str(self.target_x)
-        )
-        self._ros_node.get_logger().info(
-            "Target y: " + str(self.target_y)
-        )
-        self._ros_node.get_logger().info(
-            "Target z: " + str(self.target_z)
-        )
+        self._ros_node.get_logger().info("Target x: " + str(self.target_x))
+        self._ros_node.get_logger().info("Target y: " + str(self.target_y))
+        self._ros_node.get_logger().info("Target z: " + str(self.target_z))
         self.runArmToTarget()
