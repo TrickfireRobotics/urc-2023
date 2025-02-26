@@ -25,8 +25,7 @@ setup(
         "console_scripts": [
             "navigation_node = autonomous_nav.navigation_node:main",
             "sensor_processing_node = autonomous_nav.sensor_processing_node:main",
-            "control_node = autonomous_nav.control_node:main",
-            "localization_node = autonomous_nav.localization_node:main",
+            "gps_anchor_node = autonomous_nav.gps_anchor_node:main",
             "decision_making_node = autonomous_nav.decision_making_node:main",
         ],
     },

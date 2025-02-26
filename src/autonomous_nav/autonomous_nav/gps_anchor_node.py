@@ -1,7 +1,8 @@
 """
 Role: This script captures the first valid GPS fix (the "anchor" position)
 but waits 15 seconds from startup before accepting any fix.
-Once captured, it publishes the anchor lat/lon/alt on a transient local topic.
+Once captured, it publishes the anchor lat/lon/alt on a transient local topic
+so that any late subscribers still receive the message.
 
 Dependencies:
     - rclpy: ROS 2 client library for Python.
@@ -16,6 +17,7 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSHistoryPolicy
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float64MultiArray
+
 from lib.color_codes import ColorCodes, colorStr
 
 
@@ -29,6 +31,7 @@ class GpsAnchorNode(Node):
       - Captures the first valid fix after that 15s window.
       - Publishes the anchor lat/lon/alt on a transient local topic,
         ensuring late subscribers still receive the message.
+      - Only sets the anchor once; subsequent messages or time do not affect it.
     """
 
     def __init__(self) -> None:
@@ -40,7 +43,7 @@ class GpsAnchorNode(Node):
         self.anchor_lon = 0.0
         self.anchor_alt = 0.0
 
-        # Record the node's start time for the 15s warm-up
+        # Record the node's start time for the single 15s warm-up
         self.start_time = self.get_clock().now()
 
         # Set up subscriber for GPS
@@ -63,26 +66,33 @@ class GpsAnchorNode(Node):
         )
 
     def gpsCallback(self, msg: NavSatFix) -> None:
-        # If we've already set an anchor, do nothing
+        """
+        Callback for incoming GPS fixes on /fix.
+        Waits once for 15s to pass, then sets the anchor from the first valid fix.
+        """
+        # If we've already set an anchor, do nothing further
         if self.anchor_set:
             return
 
-        # Check how long it's been since startup
+        # Calculate how long it has been since node start
         time_passed = (self.get_clock().now() - self.start_time).nanoseconds / 1e9
         if time_passed < 15.0:
-            # Not yet 15 seconds, skip any fix
+            # Not yet 15 seconds, skip this fix
             return
 
-        # Now we are beyond 15s, check if there's a valid fix
-        if msg.status.status >= 0:
+        # Past the 15-second mark. Check if fix is valid
+        if msg.status.status >= 0:  # e.g., 0 = unaugmented fix, >0 = differential, etc.
             self.anchor_lat = msg.latitude
             self.anchor_lon = msg.longitude
             self.anchor_alt = msg.altitude
             self.anchor_set = True
 
             self.get_logger().info(
-                f"Anchor lat/lon set to: {self.anchor_lat:.6f}, {self.anchor_lon:.6f} "
-                f"(alt: {self.anchor_alt:.2f}) after {time_passed:.1f}s"
+                colorStr(
+                    f"Anchor lat/lon set to: {self.anchor_lat:.6f}, {self.anchor_lon:.6f} "
+                    f"(alt: {self.anchor_alt:.2f}) after {time_passed:.1f}s",
+                    ColorCodes.GREEN_OK,
+                )
             )
 
             # Publish the anchor as a Float64MultiArray [lat, lon, alt]
@@ -90,32 +100,34 @@ class GpsAnchorNode(Node):
             anchor_msg.data = [self.anchor_lat, self.anchor_lon, self.anchor_alt]
             self.anchor_pub.publish(anchor_msg)
 
-            # Optionally stop subscribing if you only want the first valid fix
+            # Optionally stop subscribing if only the first valid fix is desired
             self.destroy_subscription(self.gps_sub)
-            self.get_logger().info("Stopped GPS subscription after setting anchor.")
+            self.get_logger().info(
+                colorStr("Stopped GPS subscription after setting anchor.", ColorCodes.BLUE_OK)
+            )
 
 
 def main(args: list[str] | None = None) -> None:
     """
     Main function to initialize the rclpy context and run the GpsAnchorNode.
-
-    Args:
-        args (Optional[Any]): Command-line arguments passed to rclpy.init().
     """
     rclpy.init(args=args)
+    gps_anchor_node = None
     try:
         gps_anchor_node = GpsAnchorNode()
         rclpy.spin(gps_anchor_node)
     except KeyboardInterrupt:
         pass
     except ExternalShutdownException:
-        gps_anchor_node.get_logger().info(
-            colorStr("Shutting down gps anchor node", ColorCodes.BLUE_OK)
-        )
-        gps_anchor_node.destroy_node()
-        sys.exit(0)
+        if gps_anchor_node is not None:
+            gps_anchor_node.get_logger().info(
+                colorStr("Shutting down gps anchor node", ColorCodes.BLUE_OK)
+            )
     finally:
+        if gps_anchor_node is not None:
+            gps_anchor_node.destroy_node()
         rclpy.shutdown()
+        sys.exit(0)
 
 
 if __name__ == "__main__":
