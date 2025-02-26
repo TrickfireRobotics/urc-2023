@@ -8,6 +8,10 @@ Functionality:
 - Outputs data to the Decision Making and GPS Anchor Nodes as needed.
 - Detects large, close obstacles via the ZED stereo depth map.
 - Publishes obstacle data for the DecisionMakingNode to use.
+
+Adjustments to reduce false positives:
+- Decreases detection range to ~1.5m (5 feet).
+- Applies morphological filtering on the depth mask to ignore small clusters (e.g., tall grass).
 """
 
 import sys
@@ -81,7 +85,7 @@ class SensorProcessingNode(Node):
         # -------------------------------------------------
         #   Depth-based obstacle detection
         # -------------------------------------------------
-        # Subscribe to the ZED node's depth image (adjust topic name if needed)
+        # Subscribe to the ZED node's depth image
         self.depth_sub = self.create_subscription(
             Image, "/zed/zed_node/depth/depth_registered", self.obstacleDetection, 10
         )
@@ -97,9 +101,6 @@ class SensorProcessingNode(Node):
     def processCameraInfo(self, msg: CameraInfo) -> None:
         """
         Processes camera intrinsic parameters from /camera_info topic.
-
-        Args:
-            msg (CameraInfo): Camera intrinsic parameters message.
         """
         self.camera_matrix = np.array(msg.k, dtype=np.float64).reshape(3, 3)
         self.dist_coeffs = np.array(msg.d, dtype=np.float64)
@@ -110,43 +111,31 @@ class SensorProcessingNode(Node):
     def arucoMarkerDetection(self, msg: Image) -> None:
         """
         Processes the incoming camera image to detect ArUco markers.
-        Also draws markers and axes onto the image and displays the result.
-
-        Args:
-            msg (Image): ROS2 image message from the ZED 2i.
+        Draws markers and axes onto the image and displays the result (for debugging).
         """
         self.get_logger().debug("arucoMarkerDetection callback triggered.")
         if self.camera_matrix is None or self.dist_coeffs is None:
             self.get_logger().warning("Camera intrinsics not received yet. Skipping frame.")
             return
 
-        # Convert ROS image to OpenCV format
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-
-        # Convert to grayscale
         gray_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
 
-        # Initialize ArUco dictionary and detector
         aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
         parameters = aruco.DetectorParameters()
         aruco_detector = aruco.ArucoDetector(aruco_dict, parameters)
 
-        # Detect ArUco markers in the grayscale image
         corners, ids, _ = aruco_detector.detectMarkers(gray_image)
 
         if ids is not None and len(ids) > 0:
             self.get_logger().info(f"Detected ArUco markers: {ids.flatten()}")
-
-            # Estimate pose for each detected marker
             tag_size = 0.2  # meters
             rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(
                 corners, tag_size, self.camera_matrix, self.dist_coeffs
             )
 
-            # Draw the detected markers on the original image
             aruco.drawDetectedMarkers(cv_image, corners, ids)
 
-            # We'll define the 3D coordinates for a 0.2m marker (adjust if needed).
             half_size = tag_size / 2.0
             object_points = np.array(
                 [
@@ -161,8 +150,6 @@ class SensorProcessingNode(Node):
             for i in range(len(ids)):
                 marker_id = int(ids[i][0])
                 corners_2d = corners[i][0].astype(np.float32)
-
-                # Solve for pose with solvePnP
                 ret, rvec, tvec = cv2.solvePnP(
                     object_points,
                     corners_2d,
@@ -174,14 +161,12 @@ class SensorProcessingNode(Node):
                     self.get_logger().warning(f"SolvePnP failed for marker {marker_id}")
                     continue
 
-                # Draw axes with cv2.drawFrameAxes
                 axis_length = 0.1
                 cv2.drawFrameAxes(
                     cv_image, self.camera_matrix, self.dist_coeffs, rvec, tvec, axis_length, 2
                 )
 
                 pos_x, pos_y, pos_z = tvec.reshape(-1)
-                # Publish to /aruco_marker_data
                 marker_msg = Float32MultiArray()
                 marker_msg.data = [float(marker_id), pos_x, pos_y, pos_z]
                 self.aruco_pub.publish(marker_msg)
@@ -189,11 +174,10 @@ class SensorProcessingNode(Node):
                 self.get_logger().info(
                     f"Marker {marker_id}: Position -> x={pos_x:.3f}, y={pos_y:.3f}, z={pos_z:.3f}"
                 )
-
         else:
             self.get_logger().debug("No ArUco markers detected in this frame.")
 
-        # Scale and display for debugging
+        # Debug display (upscale)
         scale_factor = 6.0
         resized_image = cv2.resize(
             cv_image, None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_LINEAR
@@ -208,9 +192,6 @@ class SensorProcessingNode(Node):
     def processLidar(self, msg: LaserScan) -> None:
         """
         Processes lidar data and publishes a simple result (min distance).
-
-        Args:
-            msg (LaserScan): The raw lidar data.
         """
         self.get_logger().debug("processLidar callback triggered.")
         if not msg.ranges:
@@ -227,10 +208,9 @@ class SensorProcessingNode(Node):
     def obstacleDetection(self, depth_msg: Image) -> None:
         """
         Uses the ZED stereo depth map to detect large, close obstacles.
-        Publishes a boolean if an obstacle is detected, as well as obstacle details.
-
-        Args:
-            depth_msg (Image): ROS2 image message (32-bit float depth image).
+        Publishes:
+         - /obstacle_detected (Bool)
+         - /obstacle_info (Float32MultiArray)
         """
         if depth_msg.encoding not in ["32FC1", "16UC1"]:
             self.get_logger().warning(
@@ -244,62 +224,68 @@ class SensorProcessingNode(Node):
             self.get_logger().error(f"Failed to convert depth image: {e}")
             return
 
-        # Depth image is in meters (ZED typically publishes 32FC1).
-        # We want to find if there's an object taller than ~0.3m (1 foot)
-        # within ~3m range (10 feet ~ 3.05m). This is a simplistic approach.
+        # ---------------------------------------------------------
+        #    1) Threshold: Detect "close" obstacles within ~1.5m
+        # ---------------------------------------------------------
+        close_thresh = 1.5  # ~5 feet
+        mask_close = (depth_image > 0.0) & (depth_image < close_thresh)
 
-        # We'll do a naive approach: Check some region(s) of interest
-        # for depth values significantly less than 3m, forming a cluster
-        # that might indicate a tall obstacle. A real solution might do
-        # bounding box detection, morphological ops, or use the ZED SDK's
-        # object detection API. Here, we do a basic threshold approach.
+        # ---------------------------------------------------------
+        #    2) Morphological filtering to remove small patches
+        #       (e.g., grass, small rocks).
+        # ---------------------------------------------------------
+        # Convert to 8-bit mask for morphological ops
+        mask_uint8 = np.where(mask_close, 255, 0).astype(np.uint8)
 
-        # 1. Create a mask for "close" obstacles: depth < 3.0m
-        close_thresh = 3.0
-        # Because of 1-foot height requirement, we won't detect small bumps, but
-        # in a raw depth image, we don't have direct object height. We only check
-        # if something is close. (One could integrate the camera's angle or stereo
-        # geometry to estimate height from multiple points in the cluster.)
-        # For simplicity, let's assume if there are "enough" close pixels, it is
-        # large enough to be an obstacle.
+        # Use a small kernel to remove noise
+        kernel = np.ones((5, 5), np.uint8)
+        # 'Open' = erode then dilate => remove small bright regions (noise)
+        # 'Close' = dilate then erode => fill small holes.
+        # We'll do an 'open' to remove small patches, then a 'close' to fuse adjacent patches.
+        opened = cv2.morphologyEx(mask_uint8, cv2.MORPH_OPEN, kernel)
+        filtered_mask = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel)
 
-        close_mask = (depth_image > 0.0) & (depth_image < close_thresh)
-        num_close_pixels = np.count_nonzero(close_mask)
+        # Count how many "close" pixels remain after filtering
+        num_close_pixels = np.count_nonzero(filtered_mask)
 
-        # 2. Heuristic: If more than X% of the image is under 3m, we might have a big obstacle
+        # ---------------------------------------------------------
+        #    3) Decide if it's a 'large' obstacle
+        # ---------------------------------------------------------
         height, width = depth_image.shape
         total_pixels = height * width
-        threshold_percentage = 0.01  # 1% of image
-        self_detected = False
-
         if total_pixels == 0:
             self.get_logger().warning("Depth image has zero size.")
             return
 
+        # If more than 1% of the image is in the filtered mask, consider it an obstacle
+        threshold_percentage = 0.01
+        self_detected = False
+
         if (num_close_pixels / total_pixels) > threshold_percentage:
-            # We consider this an obstacle
             self_detected = True
 
-        # Publish a bool for obstacle detection
+        # Publish detection as a Bool
         self.obstacle_detected_pub.publish(Bool(data=self_detected))
 
-        # Additionally, we can publish some obstacle info
-        # (e.g., fraction of close pixels, average distance of the "close" area)
+        # ---------------------------------------------------------
+        #    4) Publish additional info
+        # ---------------------------------------------------------
         obstacle_data = Float32MultiArray()
-
         if self_detected:
-            # Compute average distance of the close pixels
-            avg_close_distance = float(np.mean(depth_image[close_mask]))
+            # Compute average distance over 'filtered_mask' area
+            close_pixels = depth_image[filtered_mask == 255]
+            avg_close_distance = float(np.mean(close_pixels)) if close_pixels.size > 0 else 0.0
+
             obstacle_data.data = [
                 1.0,  # 1 means we found an obstacle
                 avg_close_distance,
                 float(num_close_pixels),
             ]
             self.get_logger().info(
-                f"Obstacle detected. Average distance ~ {avg_close_distance:.2f} m"
+                f"Obstacle detected within {close_thresh:.1f}m. Avg distance ~ {avg_close_distance:.2f} m"
             )
         else:
-            obstacle_data.data = [0.0, 0.0, 0.0]  # No obstacle
+            obstacle_data.data = [0.0, 0.0, 0.0]
 
         self.obstacle_info_pub.publish(obstacle_data)
 
@@ -307,29 +293,30 @@ class SensorProcessingNode(Node):
 def main(args: list[str] | None = None) -> None:
     """
     Main function to initialize the rclpy context and run the SensorProcessingNode.
-
-    Args:
-        args (Optional[Any]): Command-line arguments passed to rclpy.init().
     """
     rclpy.init(args=args)
-    sensor_processing_node = SensorProcessingNode()
-
+    sensor_processing_node = None
     try:
+        sensor_processing_node = SensorProcessingNode()
         rclpy.spin(sensor_processing_node)
     except KeyboardInterrupt:
-        sensor_processing_node.get_logger().info("Keyboard interrupt received. Shutting down...")
-    except ExternalShutdownException:
-        sensor_processing_node.get_logger().info(
-            colorStr(
-                "External shutdown requested. Shutting down sensor_processing_node",
-                ColorCodes.BLUE_OK,
+        if sensor_processing_node is not None:
+            sensor_processing_node.get_logger().info(
+                "Keyboard interrupt received. Shutting down..."
             )
-        )
+    except ExternalShutdownException:
+        if sensor_processing_node is not None:
+            sensor_processing_node.get_logger().info(
+                colorStr(
+                    "External shutdown requested. Shutting down sensor_processing_node",
+                    ColorCodes.BLUE_OK,
+                )
+            )
     finally:
-        cv2.destroyAllWindows()
-        sensor_processing_node.destroy_node()
+        if sensor_processing_node is not None:
+            cv2.destroyAllWindows()
+            sensor_processing_node.destroy_node()
         rclpy.shutdown()
-        # Not forcibly calling sys.exit(0). Let the normal shutdown proceed.
 
 
 if __name__ == "__main__":
