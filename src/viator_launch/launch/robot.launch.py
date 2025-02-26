@@ -39,12 +39,11 @@ launch_include = IncludeLaunchDescription(
 )
 
 # Autonomous navigation nodes
-control_node = Node(package="autonomous_nav", executable="control_node", name="control_node")
 decision_making_node = Node(
     package="autonomous_nav", executable="decision_making_node", name="decision_making_node"
 )
-localization_node = Node(
-    package="autonomous_nav", executable="localization_node", name="localization_node"
+gps_anchor_node = Node(
+    package="autonomous_nav", executable="gps_anchor_node", name="gps_anchor_node"
 )
 navigation_node = Node(
     package="autonomous_nav", executable="navigation_node", name="navigation_node"
@@ -133,9 +132,8 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             arm_node,
             heartbeat_node,
             camera_node,
-            control_node,
             decision_making_node,
-            localization_node,
+            gps_anchor_node,
             navigation_node,
             sensor_processing_node,
             launch_include,

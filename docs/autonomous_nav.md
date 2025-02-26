@@ -21,25 +21,21 @@ The Autonomous Navigation Package (`src/autonomous_nav/`) consists of all high-l
 **Functionality:**
 
 - Subscribe to images and process for obstacle & object recognition with OpenCV.
-- Outputs data to the Decision Making and Localization Nodes as needed.
+- Outputs data to the Decision Making and GPS Anchor Nodes as needed.
 
 **_Optional:_** split camera processing and other sensor processing (Lidar, etc.) into separate nodes
 
-### Control Node
+### GPS Anchor Node
 
-**Role**: Controls rover actuation (movement commands).
+**Role**: Sets the anchor point for the rover from the initial GPS fix.
 
-**Functionality**: Constructs & executes actuation commands using information from the Navigation and Decision Making Nodes, handling speed, orientation, and stopping.
+**Functionality**:
 
-- Only accept processed command signals to minimize node complexity
-
-### Localization Node
-
-**Role**: Tracks the rover’s position using GNSS, IMU, or other localization sensors.
-
-**Functionality**: Integrates data from the sensor suite, excluding object detection camera data.
-
-- May need to incorporate sensor fusion between GNSS & IMUs.
+- Subscribes to the /fix topic (GPS).
+- Ignores any fixes for 15s after startup to allow GPS to stabilize.
+- Captures the first valid fix after that 15s window.
+- Publishes the anchor lat/lon/alt on a transient local topic, ensuring late subscribers still receive the message.
+- Only sets the anchor once; subsequent messages or time do not affect it.
 
 ### Decision Making Node
 
@@ -47,7 +43,7 @@ The Autonomous Navigation Package (`src/autonomous_nav/`) consists of all high-l
 
 **Functionality**:
 
-- Receives inputs from Navigation, Sensor Processing, and Localization.
+- Receives inputs from Navigation and Sensor Processing.
 - Makes decisions on stopping, rerouting, or changing navigation based on sensor or localization feedback.
 
 **_Optional:_** May need to break decision types into submodules if it becomes complex. Examples:
