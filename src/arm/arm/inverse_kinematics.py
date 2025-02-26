@@ -46,7 +46,6 @@ class InverseKinematics:
         self.state = IKState.ARRIVED
 
         self._ros_node = ros_node
-        ros_node.create_timer(0.02, self.runArmToTarget)
 
         self._interface = interface
         self._info = info
@@ -125,6 +124,8 @@ class InverseKinematics:
 
         self.e_stop_sub = ros_node.create_subscription(Float32, "e_stop", self.eStop, 10)
 
+        ros_node.create_timer(0.5, self.runArmToTarget)
+
     def setArmOffsets(self) -> None:
         for motorConfig in range(len(self.motorConfigList)):
             self.motorOffsetList[motorConfig] = self.motorStartingAngles[
@@ -186,7 +187,7 @@ class InverseKinematics:
 
             # check if arrived and get target velocity of end effector
             v, arrived = rtb.p_servo(
-                self.viator.fkine(self.viator.q), self.Tep, gain=1, threshold=0.05
+                self.viator.fkine(self.viator.q), self.Tep, gain=1, threshold=0.5
             )
             if arrived:
                 self._ros_node.get_logger().info("arrived at destination")
@@ -245,8 +246,8 @@ class InverseKinematics:
                 self._interface.runMotorSpeed(
                     MotorConfigs.ARM_ELBOW_MOTOR, self.viator.qd[2] * self.DEGREES_TO_RADIANS
                 )
-            time.sleep(1)
-            rclpy.spin_once(self._ros_node, timeout_sec=0.1)
+            # time.sleep(1)
+            # rclpy.spin_once(self._ros_node, timeout_sec=0.1)
 
     def stopAllMotors(self) -> None:
         self._interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
@@ -269,7 +270,7 @@ class InverseKinematics:
             * sm.SE3.RPY([0, 0, 0], order="xyz")
             * sm.SE3.Rz(90, unit="deg")
         )
-        self.runArmToTarget()
+        # self.runArmToTarget()
 
     def xDown(self, msg: Float32) -> None:
         if self.state == IKState.MOVING or not self.can_send:
@@ -287,7 +288,7 @@ class InverseKinematics:
             * sm.SE3.RPY([0, 0, 0], order="xyz")
             * sm.SE3.Rz(90, unit="deg")
         )
-        self.runArmToTarget()
+        # self.runArmToTarget()
 
     def zUp(self, msg: Float32) -> None:
         if self.state == IKState.MOVING or not self.can_send:
@@ -295,7 +296,7 @@ class InverseKinematics:
             return
         self.state = IKState.MOVING
         self.arrived = False
-        self.target_z += 0.5
+        self.target_z += 1
         self._ros_node.get_logger().info("Target x: " + str(self.target_x))
         self._ros_node.get_logger().info("Target y: " + str(self.target_y))
         self._ros_node.get_logger().info("Target z: " + str(self.target_z))
@@ -305,7 +306,7 @@ class InverseKinematics:
             * sm.SE3.RPY([0, 0, 0], order="xyz")
             * sm.SE3.Rz(90, unit="deg")
         )
-        self.runArmToTarget()
+        # self.runArmToTarget()
 
     def zDown(self, msg: Float32) -> None:
         if self.state == IKState.MOVING or not self.can_send:
@@ -323,4 +324,4 @@ class InverseKinematics:
             * sm.SE3.RPY([0, 0, 0], order="xyz")
             * sm.SE3.Rz(90, unit="deg")
         )
-        self.runArmToTarget()
+        # self.runArmToTarget()
