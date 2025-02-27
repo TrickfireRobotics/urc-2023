@@ -89,7 +89,7 @@ class NavigationNode(Node):
                 colorStr(
                     f"Anchor received. ref_lat={self.ref_lat:.6f}, "
                     f"ref_lon={self.ref_lon:.6f}, ref_alt={self.ref_alt:.2f}",
-                    ColorCodes.YELLOW_WARN,
+                    ColorCodes.BLUE_OK,
                 )
             )
 
@@ -110,7 +110,7 @@ class NavigationNode(Node):
         self.get_logger().info(
             colorStr(
                 f"New lat/lon goal received: lat={lat:.6f}, lon={lon:.6f} => (x={x:.2f}, y={y:.2f})",
-                ColorCodes.YELLOW_WARN,
+                ColorCodes.BLUE_OK,
             )
         )
 
@@ -216,8 +216,6 @@ def main(args: list[str] | None = None) -> None:
     except ExternalShutdownException:
         node.get_logger().info(colorStr("External shutdown request received", ColorCodes.BLUE_OK))
     finally:
-        # IMPORTANT: Do NOT call sys.exit(0) here.
-        # Keep the node alive unless user forcibly stops it or the launch ends.
         node.destroy_node()
         rclpy.shutdown()
 
