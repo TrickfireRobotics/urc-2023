@@ -9,9 +9,10 @@ Functionality:
 - Detects large, close obstacles via the ZED stereo depth map.
 - Publishes obstacle data for the DecisionMakingNode to use.
 
-Adjustments to reduce false positives:
-- Decreases detection range to ~1.5m (5 feet).
-- Applies morphological filtering on the depth mask to ignore small clusters (e.g., tall grass).
+Adjustments for reduced sensitivity:
+- Ignores the bottom 25% of the depth image (ground region).
+- Uses stronger morphological ops (9x9 kernel) to filter small patches.
+- Maintains a ~1.5m detection range threshold.
 """
 
 import sys
@@ -43,7 +44,7 @@ class SensorProcessingNode(Node):
         camera_info_sub (Subscription): ROS 2 subscription for camera intrinsics.
         aruco_pub (Publisher): Publishes ArUco marker data (ID and position).
         lidar_sub (Subscription): ROS 2 subscription for the lidar data.
-        processed_pub (Publisher): Publishes processed sensor data (example: min lidar distance).
+        processed_pub (Publisher): Publishes processed sensor data (e.g. min lidar distance).
         bridge (CvBridge): For converting ROS images to OpenCV images.
         camera_matrix (Optional[np.ndarray]): Camera intrinsic matrix from /camera_info.
         dist_coeffs (Optional[np.ndarray]): Distortion coefficients from /camera_info.
@@ -85,11 +86,9 @@ class SensorProcessingNode(Node):
         # -------------------------------------------------
         #   Depth-based obstacle detection
         # -------------------------------------------------
-        # Subscribe to the ZED node's depth image
         self.depth_sub = self.create_subscription(
             Image, "/zed/zed_node/depth/depth_registered", self.obstacleDetection, 10
         )
-        # Publishers for obstacle detection
         self.obstacle_detected_pub = self.create_publisher(Bool, "/obstacle_detected", 10)
         self.obstacle_info_pub = self.create_publisher(Float32MultiArray, "/obstacle_info", 10)
 
@@ -224,65 +223,66 @@ class SensorProcessingNode(Node):
             self.get_logger().error(f"Failed to convert depth image: {e}")
             return
 
-        # ---------------------------------------------------------
-        #    1) Threshold: Detect "close" obstacles within ~1.5m
-        # ---------------------------------------------------------
-        close_thresh = 1.5  # ~5 feet
-        mask_close = (depth_image > 0.0) & (depth_image < close_thresh)
-
-        # ---------------------------------------------------------
-        #    2) Morphological filtering to remove small patches
-        #       (e.g., grass, small rocks).
-        # ---------------------------------------------------------
-        # Convert to 8-bit mask for morphological ops
-        mask_uint8 = np.where(mask_close, 255, 0).astype(np.uint8)
-
-        # Use a small kernel to remove noise
-        kernel = np.ones((5, 5), np.uint8)
-        # 'Open' = erode then dilate => remove small bright regions (noise)
-        # 'Close' = dilate then erode => fill small holes.
-        # We'll do an 'open' to remove small patches, then a 'close' to fuse adjacent patches.
-        opened = cv2.morphologyEx(mask_uint8, cv2.MORPH_OPEN, kernel)
-        filtered_mask = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel)
-
-        # Count how many "close" pixels remain after filtering
-        num_close_pixels = np.count_nonzero(filtered_mask)
-
-        # ---------------------------------------------------------
-        #    3) Decide if it's a 'large' obstacle
-        # ---------------------------------------------------------
         height, width = depth_image.shape
-        total_pixels = height * width
-        if total_pixels == 0:
+        if height == 0 or width == 0:
             self.get_logger().warning("Depth image has zero size.")
             return
 
-        # If more than 1% of the image is in the filtered mask, consider it an obstacle
-        threshold_percentage = 0.01
+        # ---------------------------------------------------------
+        # 1) Exclude the bottom portion (e.g., 25%) to ignore ground
+        #    bounding region [0 : 0.75*height, 0 : width]
+        # ---------------------------------------------------------
+        roi_top = 0
+        roi_bottom = int(0.75 * height)
+        roi = depth_image[roi_top:roi_bottom, :]
+
+        # ---------------------------------------------------------
+        # 2) Threshold: "close" obstacles within ~1.5m
+        # ---------------------------------------------------------
+        close_thresh = 1.5  # ~5 feet
+        mask_close = (roi > 0.0) & (roi < close_thresh)
+
+        # ---------------------------------------------------------
+        # 3) Morphological filtering to remove small patches.
+        #    Increased kernel size to 9x9 for stronger filtering.
+        # ---------------------------------------------------------
+        mask_uint8 = np.where(mask_close, 255, 0).astype(np.uint8)
+        kernel = np.ones((9, 9), np.uint8)
+
+        opened = cv2.morphologyEx(mask_uint8, cv2.MORPH_OPEN, kernel)
+        filtered_mask = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel)
+
+        num_close_pixels = np.count_nonzero(filtered_mask)
+        total_pixels_roi = filtered_mask.size
+
+        # ---------------------------------------------------------
+        # 4) Decide if it's a 'large' obstacle
+        # ---------------------------------------------------------
+        threshold_percentage = 0.01  # 1%
         self_detected = False
 
-        if (num_close_pixels / total_pixels) > threshold_percentage:
+        if total_pixels_roi > 0 and (num_close_pixels / total_pixels_roi) > threshold_percentage:
             self_detected = True
 
-        # Publish detection as a Bool
+        # Publish detection
         self.obstacle_detected_pub.publish(Bool(data=self_detected))
 
         # ---------------------------------------------------------
-        #    4) Publish additional info
+        # 5) Publish additional info
         # ---------------------------------------------------------
         obstacle_data = Float32MultiArray()
         if self_detected:
-            # Compute average distance over 'filtered_mask' area
-            close_pixels = depth_image[filtered_mask == 255]
+            # Map mask back to the full image coordinate to compute actual average distance
+            close_pixels = roi[filtered_mask == 255]
             avg_close_distance = float(np.mean(close_pixels)) if close_pixels.size > 0 else 0.0
 
             obstacle_data.data = [
-                1.0,  # 1 means we found an obstacle
+                1.0,  # means an obstacle is detected
                 avg_close_distance,
                 float(num_close_pixels),
             ]
             self.get_logger().info(
-                f"Obstacle detected within {close_thresh:.1f}m. Avg distance ~ {avg_close_distance:.2f} m"
+                f"Obstacle within {close_thresh:.1f}m. ~{avg_close_distance:.2f}m average distance."
             )
         else:
             obstacle_data.data = [0.0, 0.0, 0.0]
