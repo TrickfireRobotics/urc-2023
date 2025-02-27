@@ -1,18 +1,11 @@
 """
 Role: This script defines the sensor processing node, responsible for processing all sensor data, 
-primarily camera images, for object and obstacle detection. Data is published in a format suitable 
-for other nodes.
+including object detection in the ZED stereo depth map, while ignoring the rover's wheel and ground.
 
 Functionality:
-- Subscribe to images and process for obstacle & object recognition with OpenCV.
-- Outputs data to the Decision Making and GPS Anchor Nodes as needed.
-- Detects large, close obstacles via the ZED stereo depth map.
-- Publishes obstacle data for the DecisionMakingNode to use.
-
-Adjustments for reduced sensitivity:
-- Ignores the bottom 25% of the depth image (ground region).
-- Uses stronger morphological ops (9x9 kernel) to filter small patches.
-- Maintains a ~1.5m detection range threshold.
+- Applies morphological filtering and bounding regions to exclude outer 25% (wheel) and bottom 25% 
+  (ground).
+- Publishes an obstacle detection boolean and additional info for the DecisionMakingNode.
 """
 
 import sys
@@ -36,35 +29,26 @@ class SensorProcessingNode(Node):
     """
     A ROS 2 node for processing sensor data.
 
-    This node subscribes to raw sensor data, processes it, and publishes the
-    processed results to other nodes for use in decision-making and control.
-
-    Attributes:
-        image_sub (Subscription): ROS 2 subscription for the camera image topic.
-        camera_info_sub (Subscription): ROS 2 subscription for camera intrinsics.
-        aruco_pub (Publisher): Publishes ArUco marker data (ID and position).
-        lidar_sub (Subscription): ROS 2 subscription for the lidar data.
-        processed_pub (Publisher): Publishes processed sensor data (e.g. min lidar distance).
-        bridge (CvBridge): For converting ROS images to OpenCV images.
-        camera_matrix (Optional[np.ndarray]): Camera intrinsic matrix from /camera_info.
-        dist_coeffs (Optional[np.ndarray]): Distortion coefficients from /camera_info.
-
-        depth_sub (Subscription): ROS 2 subscription for the depth image (stereo camera).
-        obstacle_detected_pub (Publisher): Publishes a Bool indicating if a large obstacle is detected.
-        obstacle_info_pub (Publisher): Publishes Float32MultiArray with obstacle details.
+    This node:
+        - Subscribes to camera images for ArUco detection.
+        - Subscribes to a depth image from the ZED stereo camera for obstacle detection.
+        - Excludes outer 25% horizontally (wheels) and bottom 25% vertically (ground).
+        - Uses morphological filtering to reduce false positives from grass or small objects.
+        - Publishes a bool (/obstacle_detected) and additional info (/obstacle_info).
     """
 
     def __init__(self) -> None:
         super().__init__("sensor_processing_node")
         self.get_logger().info("Initializing sensor_processing_node...")
 
-        # -------------------------------------------------
-        #   ZED 2i camera data (color + intrinsics)
-        # -------------------------------------------------
+        # OpenCV bridge for converting ROS images
         self.bridge = CvBridge()
+
+        # Camera intrinsics
         self.camera_matrix: Optional[np.ndarray] = None
         self.dist_coeffs: Optional[np.ndarray] = None
 
+        # Subscribe to color image + camera info
         self.image_sub = self.create_subscription(
             Image, "/zed/zed_node/rgb/image_rect_color", self.arucoMarkerDetection, 10
         )
@@ -72,35 +56,28 @@ class SensorProcessingNode(Node):
             CameraInfo, "/zed/zed_node/rgb/camera_info", self.processCameraInfo, 10
         )
 
-        # -------------------------------------------------
-        #   ArUco marker detection publisher
-        # -------------------------------------------------
+        # Publisher for ArUco marker data
         self.aruco_pub = self.create_publisher(Float32MultiArray, "/aruco_marker_data", 10)
 
-        # -------------------------------------------------
-        #   LIDAR data
-        # -------------------------------------------------
+        # Subscribe to LIDAR
         self.lidar_sub = self.create_subscription(LaserScan, "/lidar_scan", self.processLidar, 10)
         self.processed_pub = self.create_publisher(Float32, "/processed_data", 10)
 
-        # -------------------------------------------------
-        #   Depth-based obstacle detection
-        # -------------------------------------------------
+        # Subscribe to ZED depth image
         self.depth_sub = self.create_subscription(
             Image, "/zed/zed_node/depth/depth_registered", self.obstacleDetection, 10
         )
+
+        # Obstacle detection publishers
         self.obstacle_detected_pub = self.create_publisher(Bool, "/obstacle_detected", 10)
         self.obstacle_info_pub = self.create_publisher(Float32MultiArray, "/obstacle_info", 10)
 
         self.get_logger().info("sensor_processing_node is up and running, waiting for data...")
 
     # --------------------------------------------------------------------------
-    #   Camera / Intrinsics
+    #   processCameraInfo
     # --------------------------------------------------------------------------
     def processCameraInfo(self, msg: CameraInfo) -> None:
-        """
-        Processes camera intrinsic parameters from /camera_info topic.
-        """
         self.camera_matrix = np.array(msg.k, dtype=np.float64).reshape(3, 3)
         self.dist_coeffs = np.array(msg.d, dtype=np.float64)
 
@@ -109,8 +86,7 @@ class SensorProcessingNode(Node):
     # --------------------------------------------------------------------------
     def arucoMarkerDetection(self, msg: Image) -> None:
         """
-        Processes the incoming camera image to detect ArUco markers.
-        Draws markers and axes onto the image and displays the result (for debugging).
+        Basic ArUco detection. (Unchanged from previous)
         """
         self.get_logger().debug("arucoMarkerDetection callback triggered.")
         if self.camera_matrix is None or self.dist_coeffs is None:
@@ -123,7 +99,6 @@ class SensorProcessingNode(Node):
         aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
         parameters = aruco.DetectorParameters()
         aruco_detector = aruco.ArucoDetector(aruco_dict, parameters)
-
         corners, ids, _ = aruco_detector.detectMarkers(gray_image)
 
         if ids is not None and len(ids) > 0:
@@ -133,8 +108,8 @@ class SensorProcessingNode(Node):
                 corners, tag_size, self.camera_matrix, self.dist_coeffs
             )
 
+            # Draw markers
             aruco.drawDetectedMarkers(cv_image, corners, ids)
-
             half_size = tag_size / 2.0
             object_points = np.array(
                 [
@@ -176,7 +151,7 @@ class SensorProcessingNode(Node):
         else:
             self.get_logger().debug("No ArUco markers detected in this frame.")
 
-        # Debug display (upscale)
+        # Debug display
         scale_factor = 6.0
         resized_image = cv2.resize(
             cv_image, None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_LINEAR
@@ -186,11 +161,11 @@ class SensorProcessingNode(Node):
         cv2.waitKey(1)
 
     # --------------------------------------------------------------------------
-    #   Lidar Processing
+    #   processLidar
     # --------------------------------------------------------------------------
     def processLidar(self, msg: LaserScan) -> None:
         """
-        Processes lidar data and publishes a simple result (min distance).
+        Publishes min lidar distance as an example.
         """
         self.get_logger().debug("processLidar callback triggered.")
         if not msg.ranges:
@@ -202,14 +177,12 @@ class SensorProcessingNode(Node):
         self.processed_pub.publish(Float32(data=min_distance))
 
     # --------------------------------------------------------------------------
-    #   Depth-based Obstacle Detection
+    #   obstacleDetection
     # --------------------------------------------------------------------------
     def obstacleDetection(self, depth_msg: Image) -> None:
         """
         Uses the ZED stereo depth map to detect large, close obstacles.
-        Publishes:
-         - /obstacle_detected (Bool)
-         - /obstacle_info (Float32MultiArray)
+        Excludes the outer 25% of the width (wheel region) and bottom 25% (ground).
         """
         if depth_msg.encoding not in ["32FC1", "16UC1"]:
             self.get_logger().warning(
@@ -228,61 +201,49 @@ class SensorProcessingNode(Node):
             self.get_logger().warning("Depth image has zero size.")
             return
 
-        # ---------------------------------------------------------
-        # 1) Exclude the bottom portion (e.g., 25%) to ignore ground
-        #    bounding region [0 : 0.75*height, 0 : width]
-        # ---------------------------------------------------------
+        # 1) Define region of interest:
+        #    - Skip bottom 25% to avoid ground
+        #    - Skip left/right 25% to avoid wheels
         roi_top = 0
         roi_bottom = int(0.75 * height)
-        roi = depth_image[roi_top:roi_bottom, :]
+        roi_left = int(0.25 * width)
+        roi_right = int(0.75 * width)
 
-        # ---------------------------------------------------------
-        # 2) Threshold: "close" obstacles within ~1.5m
-        # ---------------------------------------------------------
-        close_thresh = 1.5  # ~5 feet
+        roi = depth_image[roi_top:roi_bottom, roi_left:roi_right]
+        roi_h, roi_w = roi.shape
+
+        # 2) Threshold for "close" obstacles within ~1.5m
+        close_thresh = 1.5  # about 5 feet
         mask_close = (roi > 0.0) & (roi < close_thresh)
 
-        # ---------------------------------------------------------
-        # 3) Morphological filtering to remove small patches.
-        #    Increased kernel size to 9x9 for stronger filtering.
-        # ---------------------------------------------------------
+        # 3) Morphological filtering
         mask_uint8 = np.where(mask_close, 255, 0).astype(np.uint8)
+        # Use a 9x9 kernel for strong noise removal
         kernel = np.ones((9, 9), np.uint8)
-
         opened = cv2.morphologyEx(mask_uint8, cv2.MORPH_OPEN, kernel)
         filtered_mask = cv2.morphologyEx(opened, cv2.MORPH_CLOSE, kernel)
 
         num_close_pixels = np.count_nonzero(filtered_mask)
-        total_pixels_roi = filtered_mask.size
+        total_pixels_roi = roi_h * roi_w
 
-        # ---------------------------------------------------------
-        # 4) Decide if it's a 'large' obstacle
-        # ---------------------------------------------------------
-        threshold_percentage = 0.01  # 1%
+        # 4) Check if more than 1% of ROI is "close"
+        threshold_percentage = 0.01
         self_detected = False
-
         if total_pixels_roi > 0 and (num_close_pixels / total_pixels_roi) > threshold_percentage:
             self_detected = True
 
-        # Publish detection
+        # Publish detection result
         self.obstacle_detected_pub.publish(Bool(data=self_detected))
 
-        # ---------------------------------------------------------
-        # 5) Publish additional info
-        # ---------------------------------------------------------
+        # 5) Publish obstacle info
         obstacle_data = Float32MultiArray()
         if self_detected:
-            # Map mask back to the full image coordinate to compute actual average distance
             close_pixels = roi[filtered_mask == 255]
             avg_close_distance = float(np.mean(close_pixels)) if close_pixels.size > 0 else 0.0
 
-            obstacle_data.data = [
-                1.0,  # means an obstacle is detected
-                avg_close_distance,
-                float(num_close_pixels),
-            ]
+            obstacle_data.data = [1.0, avg_close_distance, float(num_close_pixels)]
             self.get_logger().info(
-                f"Obstacle within {close_thresh:.1f}m. ~{avg_close_distance:.2f}m average distance."
+                f"Obstacle in ROI. ~{avg_close_distance:.2f}m average distance. ROI used: {roi_w}x{roi_h}"
             )
         else:
             obstacle_data.data = [0.0, 0.0, 0.0]
@@ -291,9 +252,6 @@ class SensorProcessingNode(Node):
 
 
 def main(args: list[str] | None = None) -> None:
-    """
-    Main function to initialize the rclpy context and run the SensorProcessingNode.
-    """
     rclpy.init(args=args)
     sensor_processing_node = None
     try:
