@@ -28,6 +28,8 @@ from std_msgs.msg import Float32, Float32MultiArray, Bool
 
 # YOLO from ultralytics (pip install ultralytics)
 from ultralytics import YOLO
+import fiftyone.zoo as foz
+import fiftyone as fo
 
 from lib.color_codes import ColorCodes, colorStr
 
@@ -57,12 +59,18 @@ class SensorProcessingNode(Node):
         self.camera_matrix: Optional[np.ndarray] = None
         self.dist_coeffs: Optional[np.ndarray] = None
 
-        # --------------------------------------------------
-        #  Load YOLO model (pretrained, e.g. 'yolov8n.pt')
-        # --------------------------------------------------
-        # The default YOLOv8n model is small and covers 80 COCO classes.
-        # We'll filter for "bottle" & "sports ball" or "baseball bat."
-        self.model = YOLO("yolov8n.pt")  # download auto if not present
+        # Load a YOLOv8 model from FiftyOne Model Zoo, focusing on "bottle" + "hammer"
+        # For a quick test, you might lower or raise confidence_thresh as needed
+        self.model = foz.load_zoo_model(
+            "ultralytics/yolov8s",  # You can try 'ultralytics/yolov8m', etc.
+            classes=["bottle", "hammer"],  # only detect these classes
+            confidence_thresh=0.3,
+        )
+
+        # Subscribe the same camera feed to the new callback
+        self.yolo_sub = self.create_subscription(
+            Image, "/zed/zed_node/rgb/image_rect_color", self.fiftyOneYoloDetectionCallback, 10
+        )
 
         # --------------------------------------------------
         #  Subscriptions
@@ -106,52 +114,47 @@ class SensorProcessingNode(Node):
     # --------------------------------------------------------------------------
     #   yoloObjectDetectionCallback
     # --------------------------------------------------------------------------
-    def yoloObjectDetectionCallback(self, msg: Image) -> None:
+
+    def fiftyOneYoloDetectionCallback(self, msg: Image) -> None:
         """
-        Runs YOLO inference on each frame to detect approximate classes for
-        a water bottle -> "bottle"
-        an orange mallet -> e.g., "sports ball" or "baseball bat" in COCO
-        Then draws bounding boxes in a window "YOLO Object Detection."
+        Uses a YOLOv8 model loaded from FiftyOne's Model Zoo to detect "bottle" and "hammer".
+        Draws bounding boxes in a new OpenCV window.
         """
+        # Convert ROS Image to OpenCV BGR
         try:
             frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
         except Exception as e:
             self.get_logger().error(f"Failed to convert image for YOLO detection: {e}")
             return
 
-        # YOLO inference with default confidence threshold
-        results = self.model.predict(source=frame, conf=0.2)
+        # Run inference via FiftyOne model
+        predictions = self.model.predict(frame)
+        # predictions is a fiftyone.core.labels.Detections object
 
-        if len(results) > 0:
-            # YOLOv8 returns a list of results; we take the first (single image)
-            detections = results[0].boxes  # bounding boxes
-            class_names = results[0].names  # {0: 'person', 1: 'bicycle', 39: 'bottle', etc.}
+        # Parse each detection's bounding box
+        for detection in predictions.detections:
+            label = detection.label  # e.g. "bottle" or "hammer"
+            confidence = detection.confidence  # float confidence
+            x, y, w, h = detection.bounding_box
+            # bounding_box is normalized [0..1], so convert to pixel coords
+            frame_h, frame_w = frame.shape[:2]
+            x1 = int(x * frame_w)
+            y1 = int(y * frame_h)
+            x2 = int((x + w) * frame_w)
+            y2 = int((y + h) * frame_h)
 
-            for det in detections:
-                cls_id = int(det.cls[0].item())  # class index
-                label = class_names[cls_id] if cls_id in class_names else f"cls{cls_id}"
-                conf_score = float(det.conf[0].item())
-                print(f"Detected class = {label}, conf = {conf_score}")
+            # Choose color by label (optional)
+            if label.lower() == "bottle":
+                color = (255, 255, 255)  # white
+            else:
+                color = (0, 165, 255)  # orange for "hammer" (aka mallet)
 
-                # We'll watch for "bottle" or "sports ball" or "baseball bat"
-                # The default COCO classes are: "bottle", "sports ball", "baseball bat"
-                # that might approximate your orange mallet
-                if label.lower() in ["bottle", "sports ball", "baseball bat"]:
-                    # bounding box coords
-                    x1, y1, x2, y2 = det.xyxy[0]
-                    x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+            # Draw bounding box + label
+            cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+            text = f"{label} {confidence:.2f}"
+            cv2.putText(frame, text, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
 
-                    # pick color by label (optional)
-                    if label.lower() == "bottle":
-                        color = (255, 255, 255)
-                    else:
-                        color = (0, 165, 255)  # orange-ish
-
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-                    text = f"{label} {conf_score:.2f}"
-                    cv2.putText(frame, text, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
-
-        # Display YOLO results
+        # Display window
         scale_factor = 2.0
         disp = cv2.resize(
             frame, None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_LINEAR
