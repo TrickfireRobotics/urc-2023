@@ -120,7 +120,7 @@ class SensorProcessingNode(Node):
             return
 
         # YOLO inference with default confidence threshold
-        results = self.model.predict(source=frame, conf=0.5)
+        results = self.model.predict(source=frame, conf=0.2)
 
         if len(results) > 0:
             # YOLOv8 returns a list of results; we take the first (single image)
@@ -131,6 +131,7 @@ class SensorProcessingNode(Node):
                 cls_id = int(det.cls[0].item())  # class index
                 label = class_names[cls_id] if cls_id in class_names else f"cls{cls_id}"
                 conf_score = float(det.conf[0].item())
+                print(f"Detected class = {label}, conf = {conf_score}")
 
                 # We'll watch for "bottle" or "sports ball" or "baseball bat"
                 # The default COCO classes are: "bottle", "sports ball", "baseball bat"
