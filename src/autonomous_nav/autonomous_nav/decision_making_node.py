@@ -86,9 +86,9 @@ class DecisionMakingNode(Node):
 
     def navStatusCallback(self, msg: String) -> None:
         self.navigation_status = msg.data
-        self.get_logger().info(
-            colorStr(f"Navigation Status: {self.navigation_status}", ColorCodes.YELLOW_WARN)
-        )
+        # self.get_logger().info(
+        #     colorStr(f"Navigation Status: {self.navigation_status}", ColorCodes.YELLOW_WARN)
+        # )
 
     def navFeedbackCallback(self, msg: Pose2D) -> None:
         self.nav_feedback = msg

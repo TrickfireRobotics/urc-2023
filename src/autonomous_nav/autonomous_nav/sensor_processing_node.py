@@ -74,7 +74,7 @@ class SensorProcessingNode(Node):
             return
 
         # Predict with YOLO
-        results = self.model(frame, conf=0.2)[0]  # Run detection on the frame
+        results = self.model(frame, conf=0.1)[0]  # Run detection on the frame
 
         # Get frame dimensions
         frame_h, frame_w = frame.shape[:2]
