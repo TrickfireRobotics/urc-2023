@@ -14,7 +14,7 @@ setup(
         (os.path.join("share", package_name, "launch"), glob("launch/*.py")),
         (os.path.join("share", package_name, "config"), glob("config/*.yaml")),
     ],
-    install_requires=["setuptools"],
+    install_requires=["setuptools", "ultralytics"],
     zip_safe=True,
     maintainer="Trickfire / Jake Kemple",
     maintainer_email="jakek927@uw.edu",
