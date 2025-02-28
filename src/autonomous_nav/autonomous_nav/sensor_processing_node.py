@@ -21,21 +21,22 @@ class SensorProcessingNode(Node):
       - ArUco marker detection
       - Depth-based obstacle ignoring wheels/ground
       - LIDAR min-distance
-      - Pretrained YOLOv8 object detection for "Hammer" + "Bottle"
+      - Custom object detection for "Hammer" + "Bottle" using YOLO World
     """
 
     def __init__(self) -> None:
         super().__init__("sensor_processing_node")
 
-        self.get_logger().info("Initializing sensor_processing_node with YOLOv8 detection...")
+        self.get_logger().info("Initializing sensor_processing_node with YOLO World detection...")
 
         self.bridge = CvBridge()
         self.camera_matrix: Optional[np.ndarray] = None
         self.dist_coeffs: Optional[np.ndarray] = None
 
         # ----------------------------------------------------------------------
-        # Load a valid YOLOv8 detection model trained on COCO dataset
-        self.model = YOLO("yolov8m.pt")  # Use "yolov8m.pt" or "yolov8s.pt" for faster inference
+        # Load a YOLO World model for custom object detection
+        self.model = YOLO("yolov8l-world.pt")  # Use YOLO World model
+        self.model.set_classes(["hammer", "bottle"])  # Define custom objects
 
         # ----------------------------------------------------------------------
         # Subscriptions
@@ -46,12 +47,12 @@ class SensorProcessingNode(Node):
             CameraInfo, "/zed/zed_node/rgb/camera_info", self.processCameraInfo, 10
         )
 
-        # Object Detection with YOLOv8
+        # Object Detection with YOLO World
         self.yolo_sub = self.create_subscription(
             Image, "/zed/zed_node/rgb/image_rect_color", self.yoloDetectionCallback, 10
         )
 
-        self.get_logger().info("sensor_processing_node is up and running with YOLOv8.")
+        self.get_logger().info("sensor_processing_node is up and running with YOLO World.")
 
     # --------------------------------------------------------------------------
     #   processCameraInfo
@@ -61,20 +62,20 @@ class SensorProcessingNode(Node):
         self.dist_coeffs = np.array(msg.d, dtype=np.float64)
 
     # --------------------------------------------------------------------------
-    #   YOLOv8 Object Detection
+    #   YOLO World Object Detection
     # --------------------------------------------------------------------------
     def yoloDetectionCallback(self, msg: Image) -> None:
         """
-        Runs a YOLOv8 detection model on the camera feed.
+        Runs YOLO World detection on the camera feed.
         """
         try:
             frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
         except Exception as e:
-            self.get_logger().error(f"Failed to convert image for YOLOv8 detection: {e}")
+            self.get_logger().error(f"Failed to convert image for YOLO World detection: {e}")
             return
 
-        # Predict with YOLO
-        results = self.model(frame, conf=0.1)[0]  # Run detection on the frame
+        # Predict with YOLO World
+        results = self.model(frame, conf=0.3)[0]  # Adjust confidence threshold if needed
 
         # Get frame dimensions
         frame_h, frame_w = frame.shape[:2]
@@ -82,23 +83,25 @@ class SensorProcessingNode(Node):
         # Filter results for "hammer" and "bottle"
         for det in results.boxes.data:
             x1, y1, x2, y2, confidence, class_idx = det.tolist()
-            label = self.model.names[int(class_idx)]  # Get class name from YOLO model
+            label = self.model.names[int(class_idx)]  # Get detected object name
             confidence = float(confidence)
 
-            if label.lower() in ["hammer", "bottle"]:
-                # Pick color
-                color = (255, 255, 255) if label.lower() == "bottle" else (0, 165, 255)
+            if confidence < 0.3:  # Adjust confidence threshold if needed
+                continue
 
-                # Draw bounding box
-                cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
-                text = f"{label} {confidence:.2f}"
-                cv2.putText(
-                    frame, text, (int(x1), int(y1) - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2
-                )
+            # Pick color
+            color = (255, 255, 255) if label.lower() == "bottle" else (0, 165, 255)
+
+            # Draw bounding box
+            cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
+            text = f"{label} {confidence:.2f}"
+            cv2.putText(
+                frame, text, (int(x1), int(y1) - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2
+            )
 
         # Display result
         disp = cv2.resize(frame, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
-        cv2.imshow("YOLOv8 Detection", disp)
+        cv2.imshow("YOLO World Detection", disp)
         cv2.waitKey(1)
 
     # --------------------------------------------------------------------------
