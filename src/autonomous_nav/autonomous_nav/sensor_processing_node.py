@@ -4,17 +4,16 @@ including:
   - ArUco detection (unchanged)
   - LIDAR min-distance reading (unchanged)
   - Depth-based obstacle detection ignoring wheels/ground (unchanged)
-  - New YOLO-based detection for approximate "water bottle" (COCO label "bottle") 
-    and "orange mallet" (COCO label "sports ball" or "baseball bat").
+  - New YOLO-based detection for classes "bottle" and "hammer" 
+    (the latter used as an orange mallet stand-in).
 
-Uses a pretrained YOLO model from ultralytics (yolov8n.pt) for a quick demonstration.
+Uses FiftyOne's Model Zoo to load a YOLOv8s model restricted to these classes.
 """
 
 import sys
 import math
 import numpy as np
 import cv2  # pylint: disable=no-member
-from cv_bridge import CvBridge
 from cv2 import aruco
 from typing import Optional
 
@@ -22,12 +21,12 @@ import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 
-# ROS messages
 from sensor_msgs.msg import Imu, LaserScan, Image, CameraInfo
 from std_msgs.msg import Float32, Float32MultiArray, Bool
 
-# YOLO from ultralytics (pip install ultralytics)
-from ultralytics import YOLO
+from cv_bridge import CvBridge
+
+# 1) Make sure you have:  pip install fiftyone[all] ultralytics
 import fiftyone.zoo as foz
 import fiftyone as fo
 
@@ -44,36 +43,37 @@ class SensorProcessingNode(Node):
         ignoring wheels & ground
       - LIDAR min-distance
     New:
-      - YOLO-based detection for classes:
-          "bottle" -> water bottle
-          "sports ball" (or "baseball bat") -> orange mallet
+      - YOLO-based detection via FiftyOne:
+          classes=["bottle", "hammer"]
+          => "bottle" ~ water bottle, "hammer" ~ mallet
 
-    We draw bounding boxes on the camera feed with YOLO in a new window "YOLO Object Detection."
+    We draw bounding boxes on the camera feed with YOLO in a new window "FiftyOne YOLO Detection."
     """
 
     def __init__(self) -> None:
         super().__init__("sensor_processing_node")
-        self.get_logger().info("Initializing sensor_processing_node with YOLO demo...")
+
+        self.get_logger().info(
+            "Initializing sensor_processing_node with FiftyOne YOLO integration..."
+        )
 
         self.bridge = CvBridge()
         self.camera_matrix: Optional[np.ndarray] = None
         self.dist_coeffs: Optional[np.ndarray] = None
 
-        # Load a YOLOv8 model from FiftyOne Model Zoo, focusing on "bottle" + "hammer"
-        # For a quick test, you might lower or raise confidence_thresh as needed
+        # --------------------------------------------------
+        # Load YOLOv8s from FiftyOne Model Zoo
+        # restricting to classes ["bottle", "hammer"]
+        # If the default confidence_thresh is too high/low, adjust it here
         self.model = foz.load_zoo_model(
-            "ultralytics/yolov8s",  # You can try 'ultralytics/yolov8m', etc.
-            classes=["bottle", "hammer"],  # only detect these classes
-            confidence_thresh=0.3,
-        )
-
-        # Subscribe the same camera feed to the new callback
-        self.yolo_sub = self.create_subscription(
-            Image, "/zed/zed_node/rgb/image_rect_color", self.fiftyOneYoloDetectionCallback, 10
+            "ultralyticsv8",  # The base name recognized by the FiftyOne Model Zoo
+            model_name="yolov8s",  # The YOLOv8 variant you want
+            classes=["bottle", "hammer"],  # Only these two classes
+            confidence_thresh=0.2,
         )
 
         # --------------------------------------------------
-        #  Subscriptions
+        #  Subscriptions & Publishers
         # --------------------------------------------------
         # 1) ArUco detection
         self.image_sub = self.create_subscription(
@@ -83,9 +83,9 @@ class SensorProcessingNode(Node):
             CameraInfo, "/zed/zed_node/rgb/camera_info", self.processCameraInfo, 10
         )
 
-        # 2) YOLO-based detection
+        # 2) YOLO-based detection w/ FiftyOne
         self.yolo_sub = self.create_subscription(
-            Image, "/zed/zed_node/rgb/image_rect_color", self.yoloObjectDetectionCallback, 10
+            Image, "/zed/zed_node/rgb/image_rect_color", self.fiftyOneYoloDetectionCallback, 10
         )
 
         # 3) LIDAR
@@ -99,7 +99,7 @@ class SensorProcessingNode(Node):
         self.obstacle_detected_pub = self.create_publisher(Bool, "/obstacle_detected", 10)
         self.obstacle_info_pub = self.create_publisher(Float32MultiArray, "/obstacle_info", 10)
 
-        # ArUco publisher
+        # ArUco detection publisher
         self.aruco_pub = self.create_publisher(Float32MultiArray, "/aruco_marker_data", 10)
 
         self.get_logger().info("sensor_processing_node is up and running.")
@@ -112,55 +112,56 @@ class SensorProcessingNode(Node):
         self.dist_coeffs = np.array(msg.d, dtype=np.float64)
 
     # --------------------------------------------------------------------------
-    #   yoloObjectDetectionCallback
+    #   fiftyOneYoloDetectionCallback
     # --------------------------------------------------------------------------
-
     def fiftyOneYoloDetectionCallback(self, msg: Image) -> None:
         """
-        Uses a YOLOv8 model loaded from FiftyOne's Model Zoo to detect "bottle" and "hammer".
-        Draws bounding boxes in a new OpenCV window.
+        Uses FiftyOne's YOLO model integration to detect "bottle" and "hammer"
+        bounding boxes in the camera feed. We assume "hammer" stands in for your mallet.
+        Draws bounding boxes in a new OpenCV window "FiftyOne YOLO Detection."
         """
-        # Convert ROS Image to OpenCV BGR
         try:
             frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
         except Exception as e:
             self.get_logger().error(f"Failed to convert image for YOLO detection: {e}")
             return
 
-        # Run inference via FiftyOne model
+        # Perform detection with FiftyOne model
+        # This returns a fiftyone.core.labels.Detections object
         predictions = self.model.predict(frame)
-        # predictions is a fiftyone.core.labels.Detections object
 
         # Parse each detection's bounding box
-        for detection in predictions.detections:
-            label = detection.label  # e.g. "bottle" or "hammer"
-            confidence = detection.confidence  # float confidence
-            x, y, w, h = detection.bounding_box
-            # bounding_box is normalized [0..1], so convert to pixel coords
+        for det in predictions.detections:
+            label = det.label  # e.g. "bottle" or "hammer"
+            confidence = det.confidence
+            # bounding_box is [x, y, w, h], normalized in [0..1]
+            x, y, w, h = det.bounding_box
             frame_h, frame_w = frame.shape[:2]
+
+            # Convert to pixel coords
             x1 = int(x * frame_w)
             y1 = int(y * frame_h)
             x2 = int((x + w) * frame_w)
             y2 = int((y + h) * frame_h)
 
-            # Choose color by label (optional)
+            # Choose color
             if label.lower() == "bottle":
-                color = (255, 255, 255)  # white
+                color = (255, 255, 255)
             else:
-                color = (0, 165, 255)  # orange for "hammer" (aka mallet)
+                color = (0, 165, 255)  # orange-ish for "hammer"
 
             # Draw bounding box + label
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
             text = f"{label} {confidence:.2f}"
             cv2.putText(frame, text, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
 
-        # Display window
+        # Display results in a new window
         scale_factor = 2.0
         disp = cv2.resize(
             frame, None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_LINEAR
         )
-        cv2.namedWindow("YOLO Object Detection", cv2.WINDOW_NORMAL)
-        cv2.imshow("YOLO Object Detection", disp)
+        cv2.namedWindow("FiftyOne YOLO Detection", cv2.WINDOW_NORMAL)
+        cv2.imshow("FiftyOne YOLO Detection", disp)
         cv2.waitKey(1)
 
     # --------------------------------------------------------------------------
@@ -185,9 +186,8 @@ class SensorProcessingNode(Node):
 
         if ids is not None and len(ids) > 0:
             self.get_logger().info(f"Detected ArUco markers: {ids.flatten()}")
-            # If you do pose estimation, etc. keep your existing logic here.
-
-        # (Optional: display the ArUco detection result in another window)
+            # If you do pose estimation, keep that logic here
+        # Could draw markers or debug display
 
     # --------------------------------------------------------------------------
     #   processLidar
@@ -208,7 +208,6 @@ class SensorProcessingNode(Node):
     def obstacleDetection(self, depth_msg: Image) -> None:
         """
         Depth-based obstacle detection ignoring outer 25% (wheels) + bottom 25% (ground).
-        (Unchanged from original)
         """
         if depth_msg.encoding not in ["32FC1", "16UC1"]:
             self.get_logger().warning(
