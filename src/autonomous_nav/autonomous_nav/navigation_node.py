@@ -156,7 +156,7 @@ class NavigationNode(Node):
     # ----------------------
     def publishStatus(self, msg: str) -> None:
         self.status_pub.publish(String(data=msg))
-        self.get_logger().info(colorStr(msg, ColorCodes.GREEN_OK))
+        # self.get_logger().info(colorStr(msg, ColorCodes.GREEN_OK))
 
     def publishFeedback(self, gx: float, gy: float) -> None:
         dx = gx - self.current_position[0]
