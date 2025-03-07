@@ -7,6 +7,8 @@ import math
 from dataclasses import dataclass, field
 from typing import Any
 
+import myactuator_rmd_py as rmd
+
 
 @dataclass(frozen=True, kw_only=True)
 class MotorConfig:
@@ -99,7 +101,26 @@ class MotorConfigs:
     A constants class that contains motor constants.
     """
 
-    TEST_RMD = RMDx8MotorConfig(can_id=1, config={"Test": 0})
+    TEST_RMD = RMDx8MotorConfig(
+        can_id=1,
+        config={
+            "reducer_ratio": rmd.actuator_constants.X8V2.reducer_ratio,
+            "rated_speed": rmd.actuator_constants.X8V2.rated_speed,
+            "rated_current": rmd.actuator_constants.X8V2.rated_current,
+            "rated_power": rmd.actuator_constants.X8V2.rated_power,
+            "rated_torque": rmd.actuator_constants.X8V2.rated_torque,
+            "torque_constant": rmd.actuator_constants.X8V2.torque_constant,
+            "rotor_inertia": rmd.actuator_constants.X8V2.rotor_inertia,
+            "current_ki": 0.00,  # example value
+            "current_kp": 0.00,  # example value
+            "speed_ki": 0.00,  # example value
+            "speed_kp": 0.00,  # example value
+            "position_ki": 0.00,  # example value
+            "position_kp": 0.00,  # example value
+            "max_torque": 10.0,  # example max torque
+            "max_velocity": 10.0,  # example max velocity
+        },
+    )
 
     # Drivebase
     REAR_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(
