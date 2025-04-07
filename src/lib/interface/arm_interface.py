@@ -50,17 +50,16 @@ class ArmInterface:
             The FeedForward adjustment for the motors.
         """
         if self.target_elbow is not None and self.target_shoulder is not None:
-            if self.torque_elbow is not None and self.torque_shoulder is not None:
-                self.feedforward = 0.0
+            self.feedforward = 0.0
 
-                self._interface.runMotor(
-                    motor,
-                    MoteusRunSettings(
-                        position=target_radians * RADIANS_TO_REVS,
-                        feedforward_torque=self.feedforward,
-                        set_stop=False,
-                    ),
-                )
+            self._interface.runMotor(
+                motor,
+                MoteusRunSettings(
+                    position=target_radians * RADIANS_TO_REVS,
+                    feedforward_torque=self.feedforward,
+                    set_stop=False,
+                ),
+            )
 
     def runArmShoulderMotorPosition(self, motor: MoteusMotorConfig, target_radians: float) -> None:
         """
@@ -76,28 +75,27 @@ class ArmInterface:
             The FeedForward adjustment for the motors.
         """
         if self.target_elbow is not None and self.target_shoulder is not None:
-            if self.torque_elbow is not None and self.torque_shoulder is not None:
-                self.shoulder_position = self.target_shoulder * -REVS_TO_RADIANS
-                self.elbow_position = self.target_elbow * -REVS_TO_RADIANS
+            self.shoulder_position = self.target_shoulder * -REVS_TO_RADIANS
+            self.elbow_position = self.target_elbow * -REVS_TO_RADIANS
 
-                if (
-                    self.shoulder_position > math.pi
-                    and self.shoulder_position - self.elbow_position > math.pi
-                ):
-                    self.feedforward = (19.53 * (math.cos(self.shoulder_position))) + 0.15 * (
-                        math.cos(self.shoulder_position - self.elbow_position)
-                    )
-
-                else:
-                    self.feedforward = (19.53 * (math.cos(self.shoulder_position))) - 0.15 * (
-                        math.cos(self.shoulder_position - self.elbow_position)
-                    )
-
-                self._interface.runMotor(
-                    motor,
-                    MoteusRunSettings(
-                        position=target_radians * RADIANS_TO_REVS,
-                        feedforward_torque=self.feedforward,
-                        set_stop=False,
-                    ),
+            if (
+                self.shoulder_position > math.pi
+                and self.shoulder_position - self.elbow_position > math.pi
+            ):
+                self.feedforward = (19.53 * (math.cos(self.shoulder_position))) + 0.15 * (
+                    math.cos(self.shoulder_position - self.elbow_position)
                 )
+
+            else:
+                self.feedforward = (19.53 * (math.cos(self.shoulder_position))) - 0.15 * (
+                    math.cos(self.shoulder_position - self.elbow_position)
+                )
+
+            self._interface.runMotor(
+                motor,
+                MoteusRunSettings(
+                    position=target_radians * RADIANS_TO_REVS,
+                    feedforward_torque=self.feedforward,
+                    set_stop=False,
+                ),
+            )
