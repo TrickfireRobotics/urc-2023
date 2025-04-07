@@ -1,6 +1,6 @@
 """
 This module just contains the ArmInterface class. It provides utility functions to interact with
-motors on the arm. 
+motors on the arm.
 """
 
 import math
@@ -27,9 +27,9 @@ class ArmInterface:
         self.target_shoulder = self._info.getMotorState(MotorConfigs.ARM_SHOULDER_MOTOR).position
         self.target_elbow = self._info.getMotorState(MotorConfigs.ARM_ELBOW_MOTOR).position
         self._interface = interface
-        self.torque_elbow = self._info.getMotorState(MotorConfigs.ARM_ELBOW_MOTOR).torque
-        self.torque_shoulder = self._info.getMotorState(MotorConfigs.ARM_SHOULDER_MOTOR).torque
         self.feedforward = 0.0
+        self.shoulder_position = 0.0
+        self.elbow_position = 0.0
 
         for motor_config in MotorConfigs.getAllMotors():
             self._publishers[motor_config.can_id] = self._ros_node.create_publisher(
@@ -51,33 +51,7 @@ class ArmInterface:
         """
         if self.target_elbow is not None and self.target_shoulder is not None:
             if self.torque_elbow is not None and self.torque_shoulder is not None:
-                if self.target_shoulder < 0.0 and self.target_shoulder > -0.25:
-                    self.feedforward = (
-                        (56.14025 * (math.cos(self.target_elbow)))
-                        - (30.13 * (math.cos(self.target_shoulder)))
-                        - (self.torque_elbow - self.torque_shoulder)
-                    )
-
-                if self.target_shoulder < -0.25 and self.target_shoulder > -0.50:
-                    self.feedforward = (
-                        (56.14025 * (math.cos(self.target_elbow)))
-                        - (30.13 * (math.cos(self.target_shoulder)))
-                        - (self.torque_elbow - self.torque_shoulder)
-                    )
-
-                if self.target_shoulder < -0.50 and self.target_shoulder > -0.75:
-                    self.feedforward = (
-                        (56.14025 * (math.sin(self.target_elbow)))
-                        - (30.13 * (math.cos(self.target_shoulder)))
-                        + (self.torque_elbow - self.torque_shoulder)
-                    )
-
-                if self.target_shoulder < -0.75 and self.target_shoulder > 0.0:
-                    self.feedforward = (
-                        (56.14025 * (math.sin(self.target_elbow)))
-                        - (30.13 * (math.cos(self.target_shoulder)))
-                        - (self.torque_elbow - self.torque_shoulder)
-                    )
+                self.feedforward = 0.0
 
                 self._interface.runMotor(
                     motor,
@@ -103,53 +77,20 @@ class ArmInterface:
         """
         if self.target_elbow is not None and self.target_shoulder is not None:
             if self.torque_elbow is not None and self.torque_shoulder is not None:
-                if self.target_shoulder < 0.0 and self.target_shoulder > -0.25:
-                    self.feedforward = (
-                        (30.13 * (math.cos(self.target_shoulder)))
-                        - (
-                            9.5
-                            * (
-                                5.9095 * (math.cos(self.target_elbow))
-                                + 15.065 * (math.cos(self.target_shoulder))
-                            )
-                        )
-                        - (self.torque_elbow - self.torque_shoulder)
+                self.shoulder_position = self.target_shoulder * -REVS_TO_RADIANS
+                self.elbow_position = self.target_elbow * -REVS_TO_RADIANS
+
+                if (
+                    self.shoulder_position > math.pi
+                    and self.shoulder_position - self.elbow_position > math.pi
+                ):
+                    self.feedforward = (19.53 * (math.cos(self.shoulder_position))) + 0.15 * (
+                        math.cos(self.shoulder_position - self.elbow_position)
                     )
 
-                if self.target_shoulder < -0.25 and self.target_shoulder > -0.50:
-                    self.feedforward = (
-                        (30.13 * (math.cos(self.target_shoulder)))
-                        - (
-                            9.5
-                            * (
-                                7.5325 * (math.cos(self.target_shoulder))
-                                - 5.9095 * (math.cos(self.target_elbow))
-                            )
-                        )
-                        + (self.torque_elbow - self.torque_shoulder)
-                    )
-
-                if self.target_shoulder < -0.50 and self.target_shoulder > -0.75:
-                    self.feedforward = (
-                        (30.13 * (math.cos(self.target_shoulder)))
-                        + (
-                            9.5
-                            * (
-                                15.065 * (math.cos(self.target_shoulder))
-                                - (5.9095 * (math.sin(self.target_elbow)))
-                            )
-                        )
-                        + (self.torque_elbow - self.torque_shoulder)
-                    )
-
-                if self.target_shoulder < -0.75 and self.target_shoulder > 0.0:
-                    self.feedforward = (
-                        (30.13 * (math.cos(self.target_shoulder)))
-                        + (
-                            9.5 * (5.9095 * (math.sin(self.target_elbow)))
-                            + (15.065 * (math.cos(self.target_shoulder)))
-                        )
-                        - (self.torque_elbow - self.torque_shoulder)
+                else:
+                    self.feedforward = (19.53 * (math.cos(self.shoulder_position))) - 0.15 * (
+                        math.cos(self.shoulder_position - self.elbow_position)
                     )
 
                 self._interface.runMotor(
