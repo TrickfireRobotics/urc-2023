@@ -2,6 +2,7 @@ from rclpy.node import Node
 from std_msgs.msg import Float32
 
 from lib.configs import MotorConfigs
+from lib.interface.arm_interface import ArmInterface
 from lib.interface.robot_interface import RobotInterface
 
 
@@ -9,9 +10,10 @@ class IndividualControlVel:
     WRIST_VEL = 0.3
     VEL = 1.0
 
-    def __init__(self, ros_node: Node, interface: RobotInterface):
+    def __init__(self, ros_node: Node, interface: RobotInterface, arm_interface: ArmInterface):
         self._ros_node = ros_node
         self.bot_interface = interface
+        self.arm_interface = arm_interface
 
         self.can_send = False
 
@@ -148,7 +150,9 @@ class IndividualControlVel:
 
         if data > 0:
             self._ros_node.get_logger().info("Shoulder up" + str(data))
-            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_SHOULDER_MOTOR, -self.VEL)
+            self.arm_interface.runArmShoulderMotorVelocity(
+                MotorConfigs.ARM_SHOULDER_MOTOR, -self.VEL
+            )
 
         else:
             self._ros_node.get_logger().info("Shoulder STOP")
@@ -162,7 +166,9 @@ class IndividualControlVel:
 
         if data > 0:
             self._ros_node.get_logger().info("Shoulder down" + str(data))
-            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_SHOULDER_MOTOR, self.VEL)
+            self.arm_interface.runArmShoulderMotorVelocity(
+                MotorConfigs.ARM_SHOULDER_MOTOR, self.VEL
+            )
 
         else:
             self._ros_node.get_logger().info("Shoulder STOP")
