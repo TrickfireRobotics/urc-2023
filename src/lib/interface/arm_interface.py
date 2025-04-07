@@ -36,7 +36,7 @@ class ArmInterface:
                 String, motor_config.getInterfaceTopicName(), 10
             )
 
-    def runArmElbowMotorPosition(self, motor: MoteusMotorConfig, target_radians: float) -> None:
+    def runArmElbowMotorPosition(self, motor: MoteusMotorConfig, target_velocity: float) -> None:
         """
         Runs the specified motor to reach the specified position.
 
@@ -55,13 +55,13 @@ class ArmInterface:
             self._interface.runMotor(
                 motor,
                 MoteusRunSettings(
-                    position=target_radians * RADIANS_TO_REVS,
+                    velocity=target_velocity,
                     feedforward_torque=self.feedforward,
                     set_stop=False,
                 ),
             )
 
-    def runArmShoulderMotorPosition(self, motor: MoteusMotorConfig, target_radians: float) -> None:
+    def runArmShoulderMotorPosition(self, motor: MoteusMotorConfig, target_velocity: float) -> None:
         """
         Runs the specified motor to reach the specified position.
 
@@ -94,7 +94,7 @@ class ArmInterface:
             self._interface.runMotor(
                 motor,
                 MoteusRunSettings(
-                    position=target_radians * RADIANS_TO_REVS,
+                    velocity=target_velocity,
                     feedforward_torque=self.feedforward,
                     set_stop=False,
                 ),
