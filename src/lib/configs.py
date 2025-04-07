@@ -140,6 +140,9 @@ class MotorConfigs:
         can_id=1,
         config={
             "servo.max_voltage": 56.0,
+            "servo.pid_position.kp": 500.0,
+            "servo.pid_position.ki": 0.0,
+            "servo.pid_position.kd": 0.0,
             "servopos.position_min": math.nan,
             "servopos.position_max": math.nan,
         },
