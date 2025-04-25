@@ -18,6 +18,6 @@ setup(
     license="TODO: License declaration",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": ["myMotherboardDriver = motherboard_driver.mb_driver:main"],
+        "console_scripts": ["motherboard_driver = motherboard_driver.mb_driver:main"],
     },
 )
