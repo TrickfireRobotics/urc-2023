@@ -26,6 +26,8 @@ heartbeat_node = Node(package="heartbeat", executable="heartbeat", name="heartbe
 # To include it in the startup, add it to the array in the generate_launch_description() method
 example_node = Node(package="example_node", executable="myExampleNode", name="my_example_node")
 
+mbd_node = Node(package="motherboard_driver", executable="myMotherboardDriver", name="mbd_node")
+
 launch_include = IncludeLaunchDescription(
     XMLLaunchDescriptionSource(
         os.path.join(
@@ -45,5 +47,6 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             arm_node,
             heartbeat_node,
             launch_include,
+            mbd_node,
         ]
     )
