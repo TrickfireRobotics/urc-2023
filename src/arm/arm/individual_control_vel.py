@@ -8,12 +8,16 @@ from lib.interface.robot_interface import RobotInterface
 
 class IndividualControlVel:
     WRIST_VEL = 0.3
-    VEL = 1.0
+    VEL = 0.2
+    SHOULDER_VEL = 0.3
 
     def __init__(self, ros_node: Node, interface: RobotInterface, arm_interface: ArmInterface):
         self._ros_node = ros_node
         self.bot_interface = interface
         self.arm_interface = arm_interface
+        self.arm_interface.set_motor_positions()
+
+        self.shoulder_moving = False
 
         self.can_send = False
 
@@ -57,6 +61,14 @@ class IndividualControlVel:
         self.turntable_counter_clockwise_sub = ros_node.create_subscription(
             Float32, "turntable_ccw", self.turntableCCW, 10
         )
+
+        # create timer for calling shoulder stationary feedforward method
+        # ros_node.create_timer(0.5, self.shoulder_stationary)
+
+    def shoulder_stationary(self) -> None:
+        if not self.shoulder_moving:
+            self._ros_node.get_logger().info("shoulder stationary")
+            self.arm_interface.stationary()
 
     def leftWristCW(self, msg: Float32) -> None:
         if not self.can_send:
@@ -120,16 +132,16 @@ class IndividualControlVel:
 
         data = msg.data
 
-        if data > 0:
+        if data != 0:
             self._ros_node.get_logger().info("Elbow up" + str(data))
-            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_ELBOW_MOTOR, -self.VEL)
+            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_ELBOW_MOTOR, self.VEL * data)
 
         else:
             self._ros_node.get_logger().info("Elbow down STOP")
             self.bot_interface.stopMotor(MotorConfigs.ARM_ELBOW_MOTOR)
 
     def elbowDown(self, msg: Float32) -> None:
-        if not self.can_send:
+        """if not self.can_send:
             return
 
         data = msg.data
@@ -140,7 +152,8 @@ class IndividualControlVel:
 
         else:
             self._ros_node.get_logger().info("Elbow down STOP")
-            self.bot_interface.stopMotor(MotorConfigs.ARM_ELBOW_MOTOR)
+            self.bot_interface.stopMotor(MotorConfigs.ARM_ELBOW_MOTOR)"""
+        return
 
     def shoulderUp(self, msg: Float32) -> None:
         if not self.can_send:
@@ -148,18 +161,20 @@ class IndividualControlVel:
 
         data = msg.data
 
-        if data > 0:
+        if data != 0:
+            self.shoulder_moving = True
             self._ros_node.get_logger().info("Shoulder up" + str(data))
             self.arm_interface.runArmShoulderMotorVelocity(
-                MotorConfigs.ARM_SHOULDER_MOTOR, -self.VEL
+                MotorConfigs.ARM_SHOULDER_MOTOR, self.SHOULDER_VEL * data
             )
 
         else:
+            self.shoulder_moving = False
             self._ros_node.get_logger().info("Shoulder STOP")
             self.bot_interface.stopMotor(MotorConfigs.ARM_SHOULDER_MOTOR)
 
     def shoulderDown(self, msg: Float32) -> None:
-        if not self.can_send:
+        """if not self.can_send:
             return
 
         data = msg.data
@@ -172,7 +187,8 @@ class IndividualControlVel:
 
         else:
             self._ros_node.get_logger().info("Shoulder STOP")
-            self.bot_interface.stopMotor(MotorConfigs.ARM_SHOULDER_MOTOR)
+            self.bot_interface.stopMotor(MotorConfigs.ARM_SHOULDER_MOTOR)"""
+        return
 
     def turntableCW(self, msg: Float32) -> None:
         if not self.can_send:
