@@ -18,6 +18,7 @@ class IndividualControlVel:
         self.arm_interface.set_motor_positions()
 
         self.shoulder_moving = False
+        self.shoulder_vel = 0.0
 
         self.can_send = False
 
@@ -63,12 +64,15 @@ class IndividualControlVel:
         )
 
         # create timer for calling shoulder stationary feedforward method
-        # ros_node.create_timer(0.5, self.shoulder_stationary)
+        ros_node.create_timer(0.1, self.handle_shoulder)
 
-    def shoulder_stationary(self) -> None:
+    def handle_shoulder(self) -> None:
         if not self.shoulder_moving:
-            self._ros_node.get_logger().info("shoulder stationary")
-            self.arm_interface.stationary()
+            self.arm_interface.stationary(MotorConfigs.ARM_SHOULDER_MOTOR)
+        else:
+            self.arm_interface.runArmShoulderMotorVelocity(
+                MotorConfigs.ARM_SHOULDER_MOTOR, self.shoulder_vel
+            )
 
     def leftWristCW(self, msg: Float32) -> None:
         if not self.can_send:
@@ -164,14 +168,12 @@ class IndividualControlVel:
         if data != 0:
             self.shoulder_moving = True
             self._ros_node.get_logger().info("Shoulder up" + str(data))
-            self.arm_interface.runArmShoulderMotorVelocity(
-                MotorConfigs.ARM_SHOULDER_MOTOR, self.SHOULDER_VEL * data
-            )
+            self.shoulder_vel = self.SHOULDER_VEL * data
 
         else:
             self.shoulder_moving = False
             self._ros_node.get_logger().info("Shoulder STOP")
-            self.bot_interface.stopMotor(MotorConfigs.ARM_SHOULDER_MOTOR)
+            self.shoulder_vel = 0.0
 
     def shoulderDown(self, msg: Float32) -> None:
         """if not self.can_send:
