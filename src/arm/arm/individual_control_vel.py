@@ -193,6 +193,10 @@ class IndividualControlVel:
         return
 
     def turntableCW(self, msg: Float32) -> None:
+
+        return
+
+        """
         if not self.can_send:
             return
 
@@ -204,10 +208,13 @@ class IndividualControlVel:
 
         else:
             self._ros_node.get_logger().info("Turntable STOP")
-            self.bot_interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
+            self.bot_interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)"""
 
     def turntableCCW(self, msg: Float32) -> None:
-        if not self.can_send:
+
+        return
+
+        """if not self.can_send:
             return
 
         data = msg.data
@@ -218,4 +225,4 @@ class IndividualControlVel:
 
         else:
             self._ros_node.get_logger().info("Turntable STOP")
-            self.bot_interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
+            self.bot_interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)"""
