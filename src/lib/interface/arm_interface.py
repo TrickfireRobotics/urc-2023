@@ -20,6 +20,9 @@ RADIANS_TO_REVS = 1 / REVS_TO_RADIANS
 
 
 class ArmInterface:
+    """
+    A class that provides methods to operate the motors on the arm using feedforward.
+    """
 
     def __init__(self, ros_node: Node, info: RobotInfo, interface: RobotInterface) -> None:
         self._ros_node = ros_node
@@ -37,9 +40,12 @@ class ArmInterface:
                 String, motor_config.getInterfaceTopicName(), 10
             )
 
-    def stationary(self, motor: MoteusMotorConfig) -> None:
+    def shoulderStationary(self) -> None:
+        """
+        Runs shoulder motor at velocity 0 with the current feedforward value.
+        """
         self._interface.runMotor(
-            motor,
+            MotorConfigs.ARM_SHOULDER_MOTOR,
             MoteusRunSettings(
                 velocity=0.0,
                 feedforward_torque=-self.feedforward,
@@ -47,28 +53,27 @@ class ArmInterface:
             ),
         )
 
-    def set_motor_positions(self) -> None:
+    def update_motor_positions(self) -> None:
+        """
+        Updates the current shoulder and elbow positions.
+        """
         self.target_shoulder = self._info.getMotorState(MotorConfigs.ARM_SHOULDER_MOTOR).position
         self.target_elbow = self._info.getMotorState(MotorConfigs.ARM_ELBOW_MOTOR).position
 
-    def runArmElbowMotorVelocity(self, motor: MoteusMotorConfig, target_velocity: float) -> None:
+    def runArmElbowMotorVelocity(self, target_velocity: float) -> None:
         """
         Runs the specified motor to reach the specified position.
 
         Parameters
-        -------`
-        motor : MoteusMotorConfig
-            The config of the motor to run.
+        -------
         target_velocity: float
             The target velocity in revolutions per second.
-        feed_forward: float
-            The FeedForward adjustment for the motors.
         """
         if self.target_elbow is not None and self.target_shoulder is not None:
             self.feedforward = 0.0
 
             self._interface.runMotor(
-                motor,
+                MotorConfigs.ARM_ELBOW_MOTOR,
                 MoteusRunSettings(
                     velocity=target_velocity,
                     feedforward_torque=self.feedforward,
@@ -76,20 +81,16 @@ class ArmInterface:
                 ),
             )
 
-    def runArmShoulderMotorVelocity(self, motor: MoteusMotorConfig, target_velocity: float) -> None:
+    def runArmShoulderMotorVelocity(self, target_velocity: float) -> None:
         """
         Runs the specified motor to reach the specified position.
 
         Parameters
-        -------`
-        motor : MoteusMotorConfig
-            The config of the motor to run.
+        -------
         target_velocity: float
             The target velocity in revolutions per second.
-        feed_forward: float
-            The FeedForward adjustment for the motors.
         """
-        self.set_motor_positions()
+        self.update_motor_positions()
         if self.target_elbow is not None and self.target_shoulder is not None:
 
             self.shoulder_position = self.target_shoulder * -REVS_TO_RADIANS
@@ -113,7 +114,7 @@ class ArmInterface:
             self._ros_node.get_logger().info("elbow current: " + str(self.target_elbow))
 
             self._interface.runMotor(
-                motor,
+                MotorConfigs.ARM_SHOULDER_MOTOR,
                 MoteusRunSettings(
                     velocity=target_velocity,
                     feedforward_torque=-self.feedforward,

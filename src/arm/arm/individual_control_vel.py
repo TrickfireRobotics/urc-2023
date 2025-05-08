@@ -68,11 +68,9 @@ class IndividualControlVel:
 
     def handle_shoulder(self) -> None:
         if not self.shoulder_moving:
-            self.arm_interface.stationary(MotorConfigs.ARM_SHOULDER_MOTOR)
+            self.arm_interface.shoulderStationary()
         else:
-            self.arm_interface.runArmShoulderMotorVelocity(
-                MotorConfigs.ARM_SHOULDER_MOTOR, self.shoulder_vel
-            )
+            self.arm_interface.runArmShoulderMotorVelocity(self.shoulder_vel)
 
     def leftWristCW(self, msg: Float32) -> None:
         if not self.can_send:
