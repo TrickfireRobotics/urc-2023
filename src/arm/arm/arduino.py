@@ -5,7 +5,7 @@ class ArduinoNanoEvery:
         self.bus = bus
         self.addr = address
 
-    def send_command(self, cmd_id: int, payload: bytes = b ''):
+    def send_command(self, cmd_id: int, payload: bytes = b''):
         # Prefix messages with a command byte, e.g. 0x01 = "ping"
         msg = bytes([cmd_id]) + payload
         self.bus.write(self.addr, msg)
