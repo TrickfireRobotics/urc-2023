@@ -15,7 +15,7 @@ class IndividualControlVel:
         self._ros_node = ros_node
         self.bot_interface = interface
         self.arm_interface = arm_interface
-        self.arm_interface.set_motor_positions()
+        self.arm_interface.update_motor_positions()
 
         self.shoulder_moving = False
         self.shoulder_vel = 0.0
