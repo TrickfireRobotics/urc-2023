@@ -32,6 +32,9 @@ RUN pip3 install pyusb
 # Install OpenCV for python
 RUN pip3 install opencv-python
 
+# Install smbus2 for Cooling I2C communication
+RUN pip3 install smbus2
+
 # Update pydocstyle to remove a deprecation warning when testing for PEP257
 RUN pip install --upgrade pydocstyle
 
