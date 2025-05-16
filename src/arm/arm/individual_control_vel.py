@@ -135,7 +135,7 @@ class IndividualControlVel:
 
         data = msg.data
 
-        if data != 0:
+        if abs(data) > 0.001:
             self._ros_node.get_logger().info("Elbow up" + str(data * self.VEL))
             self.bot_interface.runMotorSpeed(MotorConfigs.ARM_ELBOW_MOTOR, self.VEL * data)
 
