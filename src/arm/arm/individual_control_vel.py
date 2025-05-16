@@ -10,6 +10,7 @@ class IndividualControlVel:
     WRIST_VEL = 0.3
     VEL = 0.2
     SHOULDER_VEL = 0.3
+    TURNTABLE_VEL = 0.2
 
     def __init__(self, ros_node: Node, interface: RobotInterface, arm_interface: ArmInterface):
         self._ros_node = ros_node
@@ -135,7 +136,7 @@ class IndividualControlVel:
         data = msg.data
 
         if data != 0:
-            self._ros_node.get_logger().info("Elbow up" + str(data))
+            self._ros_node.get_logger().info("Elbow up" + str(data * self.VEL))
             self.bot_interface.runMotorSpeed(MotorConfigs.ARM_ELBOW_MOTOR, self.VEL * data)
 
         else:
@@ -165,7 +166,7 @@ class IndividualControlVel:
 
         if data != 0:
             self.shoulder_moving = True
-            self._ros_node.get_logger().info("Shoulder up" + str(data))
+            self._ros_node.get_logger().info("Shoulder up" + str(data * self.SHOULDER_VEL))
             self.shoulder_vel = self.SHOULDER_VEL * data
 
         else:
@@ -191,22 +192,20 @@ class IndividualControlVel:
         return
 
     def turntableCW(self, msg: Float32) -> None:
-
-        return
-
-        """
         if not self.can_send:
             return
 
         data = msg.data
 
-        if data > 0:
-            self._ros_node.get_logger().info("Turntable clock wise")
-            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_TURNTABLE_MOTOR, self.VEL)
+        if data != 0:
+            self._ros_node.get_logger().info("Turntable" + str(data * self.TURNTABLE_VEL))
+            self.bot_interface.runMotorSpeed(
+                MotorConfigs.ARM_TURNTABLE_MOTOR, self.TURNTABLE_VEL * data
+            )
 
         else:
             self._ros_node.get_logger().info("Turntable STOP")
-            self.bot_interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)"""
+            self.bot_interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
 
     def turntableCCW(self, msg: Float32) -> None:
 
