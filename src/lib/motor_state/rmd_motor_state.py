@@ -53,6 +53,3 @@ class RMDX8RunSettings(CanMotorRunSettings["RMDX8RunSettings"]):
     """
     A dataclass representing the different settings while running an RMD-X8 motor.
     """
-    position: float | None = None
-    velocity: float | None = None
-    set_stop: bool = True
