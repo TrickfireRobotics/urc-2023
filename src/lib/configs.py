@@ -26,6 +26,21 @@ class MotorConfig:
     The type of the motor.
     """
 
+    config: dict[str, float | int] | None
+    """
+    The config of the motor. 
+    
+    # Moteus
+
+    See: https://github.com/mjbots/moteus/blob/main/docs/reference.md#c-configurable-values
+
+    The `id.id` will be ignored.
+
+    # RMD
+
+    RMD settings can be completely controled by run settings
+    """
+
     def getCanTopicName(self) -> str:
         """
         Gets the motor's topic name for data sourced from can.
@@ -49,14 +64,6 @@ class MoteusMotorConfig(MotorConfig):
     A dataclass that contains config values relating to moteus motors connected via the can bus.
     """
 
-    config: dict[str, float | int]
-    """
-    The config of the motor. See:
-    https://github.com/mjbots/moteus/blob/main/docs/reference.md#c-configurable-values
-
-    The `id.id` will be ignored.
-    """
-
     # Set the value of motor_type
     def __post_init__(self) -> None:
         # Can't use simple assignment since class is frozen
@@ -74,8 +81,6 @@ class RMDx8MotorConfig(MotorConfig):
     """
     A data class that contains config values relating to rmdx8 motors.
     """
-
-    config: dict[str, float | int]
 
     # Set the value of motor_type
     def __post_init__(self) -> None:
