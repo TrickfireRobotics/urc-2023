@@ -1,6 +1,6 @@
 """
 This module just contains the RobotInterface class. It provides utility functions to interact with
-motors on the robot. 
+motors on the robot.
 """
 
 import math

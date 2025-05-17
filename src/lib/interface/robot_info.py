@@ -35,7 +35,7 @@ class RobotInfo:  # pylint: disable=too-few-public-methods
 
     def _createSubCallback(self, motor_type: str) -> Callable[[String], None]:
         def _subCallback(msg: String) -> None:
-            state = CANMotorState.fromJsonMsg(msg)
+            state: CANMotorState = CANMotorState.fromJsonMsg(msg)
             self.can_id_to_json[motor_type][state.can_id] = state
 
         return _subCallback
