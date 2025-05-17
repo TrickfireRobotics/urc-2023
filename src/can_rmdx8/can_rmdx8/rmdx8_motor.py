@@ -7,10 +7,7 @@ import math
 from threading import Lock
 
 import myactuator_rmd_py as rmd
-import numpy as np
-import rclpy
 import std_msgs.msg
-from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.publisher import Publisher
 from rclpy.subscription import Subscription
@@ -27,12 +24,11 @@ class RMDx8Motor:
 
     mutex_lock = Lock()
 
-    def __init__(self, config: RMDx8MotorConfig, ros_node: Node) -> None:
+    def __init__(self, config: RMDx8MotorConfig, driver: rmd.CanDriver, ros_node: Node) -> None:
 
         self.config = config
         self._ros_node = ros_node
-        self.driver = rmd.CanDriver("can1")
-        self.my_actuator = rmd.ActuatorInterface(self.driver, config.can_id)
+        self.my_actuator = rmd.ActuatorInterface(driver, config.can_id)
         self._subscriber = self._createSubscriber()
 
         self._publisher = self._createPublisher()
@@ -40,8 +36,6 @@ class RMDx8Motor:
         # Publish a message every 0.05 seconds
         timer_period = 0.05
         self.timer = ros_node.create_timer(timer_period, self.publishData)
-
-        self.run_settings: RMDX8RunSettings = RMDX8RunSettings()
 
     # create a subscriber
     def _createSubscriber(self) -> Subscription:
@@ -69,18 +63,21 @@ class RMDx8Motor:
         """
         Updates the RMDx8 motor state
         """
-        self.run_settings = RMDX8RunSettings.fromJsonMsg(msg)
-        self.run_settings = RMDX8RunSettings.fromJsonMsg(msg)
+        run_settings = RMDX8RunSettings.fromJsonMsg(msg)
+
         with self.mutex_lock:
-            if np.isscalar(self.run_settings.position) and not np.isnan(self.run_settings.position):
-                self.my_actuator.sendPositionAbsoluteSetpoint(
-                    self.run_settings.position, self.run_settings.velocity_limit
-                )
-            self.my_actuator.sendVelocitySetpoint(self.run_settings.velocity)
-            if self.run_settings.set_stop or (
-                np.isscalar(self.run_settings.position) and np.isnan(self.run_settings.position)
-            ):
+            # Stop if requested
+            if run_settings.set_stop:
                 self.my_actuator.stopMotor()
+            else:
+                # Else, set position and velocity if they exist
+                if run_settings.position is not None and math.isfinite(run_settings.position):
+                    self.my_actuator.sendPositionAbsoluteSetpoint(
+                        run_settings.position,
+                        0.0 if run_settings.velocity is None else run_settings.velocity_limit,
+                    )
+                if run_settings.velocity is not None and math.isfinite(run_settings.velocity):
+                    self.my_actuator.sendVelocitySetpoint(run_settings.velocity)
 
     def publishData(self) -> None:
         """

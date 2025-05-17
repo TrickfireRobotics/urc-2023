@@ -2,16 +2,11 @@ import sys
 
 import myactuator_rmd_py as rmd
 import rclpy
-import std_msgs.msg
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-from rclpy.publisher import Publisher
-from rclpy.subscription import Subscription
-from std_msgs.msg import String
 
 from lib.color_codes import ColorCodes, colorStr
 from lib.configs import MotorConfigs, RMDx8MotorConfig
-from lib.motor_state.rmd_motor_state import RMDX8MotorState, RMDX8RunSettings
 
 from .rmdx8_motor import RMDx8Motor
 
@@ -25,6 +20,7 @@ class RMDx8MotorManager(Node):
         super().__init__("can_rmdx8_node")
         self.get_logger().info(colorStr("Launching can_rmdx8 node", ColorCodes.BLUE_OK))
         self._id_to_rmdx8_motor: dict[int, RMDx8Motor] = {}
+        self.driver = rmd.CanDriver("can1")
         self.createRMDx8Motors()
 
     def shutdownMotors(self) -> None:
@@ -39,7 +35,7 @@ class RMDx8MotorManager(Node):
         Adds new rmdx8 motor to the motor dictionary
         """
         # Create a motor
-        motor = RMDx8Motor(config, self)
+        motor = RMDx8Motor(config, self.driver, self)
         self._id_to_rmdx8_motor[config.can_id] = motor
 
     def createRMDx8Motors(self) -> None:
