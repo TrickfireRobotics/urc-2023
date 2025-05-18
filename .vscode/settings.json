@@ -13,6 +13,11 @@
     "python.analysis.diagnosticSeverityOverrides": {
         "reportMissingModuleSource": "none"
     },
+    "python.analysis.exclude": [
+        "./build",
+        "./install",
+        "./log"
+    ],
     "python.defaultInterpreterPath": "python3",
     "pylint.args": [
         "--rcfile=.pylintrc"
