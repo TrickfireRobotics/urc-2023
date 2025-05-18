@@ -43,13 +43,10 @@ class RMDx8MotorManager(Node):
         Create all necessary RMDx8 motors and add them to the dictionary
         """
 
-        self.addMotor(MotorConfigs.TEST_RMD)
-        # self.addMotor( some_config)
-        # self.addMotor( some_config)
-        # self.addMotor( some_config)
-        # self.addMotor( some_config)
-        # self.addMotor( some_config)
-        # self.addMotor( some_config)
+        for config in MotorConfigs.getAllMotors():
+            if not isinstance(config, RMDx8MotorConfig):
+                continue
+            self.addMotor(config)
 
 
 # Main function
