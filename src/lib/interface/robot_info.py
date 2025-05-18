@@ -12,6 +12,8 @@ from std_msgs.msg import String
 
 from lib.configs import MotorConfig, MotorConfigs
 from lib.motor_state.can_motor_state import CANMotorState
+from lib.motor_state.moteus_motor_state import MoteusMotorState
+from lib.motor_state.rmd_motor_state import RMDX8MotorState
 
 
 class RobotInfo:  # pylint: disable=too-few-public-methods
@@ -34,8 +36,15 @@ class RobotInfo:  # pylint: disable=too-few-public-methods
             self.can_id_to_json[motor_config.motor_type][motor_config.can_id] = CANMotorState()
 
     def _createSubCallback(self, motor_type: str) -> Callable[[String], None]:
+        # this is bad code design, but it's so small scale who cares
+        state_cls: type
+        if motor_type == "moteus":
+            state_cls = MoteusMotorState
+        elif motor_type == "rmdx8":
+            state_cls = RMDX8MotorState
+
         def _subCallback(msg: String) -> None:
-            state: CANMotorState = CANMotorState.fromJsonMsg(msg)
+            state = state_cls.fromJsonMsg(msg)
             self.can_id_to_json[motor_type][state.can_id] = state
 
         return _subCallback
