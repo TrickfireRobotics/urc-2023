@@ -54,17 +54,17 @@ class RMDX8RunSettings(CanMotorRunSettings["RMDX8RunSettings"]):
     A dataclass representing the different settings while running an RMD-X8 motor.
     """
 
-    current_pid: PiGains | None
+    current_pid: PiGains | None = None
     """
     The PID values for the current/amperage of the motor 
     """
-    speed_pid: PiGains | None
-    position_pid: PiGains | None
+    speed_pid: PiGains | None = None
+    position_pid: PiGains | None = None
 
-    acceleration: float | None
+    acceleration: float | None = None
     """
     Target acceleration in revolutions/s^2
     """
-    acceleration_type: AccelerationType | None
+    acceleration_type: AccelerationType | None = None
 
-    current: float | None
+    current: float | None = None
