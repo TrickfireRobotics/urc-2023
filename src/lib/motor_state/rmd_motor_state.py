@@ -52,14 +52,16 @@ class RMDX8MotorState(CANMotorState["RMDX8MotorState"]):
 class RMDX8RunSettings(CanMotorRunSettings["RMDX8RunSettings"]):
     """
     A dataclass representing the different settings while running an RMD-X8 motor.
+
+    PiGains' constructor is defined as: `PiGains(kp: int = 0, ki: int = 0)`
     """
 
-    current_pid: PiGains | None = None
+    current_pi: PiGains | None = None
     """
     The PID values for the current/amperage of the motor 
     """
-    speed_pid: PiGains | None = None
-    position_pid: PiGains | None = None
+    speed_pi: PiGains | None = None
+    position_pi: PiGains | None = None
 
     acceleration: float | None = None
     """
