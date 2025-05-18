@@ -1,36 +1,42 @@
 # Base image: Ubuntu 20.04 with ROS2 Humble installed
 FROM ros:humble
+
 # Install dependencies from apt
-RUN apt-get update && apt-get install -y \
+RUN apt-get update 
+RUN apt-get install -y \
   # To use git in the container
   git \
   # pip is a package manager for Python
   python3-pip \
   # To let us sync with GitHub over SSH
   ssh-client \
-  ros-humble-rosbridge-server \
+  ros-humble-rosbridge-server
+
+RUN apt-get install -y \
   # Install usb utilities
   usbutils \ 
   can-utils \
   iproute2 \
-  kmod \ 
+  kmod
+
+RUN apt-get install -y \
   # Used for cv_bridge
   python3-numpy \
-  libboost-python-dev \
+  libboost-python-dev
+
+RUN apt-get install -y \
   # OpenCV
   libopencv-dev \
-  python3-opencv \
-  # Clean out the apt lists after `apt-get update`
-  && rm -rf /var/lib/apt/lists/*
+  python3-opencv
+
+# Clean out the apt lists after `apt-get update`
+RUN rm -rf /var/lib/apt/lists/*
 
 
 #Install moteus python library https://github.com/mjbots/moteus/tree/main/lib/python
 RUN pip3 install moteus
 
 RUN pip3 install pyusb
-
-# Install OpenCV for python
-RUN pip3 install opencv-python
 
 # Update pydocstyle to remove a deprecation warning when testing for PEP257
 RUN pip install --upgrade pydocstyle
