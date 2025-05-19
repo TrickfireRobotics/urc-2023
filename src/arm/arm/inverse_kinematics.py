@@ -1,327 +1,140 @@
+"""
+This file contains the InverseKinematics arm control type, as well as supporting constants
+"""
+
 import math
 import os
 import time
-from enum import IntEnum
+from typing import Callable
 
-import numpy as np
-import rclpy
 import roboticstoolbox as rtb
-import spatialgeometry as sg
 import spatialmath as sm
 from rclpy.node import Node
 from roboticstoolbox import ERobot
 from std_msgs.msg import Float32
 
-from lib.configs import MoteusMotorConfig, MotorConfigs
+from lib.configs import MotorConfigs
 from lib.interface.robot_info import RobotInfo
 from lib.interface.robot_interface import RobotInterface
 
-
-class ArmMotorsEnum(IntEnum):
-    TURNTABLE = 0
-    SHOULDER = 1
-    ELBOW = 2
-    LEFTWRIST = 3
-    RIGHTWRIST = 4
-
-
-class IKState(IntEnum):
-    ARRIVED = 0
-    MOVING = 1
-    ESTOP = 2
+# constants
+REVS_TO_RADIANS = math.pi * 2.0
+DEGREES_TO_RADIANS = math.pi / 180.0
+RADIANS_TO_DEGREES = 1.0 / DEGREES_TO_RADIANS
+RADIANS_TO_REVS = 1 / (math.pi * 2.0)
 
 
 class InverseKinematics:
+    """
+    Represents an arm control type that uses InverseKinematics.
+    """
 
-    # constants
-    REVS_TO_RADIANS = math.pi * 2.0
-    DEGREES_TO_RADIANS = math.pi / 180.0
-    RADIANS_TO_DEGREES = 1.0 / DEGREES_TO_RADIANS
+    def __init__(self, ros_node: Node, interface: RobotInterface, _: RobotInfo):
 
-    def __init__(self, ros_node: Node, interface: RobotInterface, info: RobotInfo):
-
-        self.can_send = False
-
-        self.arrived = True
-        self.state = IKState.ARRIVED
-
+        self._can_send = False
         self._ros_node = ros_node
-
         self._interface = interface
-        self._info = info
-
-        self.motorConfigList = [
-            MotorConfigs.ARM_TURNTABLE_MOTOR,
-            MotorConfigs.ARM_SHOULDER_MOTOR,
-            MotorConfigs.ARM_ELBOW_MOTOR,
-        ]
-
-        self.motorOffsetList = [
-            0.0,
-            0.0,
-            0.0,
-        ]
-
-        # setting these based on the assumption that when we initialize this class, the arm
-        # is in its default "rest"
-        self.motorStartingAngles = [
-            0.0,
-            57.3,
-            8.113,
-        ]
-
-        self.setArmOffsets()
-
-        # calculated using the l + r wrist positions
-        self.wrist_angle = 0.0
-        self.wrist_rot_angle = 0.0
-
-        # TODO INITIALIZE IK STUFF HERE -------------
-        # Import robot urdf from the resources folder
-        # current_dir = os.path.dirname(__file__)
-        urdf_file_path = os.path.abspath("/home/trickfire/urc-2023/src/arm/resource/arm.urdf")
-        # urdf_file_path = os.path.normpath(urdf_file_path)
 
         # Initialise model
-        self.viator = ERobot.URDF(urdf_file_path)
+        self.viator = ERobot.URDF(os.path.join(os.path.dirname(__file__), "../resource/arm.urdf"))
 
-        # Elementary transforms, basically rotation and translations in xyz
-        self.ets = self.viator.ets()
-
-        # #########################################################################################
-        # Set goal pose
-        # Tep is basically for storing coords & rotation
-        # Use spatial math sm to add the xyz & roll pitch yaw relative to the position of the hand
-        # (.q), which we got using forward kinematics (fkine)
-
-        # TODO these values should be initialized calling forward kinematics with the current joint
-        # angles
-        position = self.viator.fkine(self.viator.q).t
-
-        self.target_x = 0.0
-        self.target_y = 0.0
-        self.target_z = 0.0
-
-        self.Tep = (
-            self.viator.fkine(self.viator.q)
-            * sm.SE3(self.target_x, self.target_y, self.target_z)
-            * sm.SE3.RPY([0, 0, 0], order="xyz")
-            * sm.SE3.Rz(90, unit="deg")
-        )
-
-        self.jointDict: dict[str, tuple] = {}
+        # Initialize target
+        self.target: sm.SE3 = self.viator.fkine(self.viator.q)
+        self._ros_node.get_logger().info("Starting pos: " + str(self.target.t))
+        self.last_target: sm.SE3 = sm.SE3(self.target)
 
         # Make our solver
         self.solver = rtb.IK_LM()
 
-        self.up_x_sub = ros_node.create_subscription(Float32, "shoulder_up", self.xUp, 10)
-
-        self.down_x_sub = ros_node.create_subscription(Float32, "shoulder_down", self.xDown, 10)
-
-        self.up_z_sub = ros_node.create_subscription(Float32, "elbow_up", self.zUp, 10)
-
-        self.down_z_sub = ros_node.create_subscription(Float32, "elbow_down", self.zDown, 10)
-
-        self.e_stop_sub = ros_node.create_subscription(Float32, "e_stop", self.eStop, 10)
-
-        ros_node.create_timer(0.5, self.runArmToTarget)
-
-    def setArmOffsets(self) -> None:
-        for motorConfig in range(len(self.motorConfigList)):
-            self.motorOffsetList[motorConfig] = self.motorStartingAngles[
-                motorConfig
-            ] - self.getMeasuredMotorAngle(motorConfig)
-
-    def getMeasuredMotorAngle(self, motor: int) -> float:
-        """
-        Returns the angle of the motor IN DEGREES based on int representing motor config's index
-        in the list of motor configs
-        """
-        _position = self._info.getMotorState(self.motorConfigList[motor]).position
-        position_degrees = (
-            (_position if _position is not None else 0.0)
-            * self.REVS_TO_RADIANS
-            * self.RADIANS_TO_DEGREES
+        # Initialize subs
+        self._last_received: list[float] = []
+        ros_node.create_subscription(Float32, "shoulder_up", self._createSub(sm.SE3(0.1, 0, 0)), 10)
+        ros_node.create_subscription(
+            Float32, "shoulder_down", self._createSub(sm.SE3(-0.1, 0, 0)), 10
         )
-        if motor == 0 or motor == 1:
-            position_degrees = -position_degrees
-
-        return position_degrees
-
-    def getPerceivedMotorAngle(self, motor: int) -> float:
-        """
-        Returns what the angle of the arm is in our IK representation of the arm
-        """
-        measuredAngle = self.getMeasuredMotorAngle(motor)
-        return measuredAngle + self.motorOffsetList[motor]
-
-    def setQ(self) -> None:
-        self.viator.q = np.array(
-            [
-                self.getPerceivedMotorAngle(ArmMotorsEnum.TURNTABLE),
-                self.getPerceivedMotorAngle(ArmMotorsEnum.SHOULDER),
-                self.getPerceivedMotorAngle(ArmMotorsEnum.ELBOW),
-                0,
-                8.113,
-            ]
+        ros_node.create_subscription(Float32, "elbow_up", self._createSub(sm.SE3(0, 0, 0.1)), 10)
+        ros_node.create_subscription(Float32, "elbow_down", self._createSub(sm.SE3(0, 0, -0.1)), 10)
+        ros_node.create_subscription(
+            Float32, "turntable_cw", self._createSub(sm.SE3(0, 0.1, 0)), 10
         )
-        self._ros_node.get_logger().info("current q: " + str(self.viator.q))
+        ros_node.create_subscription(
+            Float32, "turntable_ccw", self._createSub(sm.SE3(0, -0.1, 0)), 10
+        )
+        ros_node.create_subscription(Float32, "e_stop", self._eStop, 10)
 
-    def eStop(self, msg: Float32) -> None:
-        self.stopAllMotors()
-        self.state = IKState.ESTOP
-        self._ros_node.get_logger().info("emergency stopping")
+    @property
+    def can_send(self) -> bool:
+        """
+        True if inverse_kinematics should be the one controlling the arm, else False.
+        """
+        return self._can_send
+
+    @can_send.setter
+    def can_send(self, val: bool) -> None:
+        if not val:
+            self.stopAllMotors()
+        self._can_send = val
 
     def runArmToTarget(self) -> None:
-        if not self.arrived:
-            self.stopAllMotors()
-            self._ros_node.get_logger().info(
-                "SHOULDER: "
-                + str(self._info.getMotorState(MotorConfigs.ARM_SHOULDER_MOTOR).position)
-            )
-            self._ros_node.get_logger().info(
-                "ELBOW: " + str(self._info.getMotorState(MotorConfigs.ARM_ELBOW_MOTOR).position)
-            )
-            # set the joint angles
-            self.setQ()
+        """
+        Makes the arm go to the target position.
 
-            # check if arrived and get target velocity of end effector
-            v, arrived = rtb.p_servo(
-                self.viator.fkine(self.viator.q), self.Tep, gain=1, threshold=0.5
-            )
-            if arrived:
-                self._ros_node.get_logger().info("arrived at destination")
-                self.arrived = True
-                self.state = IKState.ARRIVED
-                self.stopAllMotors()
-                return
-            elif self.state == IKState.ESTOP:
-                self.stopAllMotors()
-                return
-            J = self.viator.jacobe(self.viator.q)
+        Note, if the position is unreachable, the arm will not move.
+        """
+        if not self.can_send:
+            return
 
-            self.viator.qd = np.linalg.pinv(J) @ v
+        # Solve for the target position
+        sol = self.solver.solve(self.viator.ets(), self.target)
+        if not sol.success:
+            self._ros_node.get_logger().warning("IK Solver failed: " + sol.reason)
+            self.target = self.last_target
 
-            self._ros_node.get_logger().info("qd: " + str(self.viator.qd))
-            self._ros_node.get_logger().info(
-                "turntable speed: " + str(self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS),
-            )
-            self._ros_node.get_logger().info(
-                "shoulder speed: " + str(self.viator.qd[1] * -1 * self.DEGREES_TO_RADIANS),
-            )
-            self._ros_node.get_logger().info(
-                "elbow speed: " + str(self.viator.qd[2] * self.DEGREES_TO_RADIANS)
-            )
+        self._ros_node.get_logger().info(
+            f"target: {self.target.t}\nturntable: {sol.q[0]} ({sol.q[0] * RADIANS_TO_REVS})"
+            + f"\nshoulder: {sol.q[1]} ({sol.q[1] * RADIANS_TO_REVS})"
+        )
 
-            # check if any of the velocities exceed cool number
-            if abs(self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS) > 0.5:
-                self._ros_node.get_logger().info(
-                    "turntable speed too fast ",
-                    str(self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS),
-                )
-                self.stopAllMotors()
-
-            elif abs(self.viator.qd[1] * -1 * self.DEGREES_TO_RADIANS) > 0.5:
-                self._ros_node.get_logger().info(
-                    "shoulder speed too fast ",
-                    str(self.viator.qd[1] * -1 * self.DEGREES_TO_RADIANS),
-                )
-                self.stopAllMotors()
-
-            elif abs(self.viator.qd[2] * self.DEGREES_TO_RADIANS) > 0.5:
-                self._ros_node.get_logger().info(
-                    "elbow speed too fast ", str(self.viator.qd[2] * self.DEGREES_TO_RADIANS)
-                )
-                self.stopAllMotors()
-
-            else:
-                self._interface.runMotorSpeed(
-                    MotorConfigs.ARM_TURNTABLE_MOTOR,
-                    self.viator.qd[0] * -1 * self.DEGREES_TO_RADIANS,
-                )
-                self._interface.runMotorSpeed(
-                    MotorConfigs.ARM_SHOULDER_MOTOR,
-                    self.viator.qd[1] * -1 * self.DEGREES_TO_RADIANS,
-                )
-                self._interface.runMotorSpeed(
-                    MotorConfigs.ARM_ELBOW_MOTOR, self.viator.qd[2] * self.DEGREES_TO_RADIANS
-                )
-            # time.sleep(1)
-            # rclpy.spin_once(self._ros_node, timeout_sec=0.1)
+        # Make motors move to the positions that were found
+        self._interface.runMotorPosition(
+            MotorConfigs.ARM_TURNTABLE_MOTOR, sol.q[0] * RADIANS_TO_REVS
+        )
+        self._interface.runMotorPosition(
+            MotorConfigs.ARM_SHOULDER_MOTOR, -sol.q[1] * RADIANS_TO_REVS
+        )
 
     def stopAllMotors(self) -> None:
+        """
+        Stops, not diables, all motors in the arm
+        """
         self._interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
         self._interface.stopMotor(MotorConfigs.ARM_SHOULDER_MOTOR)
         self._interface.stopMotor(MotorConfigs.ARM_ELBOW_MOTOR)
 
-    def xUp(self, msg: Float32) -> None:
-        if self.state == IKState.MOVING or not self.can_send:
-            self._ros_node.get_logger().info("arm still moving")
-            return
-        self.state = IKState.MOVING
-        self.arrived = False
-        self.target_x += 0.5
-        self._ros_node.get_logger().info("Target x: " + str(self.target_x))
-        self._ros_node.get_logger().info("Target y: " + str(self.target_y))
-        self._ros_node.get_logger().info("Target z: " + str(self.target_z))
-        self.Tep = (
-            self.viator.fkine(self.viator.q)
-            * sm.SE3(self.target_x, self.target_y, self.target_z)
-            * sm.SE3.RPY([0, 0, 0], order="xyz")
-            * sm.SE3.Rz(90, unit="deg")
-        )
-        # self.runArmToTarget()
+    def _createSub(self, delta: sm.SE3) -> Callable[[Float32], None]:
+        # Use list as way to track when this sub was last received
+        last_receieved_index = len(self._last_received) - 1
+        self._last_received.append(time.time())
 
-    def xDown(self, msg: Float32) -> None:
-        if self.state == IKState.MOVING or not self.can_send:
-            self._ros_node.get_logger().info("arm still moving")
-            return
-        self.state = IKState.MOVING
-        self.arrived = False
-        self.target_x -= 0.5
-        self._ros_node.get_logger().info("Target x: " + str(self.target_x))
-        self._ros_node.get_logger().info("Target y: " + str(self.target_y))
-        self._ros_node.get_logger().info("Target z: " + str(self.target_z))
-        self.Tep = (
-            self.viator.fkine(self.viator.q)
-            * sm.SE3(self.target_x, self.target_y, self.target_z)
-            * sm.SE3.RPY([0, 0, 0], order="xyz")
-            * sm.SE3.Rz(90, unit="deg")
-        )
-        # self.runArmToTarget()
+        def sub(msg: Float32) -> None:
+            # Calculate time since last received sub
+            time_delta = time.time() - self._last_received[last_receieved_index]
 
-    def zUp(self, msg: Float32) -> None:
-        if self.state == IKState.MOVING or not self.can_send:
-            self._ros_node.get_logger().info("arm still moving")
-            return
-        self.state = IKState.MOVING
-        self.arrived = False
-        self.target_z += 1
-        self._ros_node.get_logger().info("Target x: " + str(self.target_x))
-        self._ros_node.get_logger().info("Target y: " + str(self.target_y))
-        self._ros_node.get_logger().info("Target z: " + str(self.target_z))
-        self.Tep = (
-            self.viator.fkine(self.viator.q)
-            * sm.SE3(self.target_x, self.target_y, self.target_z)
-            * sm.SE3.RPY([0, 0, 0], order="xyz")
-            * sm.SE3.Rz(90, unit="deg")
-        )
-        # self.runArmToTarget()
+            # Calculate new target
+            self.last_target = sm.SE3(self.target)
+            self.target *= sm.SE3(delta * min(time_delta, 0.1) * msg.data)
+            self._ros_node.get_logger().debug(
+                f"delta: {delta}\ndata: {msg.data}\ntime_delta: {time_delta}"
+            )
 
-    def zDown(self, msg: Float32) -> None:
-        if self.state == IKState.MOVING or not self.can_send:
-            self._ros_node.get_logger().info("arm still moving")
-            return
-        self.state = IKState.MOVING
-        self.arrived = False
-        self.target_x -= 0.5
-        self._ros_node.get_logger().info("Target x: " + str(self.target_x))
-        self._ros_node.get_logger().info("Target y: " + str(self.target_y))
-        self._ros_node.get_logger().info("Target z: " + str(self.target_z))
-        self.Tep = (
-            self.viator.fkine(self.viator.q)
-            * sm.SE3(self.target_x, self.target_y, self.target_z)
-            * sm.SE3.RPY([0, 0, 0], order="xyz")
-            * sm.SE3.Rz(90, unit="deg")
-        )
-        # self.runArmToTarget()
+            # Move arm to new target
+            self.runArmToTarget()
+
+            # Update when this sub was last received
+            self._last_received[last_receieved_index] = time.time()
+
+        return sub
+
+    def _eStop(self, _: Float32) -> None:
+        self.stopAllMotors()
+        self._ros_node.get_logger().info("emergency stopping")

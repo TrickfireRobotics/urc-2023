@@ -140,8 +140,10 @@ class MotorConfigs:
         can_id=1,
         config={
             "servo.max_voltage": 56.0,
-            "servopos.position_min": math.nan,
-            "servopos.position_max": math.nan,
+            "servopos.position_min": -0.25,
+            "servopos.position_max": 0,
+            "servo.max_velocity": 0.1,
+            "servo.default_velocity_limit": 0.1,
         },
     )
     ARM_ELBOW_MOTOR = MoteusMotorConfig(
@@ -169,9 +171,10 @@ class MotorConfigs:
             "servo.pid_position.ki": 0.0,
             "servo.pid_position.kd": 1.0,
             "servo.max_current_A": 10.0,
-            "servo.max_velocity": 1.0,
-            "servopos.position_min": math.nan,
-            "servopos.position_max": math.nan,
+            "servo.max_velocity": 0.1,
+            "servo.default_velocity_limit": 0.1,
+            "servopos.position_min": 0,
+            "servopos.position_max": 1,
         },
     )
 
