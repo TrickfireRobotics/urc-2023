@@ -48,17 +48,23 @@ class InverseKinematics:
 
         # Initialize subs
         self._last_received: list[float] = []
-        ros_node.create_subscription(Float32, "shoulder_up", self._createSub(sm.SE3(0.1, 0, 0)), 10)
         ros_node.create_subscription(
-            Float32, "shoulder_down", self._createSub(sm.SE3(-0.1, 0, 0)), 10
-        )
-        ros_node.create_subscription(Float32, "elbow_up", self._createSub(sm.SE3(0, 0, 0.1)), 10)
-        ros_node.create_subscription(Float32, "elbow_down", self._createSub(sm.SE3(0, 0, -0.1)), 10)
-        ros_node.create_subscription(
-            Float32, "turntable_cw", self._createSub(sm.SE3(0, 0.1, 0)), 10
+            Float32, "shoulder_up", self._createSub(sm.SE3.Trans(0.1, 0, 0)), 10
         )
         ros_node.create_subscription(
-            Float32, "turntable_ccw", self._createSub(sm.SE3(0, -0.1, 0)), 10
+            Float32, "shoulder_down", self._createSub(sm.SE3.Trans(-0.1, 0, 0)), 10
+        )
+        ros_node.create_subscription(
+            Float32, "elbow_up", self._createSub(sm.SE3.Trans(0, 0, 0.1)), 10
+        )
+        ros_node.create_subscription(
+            Float32, "elbow_down", self._createSub(sm.SE3.Trans(0, 0, -0.1)), 10
+        )
+        ros_node.create_subscription(
+            Float32, "turntable_cw", self._createSub(sm.SE3.Trans(0, 0.1, 0)), 10
+        )
+        ros_node.create_subscription(
+            Float32, "turntable_ccw", self._createSub(sm.SE3.Trans(0, -0.1, 0)), 10
         )
         ros_node.create_subscription(Float32, "e_stop", self._eStop, 10)
 
@@ -87,8 +93,11 @@ class InverseKinematics:
         # Solve for the target position
         sol = self.solver.solve(self.viator.ets(), self.target)
         if not sol.success:
-            self._ros_node.get_logger().warning("IK Solver failed: " + sol.reason)
+            self._ros_node.get_logger().warning(
+                f"IK Solver failed: {sol.reason}\ntarget: {self.target.t}"
+            )
             self.target = self.last_target
+            return
 
         self._ros_node.get_logger().info(
             f"target: {self.target.t}\nturntable: {sol.q[0]} ({sol.q[0] * RADIANS_TO_REVS})"
@@ -117,14 +126,20 @@ class InverseKinematics:
         self._last_received.append(time.time())
 
         def sub(msg: Float32) -> None:
+            # Don't care about 0's
+            if msg.data == 0:
+                return
+
             # Calculate time since last received sub
             time_delta = time.time() - self._last_received[last_receieved_index]
-
+            self._ros_node.get_logger().info(
+                str(self.solver.solve(self.viator.ets(), self.target).success)
+            )
             # Calculate new target
             self.last_target = sm.SE3(self.target)
-            self.target *= sm.SE3(delta * min(time_delta, 0.1) * msg.data)
+            self.target *= sm.SE3(delta, check=False)
             self._ros_node.get_logger().debug(
-                f"delta: {delta}\ndata: {msg.data}\ntime_delta: {time_delta}"
+                f"delta: {delta.t}\ndata: {msg.data}\ntime_delta: {time_delta}"
             )
 
             # Move arm to new target
