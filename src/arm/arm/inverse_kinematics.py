@@ -2,16 +2,21 @@
 This file contains the InverseKinematics arm control type, as well as supporting constants
 """
 
+import asyncio
 import math
 import os
 import time
 from typing import Callable
 
 import roboticstoolbox as rtb
+import spatialgeometry as sg
 import spatialmath as sm
+import websockets
 from rclpy.node import Node
 from roboticstoolbox import ERobot
 from std_msgs.msg import Float32
+from swift import Swift
+from swift.SwiftRoute import SwiftSocket
 
 from lib.configs import MotorConfigs
 from lib.interface.robot_info import RobotInfo
@@ -22,6 +27,35 @@ REVS_TO_RADIANS = math.pi * 2.0
 DEGREES_TO_RADIANS = math.pi / 180.0
 RADIANS_TO_DEGREES = 1.0 / DEGREES_TO_RADIANS
 RADIANS_TO_REVS = 1 / (math.pi * 2.0)
+
+
+# websockets really didn't want to run with localhost, so i added 127.0.0.1
+def socket_init(self, outq, inq, run) -> None:  # type: ignore
+
+    self.pcs = set()
+    self.run = run
+    self.outq = outq
+    self.inq = inq
+    self.USERS = set()
+    self.loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(self.loop)
+
+    started = False
+
+    port = 53000
+    while not started and port < 62000:
+        try:
+            start_server = websockets.serve(self.serve, "127.0.0.1", port)
+            self.loop.run_until_complete(start_server)
+            started = True
+        except OSError:
+            port += 1
+
+    self.inq.put(port)
+    self.loop.run_forever()
+
+
+SwiftSocket.__init__ = socket_init
 
 
 class InverseKinematics:
@@ -61,12 +95,20 @@ class InverseKinematics:
             Float32, "elbow_down", self._createSub(sm.SE3.Trans(0, 0, -0.1)), 10
         )
         ros_node.create_subscription(
-            Float32, "turntable_cw", self._createSub(sm.SE3.Trans(0, 0.1, 0)), 10
+            Float32, "turntable_cw", self._createSub(sm.SE3.Rz(10, unit="deg"), pre=True), 10
         )
         ros_node.create_subscription(
-            Float32, "turntable_ccw", self._createSub(sm.SE3.Trans(0, -0.1, 0)), 10
+            Float32, "turntable_ccw", self._createSub(sm.SE3.Rz(-10, unit="deg"), pre=True), 10
         )
         ros_node.create_subscription(Float32, "e_stop", self._eStop, 10)
+
+        self._env = Swift()
+        self._env.launch(realtime=True, comms="websocket")
+        self._env.add(self.viator)
+        self._target_axes = sg.Axes(0.1, pose=self.target)
+        self._env.add(self._target_axes)
+
+        self._ros_node.create_timer(0.05, self._env.step)
 
     @property
     def can_send(self) -> bool:
@@ -92,6 +134,8 @@ class InverseKinematics:
 
         # Solve for the target position
         sol = self.solver.solve(self.viator.ets(), self.target)
+        self.viator.q = sol.q
+        self._target_axes.T = self.target
         if not sol.success:
             self._ros_node.get_logger().warning(
                 f"IK Solver failed: {sol.reason}\ntarget: {self.target.t}"
@@ -120,7 +164,7 @@ class InverseKinematics:
         self._interface.stopMotor(MotorConfigs.ARM_SHOULDER_MOTOR)
         self._interface.stopMotor(MotorConfigs.ARM_ELBOW_MOTOR)
 
-    def _createSub(self, delta: sm.SE3) -> Callable[[Float32], None]:
+    def _createSub(self, delta: sm.SE3, pre: bool = False) -> Callable[[Float32], None]:
         # Use list as way to track when this sub was last received
         last_receieved_index = len(self._last_received) - 1
         self._last_received.append(time.time())
@@ -132,12 +176,13 @@ class InverseKinematics:
 
             # Calculate time since last received sub
             time_delta = time.time() - self._last_received[last_receieved_index]
-            self._ros_node.get_logger().info(
-                str(self.solver.solve(self.viator.ets(), self.target).success)
-            )
+
             # Calculate new target
             self.last_target = sm.SE3(self.target)
-            self.target *= sm.SE3(delta, check=False)
+            if pre:
+                self.target = sm.SE3(delta, check=False) * self.target
+            else:
+                self.target *= sm.SE3(delta, check=False)
             self._ros_node.get_logger().debug(
                 f"delta: {delta.t}\ndata: {msg.data}\ntime_delta: {time_delta}"
             )

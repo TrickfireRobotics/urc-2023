@@ -27,6 +27,7 @@ RUN pip3 install pyusb
 RUN pip3 install scipy==1.11.0
 # Install inverse kinematics library https://github.com/Phylliade/ikpy 
 RUN pip3 install roboticstoolbox-python
+RUN pip3 install "websockets>=13,<14"
 
 # Update pydocstyle to remove a deprecation warning when testing for PEP257
 RUN pip install --upgrade pydocstyle
