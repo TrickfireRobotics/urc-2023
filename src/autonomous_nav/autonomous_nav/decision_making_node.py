@@ -41,6 +41,25 @@ class DecisionMakingNode(Node):
          to ensure we bypass the obstacle.
       3. Otherwise, steer toward the waypoint using heading error.
     """
+    """
+    ----------------------------------------------OVERHAUL TASK------------------------------------------------------------------
+    Create Conditions for Stopping, Rerouting, Switching between local and global navigation and goal prioritization
+    
+    Planned Logic:
+        1. Stopping Conditions
+            a. GPS getting within URC guideline set distance from waypoint/no waypoint
+            b. Lidar Camera detecting hazards to tires/ chassis integrity
+            c. Depth of Field Camera detecting drop off beyond acceptable depth
+        2. Rerouting Conditions
+            a. Encountering obstacles/hazards including those listed in 1b. & 1c.
+            b. Completing the current waypoint/ 1a.
+        3. Reprioritization Conditions
+            a. Obstacle encountered in 1b./1c. leads to the navigation towards another waypoint being more time efficient
+            b. Current waypoint objective complete/2b./1a.
+        4. Switching Between Local or Global Navigation
+            a. if 3a. or 3b. use global navigation
+            b. otherwise use local navigation    
+    """
 
     def __init__(self) -> None:
         super().__init__("decision_making_node")
