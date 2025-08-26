@@ -48,17 +48,17 @@ class DecisionMakingNode(Node):
     Planned Logic:
         1. Stopping Conditions
             a. GPS getting within URC guideline set distance from waypoint/no waypoint
-            b. Lidar Camera detecting hazards to tires/ chassis integrity
-            c. Depth of Field Camera detecting drop off beyond acceptable depth
+            b(handled by local nav). Lidar Camera detecting hazards to tires/ chassis integrity
+            c(handled by local nav). Depth of Field Camera detecting drop off beyond acceptable depth
         2. Rerouting Conditions
             a. Encountering obstacles/hazards including those listed in 1b. & 1c.
             b. Completing the current waypoint/ 1a.
         3. Reprioritization Conditions
             a. Obstacle encountered in 1b./1c. leads to the navigation towards another waypoint being more time efficient
             b. Current waypoint objective complete/2b./1a.
-        4. Switching Between Local or Global Navigation
-            a. if 3a. or 3b. use global navigation
-            b. otherwise use local navigation    
+        4. when to use Local and/or Global Navigation
+            a. if 3a. or 3b. use global navigation to reroute then local nav to go along the obstacle towards new path 
+            b. otherwise, only use local navigation    
     """
 
     def __init__(self) -> None:
@@ -119,21 +119,28 @@ class DecisionMakingNode(Node):
         """
         Periodically checks obstacles, waypoint status, and decides how to drive.
         """
+        #1a, 2b, 3b should trigger a call to reprioritize a new waypoint with global navigation when waypoint complete
         # If no waypoint or reached
         if (
             "No waypoint provided" in self.navigation_status
             or "Successfully reached" in self.navigation_status
         ):
             self.stopRover()
-            self.avoid_state = None  # Reset
+            self.avoid_state = None  # Reset (used only for old handleObstacleAvoidance code)
             return
-
+        #constantly reprioritize global navigation before checking for obstacles or continuing to move?
+        
         # Obstacle logic
         if self.obstacle_detected or self.avoid_state is not None:
+            #upon detecting obstacle, see if ideal to reprioritize
+            #if so,
+            # do global navigation(a*) to find new path then continue using local nav
+            #identify road hazard(spikes) and dropoffs as obstacles in handleObstaceAvoidance() by setting them to lethal cost (254) to avoid area
             self.handleObstacleAvoidance()
             return
 
         # Normal waypoint driving
+
         self.driveTowardWaypoint()
 
     def handleObstacleAvoidance(self) -> None:
