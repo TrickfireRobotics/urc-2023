@@ -10,6 +10,6 @@ source /home/trickfire/urc-2023/install/setup.bash
 #ip link set can0 up
 
 # Add to the python import pathes. Not the best, but will work for now
-export PYTHONPATH="/home/trickfire/urc-2023/src/:$PYTHONPATH"
+export PYTHONPATH="/home/trickfire/jake-voxel-urc/urc-2023/src/:$PYTHONPATH"
 
 ros2 launch viator_launch robot.launch.py
