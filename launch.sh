@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 source /opt/ros/$ROS_DISTRO/setup.bash
-source /home/trickfire/urc-2023/install/setup.bash
+source /home/trickfire/jake-voxel-urc/urc-2023/install/setup.bash
 
 #modprobe can
 #modprobe can_raw
