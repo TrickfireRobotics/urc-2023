@@ -41,11 +41,11 @@ class SensorProcessingNode(Node):
         # ----------------------------------------------------------------------
         # Initialize an octomap
         self.octomap_resolution = 0.05  # 5cm resolution
-        self.octree = octomap.OcTree(self.octomap_resolution)
+        self.octree = Octomap.OcTree(self.octomap_resolution)
 
         self.max_range = 10.0  # Maximum range for point cloud processing
         self.min_range = 0.1  # Minimum range for point cloud processing
-        self.sensor_origin = octomap.Point3d(0.0, 0.0, 0.0)  # Sensor origin in octomap frame
+        self.sensor_origin = Octomap.Point3d(0.0, 0.0, 0.0)  # Sensor origin in octomap frame
 
         self.camera_frame_id = "zed_camera_frame"
         self.map_frame_id = "map"
