@@ -4,6 +4,12 @@
 ./setup_zed_dependencies.sh
 
 source /opt/ros/$ROS_DISTRO/setup.bash
+colcon build \
+--symlink-install \
+--base-paths /home/trickfire/jake-voxel-urc/urc-2023 \
+--packages-select zed_wrapper \
+--cmake-args \
+-DCMAKE_BUILD_TYPE=Debug
 
 colcon build \
     --symlink-install \
