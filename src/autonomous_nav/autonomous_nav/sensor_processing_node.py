@@ -8,7 +8,8 @@ import numpy as np
 import rclpy
 from cv2 import aruco
 from cv_bridge import CvBridge
-from octomap_msgs.msg import Octomap
+import octomap
+from octomap_msgs.msg import Octomap as OctomapMsg
 from rclpy.node import Node
 from rclpy.time import Time
 from sensor_msgs.msg import CameraInfo, Image, PointCloud2
@@ -41,11 +42,11 @@ class SensorProcessingNode(Node):
         # ----------------------------------------------------------------------
         # Initialize an octomap
         self.octomap_resolution = 0.05  # 5cm resolution
-        self.octree = Octomap.OcTree(self.octomap_resolution)
+        self.octree = octomap.OcTree(self.octomap_resolution)
 
         self.max_range = 10.0  # Maximum range for point cloud processing
         self.min_range = 0.1  # Minimum range for point cloud processing
-        self.sensor_origin = Octomap.Point3d(0.0, 0.0, 0.0)  # Sensor origin in octomap frame
+        self.sensor_origin = octomap.Point3d(0.0, 0.0, 0.0)  # Sensor origin in octomap frame
 
         self.camera_frame_id = "zed_camera_frame"
         self.map_frame_id = "map"
@@ -65,7 +66,7 @@ class SensorProcessingNode(Node):
         self.get_logger().info("sensor_processing_node is up and running.")
         # ----------------------------------------------------------------------
         # Publishers
-        self.octomap_pub = self.create_publisher(Octomap, "/octomap_binary", 10)
+        self.octomap_pub = self.create_publisher(OctomapMsg, "/octomap_binary", 10)
         self.occupied_cells_pub = self.create_publisher(
             MarkerArray, "/occupied_cells_vis_array", 10
         )
@@ -392,6 +393,28 @@ class SensorProcessingNode(Node):
             f"Updated OctoMap with {octomap_cloud.size()} points. Tree size: {self.octree.size()}"
         )
 
+    def publish_octomap(self) -> None:
+        """Publish the current OctoMap as a binary message"""
+        try:
+            # Create OctoMap message
+            octomap_msg = OctomapMsg()
+            octomap_msg.header.frame_id = self.map_frame_id
+            octomap_msg.header.stamp = self.get_clock().now().to_msg()
+            
+            # Serialize octree to binary
+            octomap_msg.binary = True
+            octomap_msg.id = "OcTree"
+            octomap_msg.resolution = self.octomap_resolution
+            
+            # Write octree to binary stream
+            s = self.octree.writeBinary()
+            octomap_msg.data = list(s)
+            
+            self.octomap_pub.publish(octomap_msg)
+            self.get_logger().info(f"Published OctoMap with {self.octree.size()} nodes")
+            
+        except Exception as e:
+            self.get_logger().error(f"Failed to publish OctoMap: {e}")
     # --------------------------------------------------------------------------
     #   ArUco Marker Detection
     # --------------------------------------------------------------------------
