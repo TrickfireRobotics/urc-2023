@@ -217,7 +217,24 @@ class SensorProcessingNode(Node):
         try:
             cloud_msg = PointCloud2()
             cloud_msg.header = original_header
-    # Also add this method for frame rate control
+            cloud_msg.height = 1
+            cloud_msg.width = len(points)
+            cloud_msg.is_dense = False
+            cloud_msg.is_bigendian = False
+
+            cloud_msg.fields = [
+                PointField(name="x", offset=0, datatype=PointField.FLOAT32, count=1),
+                PointField(name="y", offset=4, datatype=PointField.FLOAT32, count=1),
+                PointField(name="z", offset=8, datatype=PointField.FLOAT32, count=1),
+            ]
+            cloud_msg.point_step = 12  # 3 fields * 4 bytes each
+            cloud_msg.row_step = cloud_msg.point_step * cloud_msg.width
+
+            cloud_msg.data = points.astype(np.float32).tobytes()
+
+            self.filtered_cloud_pub.publish(cloud_msg)
+        except Exception as e:
+            self.get_logger().error(f"Failed to publish filtered cloud: {e}")
 
     # --------------------------------------------------------------------------
     #   octomap integration
