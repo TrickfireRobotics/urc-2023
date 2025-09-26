@@ -33,7 +33,7 @@
   <exec_depend>zed_msgs</exec_depend>
 
   <!-- Voxel map dependencies-->
-  <depend>python3-octomap-pip</depend>
+
 
   <!-- Localization -->
   <depend>robot_localization</depend>
