@@ -235,61 +235,7 @@ class SensorProcessingNode(Node):
             self.filtered_cloud_pub.publish(cloud_msg)
         except Exception as e:
             self.get_logger().error(f"Failed to publish filtered cloud: {e}")
-
-    # --------------------------------------------------------------------------
-    #   octomap integration
-    # --------------------------------------------------------------------------
-    # def update_octomap(self, points: np.ndarray, timestamp: Time) -> None:
-    #     """Update the OctoMap with new point cloud data"""
-
-    #     # Convert numpy points to OctoMap point cloud
-    #     octomap_cloud = octomap.Pointcloud()
-
-    #     for point in points:
-    #         # Filter out ground points (assuming camera is mounted above ground)
-    #         if point[1] < -0.5 or point[1] > 2.5:  # Skip points too low or too high
-    #             continue
-
-    #         octo_point = octomap.point3d(float(point[0]), float(point[1]), float(point[2]))
-    #         octomap_cloud.push_back(octo_point)
-
-    #     if octomap_cloud.size() == 0:
-    #         self.get_logger().warning("No valid points for OctoMap after filtering")
-    #         return
-
-    #     # Insert the point cloud into the octree
-    #     # The sensor origin should be updated based on robot pose if available
-    #     self.octree.insertPointCloud(octomap_cloud, self.sensor_origin, self.max_range)
-
-    #     # Update inner nodes
-    #     self.octree.updateInnerOccupancy()
-
-    #     self.get_logger().info(
-    #         f"Updated OctoMap with {octomap_cloud.size()} points. Tree size: {self.octree.size()}"
-    #     )
-
-    # def publish_octomap(self) -> None:
-    #     """Publish the current OctoMap as a binary message"""
-    #     try:
-    #         # Create OctoMap message
-    #         octomap_msg = OctomapMsg()
-    #         octomap_msg.header.frame_id = self.map_frame_id
-    #         octomap_msg.header.stamp = self.get_clock().now().to_msg()
             
-    #         # Serialize octree to binary
-    #         octomap_msg.binary = True
-    #         octomap_msg.id = "OcTree"
-    #         octomap_msg.resolution = self.octomap_resolution
-            
-    #         # Write octree to binary stream
-    #         s = self.octree.writeBinary()
-    #         octomap_msg.data = list(s)
-            
-    #         self.octomap_pub.publish(octomap_msg)
-    #         self.get_logger().info(f"Published OctoMap with {self.octree.size()} nodes")
-            
-    #     except Exception as e:
-    #         self.get_logger().error(f"Failed to publish OctoMap: {e}")
     # --------------------------------------------------------------------------
     #   ArUco Marker Detection
     # --------------------------------------------------------------------------

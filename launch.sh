@@ -9,7 +9,7 @@ source /home/trickfire/jake-voxel-urc/urc-2023/install/setup.bash
 #ip link set can0 type can bitrate 1000000 dbitrate 5000000 fd on
 #ip link set can0 up
 
-# Add to the python import pathes. Not the best, but will work for now
+# Add to the python import pathes
 export PYTHONPATH="/home/trickfire/jake-voxel-urc/urc-2023/src/:$PYTHONPATH"
 
 ros2 launch viator_launch robot.launch.py
