@@ -29,6 +29,7 @@ class NavigationNode(Node):
 
     def __init__(self) -> None:
         super().__init__("navigation_node")
+        self.get_logger().info(f"Navigation Node has been started successfully")
 
         # ---- Configuration / Parameters ----
         self.reached_threshold = 1.0  # meters
