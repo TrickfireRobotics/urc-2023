@@ -71,7 +71,7 @@ class NavigationNode(Node):
         self.gps_sub = self.create_subscription(NavSatFix, "/fix", self.gpsCallback, 10)
 
         self.global_costmap_subscription = self.create_subscription(
-            OccupancyGrid, "/global_costmap/costmap", self.costmap_callback, 10
+            OccupancyGrid, "/projected_map", self.costmap_callback, 10
         )
         # TODO subscribe to the cost map right here
 
