@@ -1,15 +1,15 @@
-import sys
 import math
+import sys
+from queue import Queue
+from typing import List, Optional, Tuple
 
 import rclpy
-from rclpy.node import Node
+from geometry_msgs.msg import Pose2D, PoseStamped
+from nav_msgs.msg import OccupancyGrid, Odometry, Path
 from rclpy.executors import ExternalShutdownException
-
+from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix
-from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Pose2D
-from std_msgs.msg import String, Float64MultiArray
-from typing import Optional, Tuple
+from std_msgs.msg import Bool, Float32MultiArray, Float64MultiArray, String
 
 from lib.color_codes import ColorCodes, colorStr
 
@@ -24,6 +24,7 @@ class NavigationNode(Node):
         - Subscribes to /goal_latlon (NavSatFix) for a new lat/lon waypoint.
         - Subscribes to /odometry/filtered (Odometry) for current pose.
         - Publishes /navigation_status (String) and /navigation_feedback (Pose2D).
+
     """
 
     def __init__(self) -> None:
@@ -38,13 +39,23 @@ class NavigationNode(Node):
         self.ref_lat = 0.0
         self.ref_lon = 0.0
         self.ref_alt = 0.0
+        self.start_lat = 0.0
+        self.start_lon = 0.0
+        self.start_alt = 0.0
 
         # ---- Internal State ----
         self.active_waypoint: Optional[Tuple[float, float]] = None
         self.current_position = (0.0, 0.0)  # x, y
         self.current_yaw = 0.0
-
+        self.current_global_yaw = 0.0
+        self.current_lat = 0.0
+        self.current_lon = 0.0
+        self.current_alt = 0.0
+        self.end_goal_waypoint: Tuple[float, float]
+        self.path: Path
+        self.global_costmap: OccupancyGrid
         # ---- Subscribers ----
+        # latitude, longitude, altitude
         self.anchor_sub = self.create_subscription(
             Float64MultiArray, "/anchor_position", self.anchorCallback, 10
         )
@@ -56,11 +67,17 @@ class NavigationNode(Node):
         self.odom_sub = self.create_subscription(
             Odometry, "/odometry/filtered", self.odomCallback, 10
         )
+        self.gps_sub = self.create_subscription(NavSatFix, "/fix", self.gpsCallback, 10)
+
+        self.global_costmap_subscription = self.create_subscription(
+            OccupancyGrid, "/global_costmap/costmap", self.costmap_callback, 10
+        )
+        # TODO subscribe to the cost map right here
 
         # ---- Publishers ----
         self.status_pub = self.create_publisher(String, "/navigation_status", 10)
         self.feedback_pub = self.create_publisher(Pose2D, "/navigation_feedback", 10)
-
+        self.path_pub = self.create_publisher(Path, "/path", 10)
         # ---- Timers ----
         self.timer = self.create_timer(0.1, self.updateNavigation)  # 10 Hz
 
@@ -93,6 +110,43 @@ class NavigationNode(Node):
                 )
             )
 
+    def gpsCallback(self, msg: NavSatFix) -> None:
+        if not self.anchor_received:
+            return
+        if msg.status.status >= 0 and self.current_lat == 0:
+            self.current_lat = msg.latitude
+            self.current_lon = msg.longitude
+            self.current_alt = msg.altitude
+            self.determine_global_yaw()
+        # If fix is valid (>= 0 => at least a standard fix)
+        if msg.status.status >= 0:
+            self.current_lat = msg.latitude
+            self.current_lon = msg.longitude
+            self.current_alt = msg.altitude
+        self.get_logger().info(
+            colorStr(
+                f"current position received. current_lat={self.current_lat:.6f}, "
+                f"current_lon={self.current_lon:.6f}, current_alt={self.current_alt:.2f}",
+                ColorCodes.BLUE_OK,
+            )
+        )
+
+    def determine_global_yaw(self) -> None:
+        x = math.cos(math.radians(self.current_lat)) * math.sin(
+            math.radians(self.current_lon) - math.radians(self.ref_lon)
+        )
+        y = math.cos(math.radians(self.ref_lat)) * math.sin(
+            math.radians(self.current_lat)
+        ) - math.sin(math.radians(self.ref_lat)) * math.cos(
+            math.radians(self.current_lat)
+        ) * math.cos(
+            math.radians(self.current_lon) - math.radians(self.ref_lon)
+        )
+        result = math.atan2(x, y)
+        result = result * (math.pi / 180)
+        result = (result + 360) % 360
+        self.current_global_yaw = result
+
     def processLatLonGoal(self, msg: NavSatFix) -> None:
         """
         Converts lat/lon from the NavSatFix message into local x,y coordinates
@@ -118,9 +172,18 @@ class NavigationNode(Node):
         """
         Updates self.current_position and self.current_yaw from odometry.
         """
-        self.current_position = (msg.pose.pose.position.x, msg.pose.pose.position.y)
+        self.current_position = (
+            msg.pose.pose.position.x,
+            msg.pose.pose.position.y,
+        )  # RELATIVE TO FRAME
         q = msg.pose.pose.orientation
         self.current_yaw = self.quaternion_to_yaw(q.x, q.y, q.z, q.w)
+
+    def costmap_callback(self, msg: OccupancyGrid) -> None:
+        self.get_logger().info(f"Received costmap: {msg.info.width} x {msg.info.height}")
+        self.global_costmap = msg
+        # check first 10 cells
+        print(msg.data[:10])
 
     # ----------------------
     #   Main Navigation Logic
@@ -133,6 +196,7 @@ class NavigationNode(Node):
 
         # If no active waypoint
         if self.active_waypoint is None:
+            # plan a set of waypoints using a queue
             self.publishStatus("No waypoint provided; Navigation Stopped.")
             return
 
@@ -147,9 +211,129 @@ class NavigationNode(Node):
             self.publishStatus(f"Successfully reached waypoint ({goal_x:.2f}, {goal_y:.2f})")
             self.active_waypoint = None
             return
-
+        else:
+            self.planPath(self.global_costmap)
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
         self.publishFeedback(goal_x, goal_y)
+
+    def planPath(
+        self,
+        grid: OccupancyGrid,
+    ) -> None:
+        path_radius = 5
+        grid_height = grid.info.height
+        grid_width = grid.info.width
+        grid_origin = grid.info.origin  # global coordinates of origin
+        """
+        This algorithm looks at the global occupancy grid in order to plan a path through it for the rover using an A* style search algorithm. 
+        """
+        # attain current position within costmap
+        current_index = self.position_to_index(grid, self.current_position)
+        # gather points within a certain radius
+        # TODO make target collect radius return only the indicies
+        # TODO filter out unkmow positions?
+        search_radius: int = 5
+        target_area: list[Tuple[int, int]] = self.collect_radius(
+            grid, current_index, search_radius
+        )  # list[Tuple[int,int]] corresponding to the index within the occupancy grid and the cost of that point in the index
+        minmium_cost = 1000.0
+        minimum_position: Tuple[float, float] = (
+            self.current_position
+        )  # the lowest cost position (AKA the position we will add next)
+        while (
+            self.distance_2d(
+                minimum_position[0],
+                minimum_position[1],
+                self.end_goal_waypoint[0],
+                self.end_goal_waypoint[1],
+            )
+            > 1
+        ):
+            # choose point with the lowest value within target area
+            for item in target_area:
+                item_position = self.index_to_position(
+                    grid, item[1]
+                )  # the x,y position of a point currently in the target area
+                item_cost = item[0] + self.distance_2d(
+                    item_position[0],
+                    item_position[1],
+                    self.end_goal_waypoint[0],
+                    self.end_goal_waypoint[1],
+                )  # item cost is the cost from the occupancy grid (item[1]) + distance to the goal
+                if item_cost < minmium_cost and item_cost != 100:
+                    minimum_position = item_position
+                    target_area = self.collect_radius(
+                        grid, item[1], 5
+                    )  # collect everything within a 2.5 meter radius of the new minimum point
+                    self.append_path(
+                        item_position[0], item_position[1]
+                    )  # add this new minmum cost point to our path
+                    if item_cost == -1:
+                        self.publishStatus(
+                            f"position ({item_position[0]:.2f}, {item_position[1]:.2f}) has been chosen as unknown)"
+                        )
+                else:
+                    self.publishStatus(
+                        f"position ({item_position[0]:.2f}, {item_position[1]:.2f}) has cost of ({item_cost})"
+                    )
+        self.path_pub.publish(self.path)
+
+        # add that to the queue until you find the goal position (use an if statement to check of the heuristic is 0 and if so, choose it, send to coord, and break)
+
+    def append_path(self, x: float, y: float) -> None:
+        self.path.header.frame_id = "map"
+        pose = PoseStamped()
+        pose.header.frame_id = "map"
+        pose.pose.position.x = x
+        pose.pose.position.y = y
+        pose.pose.orientation.w = 1.0
+        self.path.poses.append(pose)
+
+    def collect_radius(
+        self, grid: OccupancyGrid, current_index: int, radius: int
+    ) -> list[Tuple[int, int]]:
+        points_in_radius: list[Tuple[int, int]] = []
+        row_width = grid.info.width
+        num_rows = int(radius / grid.info.resolution)
+        starting_index = int(
+            current_index - ((grid.info.width * (radius / 2) / grid.info.resolution))
+        )
+        ending_index = int(
+            current_index + ((grid.info.width * (radius / 2) / grid.info.resolution))
+        )
+        for i in range(0, num_rows):
+            for j in range(0, row_width):
+                index = int(starting_index + (i * row_width) + j)
+                if index < len(grid.data):
+                    data = int(grid.data[index])
+                    points_in_radius.append((data, index))
+        return points_in_radius
+
+    def position_to_index(self, grid: OccupancyGrid, current_position: Tuple[float, float]) -> int:
+        # this function takes in the occupancy grid and an index within in it, and returns the map coordinates of that point
+        row = int((current_position[1] - grid.info.origin.position.y) / grid.info.resolution)
+        column = int((current_position[0] - grid.info.origin.position.x) / grid.info.resolution)
+        current_index = int((row * grid.info.width) + column)
+        return current_index
+
+    def index_to_position(self, grid: OccupancyGrid, target_index: int) -> Tuple[float, float]:
+        row = target_index // grid.info.resolution
+        col = target_index % grid.info.resolution
+        x_position = grid.info.origin.position.x + (col + 0.5) * grid.info.resolution
+        y_position = grid.info.origin.position.y + (row + 0.5) * grid.info.resolution
+        return (x_position, y_position)
+
+    def turnTowardGoal(self, goal_Location: Tuple[float, float]) -> None:
+        a = self.distance_2d(
+            self.current_position[0], self.current_position[1], goal_Location[0], goal_Location[1]
+        )
+        b = self.distance_2d(goal_Location[0], goal_Location[1], self.start_lat, self.start_lon)
+        c = self.distance_2d(goal_Location[0], goal_Location[1], self.start_lat, self.start_lon)
+        temp = (a**2 - c**2 - b**2) / (-2 * b * c)
+        turn_angle = math.degrees(math.acos(temp))
+        # read from current pose and anchor position
+        # do the same calculation using measurmentts relative to the anchor
+        # turn left or right that number of degrees
 
     # ----------------------
     #   Publishing Helpers
