@@ -152,5 +152,6 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             navsat_transform,
             ekf_node,
             static_tf,
+            global_costmap_node,
         ]
     )
