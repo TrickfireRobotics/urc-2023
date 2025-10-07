@@ -56,7 +56,7 @@ costmap_config = os.path.join(
 )
 global_costmap_node = Node(
     package="nav2_costmap_2d",
-    executable="costmap_2d_node",
+    executable="nav2_costmap_2d",
     name="global_costmap",
     parameters=[costmap_config],
 )
