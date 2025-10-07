@@ -57,6 +57,10 @@ class NavigationNode(Node):
         self.global_costmap: OccupancyGrid
         # ---- Subscribers ----
         # latitude, longitude, altitude
+        self.global_costmap_subscription = self.create_subscription(
+            OccupancyGrid, "/global_costmap/costmap", self.costmap_callback, 10
+        )
+
         self.anchor_sub = self.create_subscription(
             Float64MultiArray, "/anchor_position", self.anchorCallback, 10
         )
@@ -70,9 +74,6 @@ class NavigationNode(Node):
         )
         self.gps_sub = self.create_subscription(NavSatFix, "/fix", self.gpsCallback, 10)
 
-        self.global_costmap_subscription = self.create_subscription(
-            OccupancyGrid, "/global_costmap/costmap", self.costmap_callback, 10
-        )
         # TODO subscribe to the cost map right here
 
         # ---- Publishers ----
