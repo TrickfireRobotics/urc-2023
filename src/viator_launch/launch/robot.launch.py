@@ -3,9 +3,9 @@ import os
 import launch
 from ament_index_python import get_package_share_directory
 from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 can_moteus_node = Node(package="can_moteus", executable="can_moteus", name="can_moteus_node")
 
@@ -51,6 +51,15 @@ navigation_node = Node(
 sensor_processing_node = Node(
     package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
 )
+costmap_config = os.path.join(
+    get_package_share_directory("autonomous_nav"), "config", "params.yaml"
+)
+global_costmap_node = Node(
+    package="nav2_costmap_2d",
+    executable="costmap_2d_node",
+    name="global_costmap",
+    parameters=[costmap_config],
+)
 
 # Include the ZED camera launch file from zed_wrapper
 zed_launch = IncludeLaunchDescription(
@@ -59,6 +68,7 @@ zed_launch = IncludeLaunchDescription(
     ),
     launch_arguments={"camera_model": "zed2i", "composable_node": "False"}.items(),
 )
+
 
 gps_node = Node(
     package="ublox_gps",
@@ -142,5 +152,6 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             navsat_transform,
             ekf_node,
             static_tf,
+            global_costmap_node,
         ]
     )
