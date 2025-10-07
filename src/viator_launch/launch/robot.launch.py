@@ -51,7 +51,7 @@ navigation_node = Node(
 sensor_processing_node = Node(
     package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
 )
-costmap_config = os.path.join(
+"""costmap_config = os.path.join(
     get_package_share_directory("autonomous_nav"), "config", "params.yaml"
 )
 global_costmap_node = Node(
@@ -60,7 +60,7 @@ global_costmap_node = Node(
     name="global_costmap",
     parameters=[costmap_config],
 )
-
+"""
 # Include the ZED camera launch file from zed_wrapper
 zed_launch = IncludeLaunchDescription(
     PythonLaunchDescriptionSource(
@@ -152,6 +152,5 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             navsat_transform,
             ekf_node,
             static_tf,
-            global_costmap_node,
         ]
     )
