@@ -397,10 +397,10 @@ def main(args: list[str] | None = None) -> None:
 
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
-    except ExternalShutdownException:
-        node.get_logger().info(colorStr("External shutdown request received", ColorCodes.BLUE_OK))
+    except Exception as e:
+        node.get_logger().error(f"Exception during spin: {e}")
+    # except ExternalShutdownException:
+    # node.get_logger().info(colorStr("External shutdown request received", ColorCodes.BLUE_OK))
     finally:
         node.destroy_node()
         rclpy.shutdown()
