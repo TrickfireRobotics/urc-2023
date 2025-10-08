@@ -227,7 +227,7 @@ class SensorProcessingNode(Node):
             cloud_msg.row_step = cloud_msg.point_step * cloud_msg.width
 
             cloud_msg.data = points.astype(np.float32).tobytes()
-
+            self.get_logger().error(f"pushing pee")
             self.filtered_cloud_pub.publish(cloud_msg)
         except Exception as e:
             self.get_logger().error(f"Failed to publish filtered cloud: {e}")
