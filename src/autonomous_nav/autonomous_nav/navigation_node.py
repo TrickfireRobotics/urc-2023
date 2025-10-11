@@ -11,7 +11,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Bool, Float32MultiArray, Float64MultiArray, String
 
-from lib.color_codes import ColorCodes, colorStr
+# from lib.color_codes import ColorCodes, colorStr
 
 
 class NavigationNode(Node):
@@ -83,9 +83,9 @@ class NavigationNode(Node):
         # ---- Timers ----
         self.timer = self.create_timer(0.1, self.updateNavigation)  # 10 Hz
 
-        self.get_logger().info(
+        """self.get_logger().info(
             colorStr("NavigationNode (dynamic anchor) initialized", ColorCodes.BLUE_OK)
-        )
+        )"""
 
     # ----------------------
     #   Subscriptions
@@ -105,11 +105,11 @@ class NavigationNode(Node):
                 self.ref_alt = msg.data[2]
             self.anchor_received = True
             self.get_logger().info(
-                colorStr(
+                """colorStr(
                     f"Anchor received. ref_lat={self.ref_lat:.6f}, "
                     f"ref_lon={self.ref_lon:.6f}, ref_alt={self.ref_alt:.2f}",
                     ColorCodes.BLUE_OK,
-                )
+                )"""
             )
 
     def gpsCallback(self, msg: NavSatFix) -> None:
@@ -126,11 +126,11 @@ class NavigationNode(Node):
             self.current_lon = msg.longitude
             self.current_alt = msg.altitude
         self.get_logger().info(
-            colorStr(
+            """colorStr(
                 f"current position received. current_lat={self.current_lat:.6f}, "
                 f"current_lon={self.current_lon:.6f}, current_alt={self.current_alt:.2f}",
                 ColorCodes.BLUE_OK,
-            )
+            )"""
         )
 
     def determine_global_yaw(self) -> None:
@@ -166,10 +166,10 @@ class NavigationNode(Node):
         self.active_waypoint = (x, y)
         self.end_goal_waypoint = (x, y)
         self.get_logger().info(
-            colorStr(
+            """colorStr(
                 f"New lat/lon goal received: lat={lat:.6f}, lon={lon:.6f} => (x={x:.2f}, y={y:.2f})",
                 ColorCodes.BLUE_OK,
-            )
+            )"""
         )
 
     def odomCallback(self, msg: Odometry) -> None:
@@ -321,10 +321,14 @@ class NavigationNode(Node):
         return current_index
 
     def index_to_position(self, grid: OccupancyGrid, target_index: int) -> Tuple[float, float]:
-        row = target_index // grid.info.resolution
-        col = target_index % grid.info.resolution
-        x_position = grid.info.origin.position.x + (col + 0.5) * grid.info.resolution
-        y_position = grid.info.origin.position.y + (row + 0.5) * grid.info.resolution
+        row = target_index // grid.info.width
+        col = target_index % grid.info.width
+        x_position = grid.info.origin.position.x + (col) * grid.info.resolution
+        y_position = grid.info.origin.position.y + (row) * grid.info.resolution
+        self.get_logger().info(
+            f"occupancy grid has an origin of {grid.info.origin.position.x},{grid.info.origin.position.y}"
+        )
+        self.get_logger().info(f"index {target_index} has a position of {x_position},{y_position}")
         return (x_position, y_position)
 
     def turnTowardGoal(self, goal_Location: Tuple[float, float]) -> None:
