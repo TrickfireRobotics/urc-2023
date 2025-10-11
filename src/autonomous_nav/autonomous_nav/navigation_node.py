@@ -49,7 +49,7 @@ class NavigationNode(Node):
         self.current_position = (0.0, 0.0)  # x, y
         self.current_yaw = 0.0
         self.current_global_yaw = 0.0
-        self.current_lat = 0.0
+        self.current_lat = 0
         self.current_lon = 0.0
         self.current_alt = 0.0
         self.end_goal_waypoint: Tuple[float, float]
@@ -162,7 +162,9 @@ class NavigationNode(Node):
         lon = msg.longitude
 
         x, y = self.convertLatLonToXY(lat, lon)
+        # TODO these two variables track the same thing, fix it
         self.active_waypoint = (x, y)
+        self.end_goal_waypoint = (x, y)
         self.get_logger().info(
             colorStr(
                 f"New lat/lon goal received: lat={lat:.6f}, lon={lon:.6f} => (x={x:.2f}, y={y:.2f})",

@@ -32,4 +32,59 @@ def mock_costmap() -> OccupancyGrid:
 
 @pytest.fixture
 def navigation_node(mock_costmap: OccupancyGrid) -> NavigationNode:
-    return NavigationNode()
+    test_navigation_node = NavigationNode()
+    reached_threshold = 1.0  # meters
+    earth_radius = 6371000.0  # Approx Earth radius in meters
+
+    # ---- Anchor State (from /anchor_position) ----
+    anchor_received = False
+    ref_lat = 0.0
+    ref_lon = 0.0
+    ref_alt = 0.0
+    start_lat = 0.0
+    start_lon = 0.0
+    start_alt = 0.0
+
+    # ---- Internal State ----
+    active_waypoint = (4, 3)
+    current_position = (0.0, 0.0)  # x, y
+    current_yaw = 0.0
+    current_global_yaw = 0.0
+    current_lat = 0.0
+    current_lon = 0.0
+    current_alt = 0.0
+    end_goal_waypoint = (4, 3)
+    global_costmap = mock_costmap
+
+    return test_navigation_node
+
+
+class TestNavigationNode:
+    def test_plan_path(self, navigation_node: NavigationNode) -> None:
+        test_path = navigation_node.planPath(navigation_node.global_costmap)
+        assert hasattr(navigation_node, "path")
+        assert isinstance(navigation_node.path.poses, list)
+
+    def test_collect_radius(self, navigation_node: NavigationNode) -> None:
+        # collect the radius from the center of the costmap
+        costmap_center = int(
+            navigation_node.global_costmap.info.width
+            * navigation_node.global_costmap.info.height
+            / 2
+        )
+        test_radius = navigation_node.collect_radius(
+            navigation_node.global_costmap, costmap_center, 2
+        )
+        assert len(test_radius) > 1
+        # should get a 2x2 box /0.5 (total of 80 indicies)
+        # check that the points have the expected indicies
+        # do this by checking if the center node is in the list
+
+    def test_position_to_index(self, navigation_node: NavigationNode) -> None:
+        index = navigation_node.position_to_index(navigation_node.global_costmap, (0, 0))
+        assert index > 0
+
+    def test_index_to_position(self, navigation_node: NavigationNode) -> None:
+        position = navigation_node.index_to_position(navigation_node.global_costmap, 40)
+        assert position[0] > 0
+        assert position[1] > 0
