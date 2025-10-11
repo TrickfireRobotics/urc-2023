@@ -224,72 +224,62 @@ class NavigationNode(Node):
         self,
         grid: OccupancyGrid,
     ) -> None:
-        path_radius = 5
-        grid_height = grid.info.height
-        grid_width = grid.info.width
-        grid_origin = grid.info.origin  # global coordinates of origin
         """
-        This algorithm looks at the global occupancy grid in order to plan a path through it for the rover using an A* style search algorithm. 
+        This algorithm looks at the global occupancy grid in order to plan a path through it for the rover using an A* style search algorithm.
         """
-        # attain current position within costmap
-        current_index = self.position_to_index(grid, self.current_position)
         # gather points within a certain radius
-        # TODO make target collect radius return only the indicies
-        # TODO filter out unkmow positions?
         search_radius: int = 5
-        target_area: list[Tuple[int, int]] = self.collect_radius(
-            grid, current_index, search_radius
-        )  # list[Tuple[int,int]] corresponding to the index within the occupancy grid and the cost of that point in the index
-        minmium_cost = 1000.0
-        minimum_position: Tuple[float, float] = (
-            self.current_position
-        )  # the lowest cost position (AKA the position we will add next)
+        lowest_cost_position = self.current_position
         while (
             self.distance_2d(
-                minimum_position[0],
-                minimum_position[1],
+                lowest_cost_position[0],
+                lowest_cost_position[1],
                 self.end_goal_waypoint[0],
                 self.end_goal_waypoint[1],
             )
             > 1
         ):
-            # choose point with the lowest value within target area
-            for item in target_area:
-                item_position = self.index_to_position(
-                    grid, item[1]
-                )  # the x,y position of a point currently in the target area
-                item_cost = item[0] + self.distance_2d(
-                    item_position[0],
-                    item_position[1],
-                    self.end_goal_waypoint[0],
-                    self.end_goal_waypoint[1],
-                )  # item cost is the cost from the occupancy grid (item[1]) + distance to the goal
-                if item_cost < minmium_cost and item_cost != 100:
-                    minimum_position = item_position
-                    target_area = self.collect_radius(
-                        grid, item[1], 5
-                    )  # collect everything within a 2.5 meter radius of the new minimum point
-                    self.append_path(
-                        item_position[0], item_position[1]
-                    )  # add this new minmum cost point to our path
-                    if item_cost == -1:
-                        self.publishStatus(
-                            f"position ({item_position[0]:.2f}, {item_position[1]:.2f}) has been chosen as unknown)"
-                        )
-                else:
-                    self.publishStatus(
-                        f"position ({item_position[0]:.2f}, {item_position[1]:.2f}) has cost of ({item_cost})"
-                    )
+            target_area = self.collect_radius(
+                grid, self.position_to_index(grid, lowest_cost_position), search_radius
+            )
+            lowest_cost_position = self.find_lowest_cost_node(target_area, grid)
+            self.append_path(lowest_cost_position)
+
         self.path_pub.publish(self.path)
 
-        # add that to the queue until you find the goal position (use an if statement to check of the heuristic is 0 and if so, choose it, send to coord, and break)
+    def find_lowest_cost_node(
+        self, target_area: list[Tuple[int, int]], grid: OccupancyGrid
+    ) -> Tuple[float, float]:
+        minimum_cost = 100.0
+        minimum_position: Tuple[float, float] = (
+            self.current_position
+        )  # the lowest cost position (AKA the position we will add next)
+        for item in target_area:
+            item_position = self.index_to_position(
+                grid, item[1]
+            )  # the x,y position of a point currently in the target area
+            item_cost = item[0] + self.distance_2d(
+                item_position[0],
+                item_position[1],
+                self.end_goal_waypoint[0],
+                self.end_goal_waypoint[1],
+            )  # item cost is the cost from the occupancy grid (item[1]) + distance to the goal
+            if item_cost < minimum_cost and item_cost != 100 and item_cost != -1:
+                minimum_position = item_position
+                minimum_cost = item_cost
+            if item_cost == -1:
+                self.publishStatus(
+                    f"position ({item_position[0]:.2f}, {item_position[1]:.2f}) has been chosen as unknown)"
+                )
 
-    def append_path(self, x: float, y: float) -> None:
+        return minimum_position
+
+    def append_path(self, new_pose: Tuple[float, float]) -> None:
         self.path.header.frame_id = "map"
         pose = PoseStamped()
         pose.header.frame_id = "map"
-        pose.pose.position.x = x
-        pose.pose.position.y = y
+        pose.pose.position.x = new_pose[0]
+        pose.pose.position.y = new_pose[1]
         pose.pose.orientation.w = 1.0
         self.path.poses.append(pose)
 
