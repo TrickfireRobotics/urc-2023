@@ -228,23 +228,30 @@ class NavigationNode(Node):
         This algorithm looks at the global occupancy grid in order to plan a path through it for the rover using an A* style search algorithm.
         """
         # gather points within a certain radius
-        search_radius: int = 5
+        search_radius: int = 2
         lowest_cost_position = self.current_position
-        while (
-            self.distance_2d(
+        distance_to_goal = self.distance_2d(
+            lowest_cost_position[0],
+            lowest_cost_position[1],
+            self.end_goal_waypoint[0],
+            self.end_goal_waypoint[1],
+        )
+        while distance_to_goal > 1:
+            self.get_logger().info(
+                f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
+            )
+            target_area = self.collect_radius(
+                grid, self.position_to_index(grid, lowest_cost_position), search_radius
+            )
+            lowest_cost_position = self.find_lowest_cost_node(target_area, grid)
+
+            self.append_path(lowest_cost_position)
+            distance_to_goal = self.distance_2d(
                 lowest_cost_position[0],
                 lowest_cost_position[1],
                 self.end_goal_waypoint[0],
                 self.end_goal_waypoint[1],
             )
-            > 1
-        ):
-            target_area = self.collect_radius(
-                grid, self.position_to_index(grid, lowest_cost_position), search_radius
-            )
-            lowest_cost_position = self.find_lowest_cost_node(target_area, grid)
-            self.append_path(lowest_cost_position)
-
         self.path_pub.publish(self.path)
 
     def find_lowest_cost_node(
@@ -305,8 +312,8 @@ class NavigationNode(Node):
 
     def position_to_index(self, grid: OccupancyGrid, current_position: Tuple[float, float]) -> int:
         # this function takes in the occupancy grid and an index within in it, and returns the map coordinates of that point
-        row = int((current_position[1] - grid.info.origin.position.y) / grid.info.resolution)
-        column = int((current_position[0] - grid.info.origin.position.x) / grid.info.resolution)
+        row = (current_position[1] - grid.info.origin.position.y) / grid.info.resolution
+        column = (current_position[0] - grid.info.origin.position.x) / grid.info.resolution
         current_index = int((row * grid.info.width) + column)
         return current_index
 
