@@ -73,7 +73,7 @@ def navigation_node(mock_costmap: OccupancyGrid) -> NavigationNode:
 
 class TestNavigationNode:
     def test_collect_radius(self, navigation_node: NavigationNode) -> None:
-        test_navigation_node = navigation_node(mock_costmap())
+
         costmap_center = int(
             navigation_node.global_costmap.info.width
             * navigation_node.global_costmap.info.height
@@ -82,16 +82,13 @@ class TestNavigationNode:
         test_radius = navigation_node.collect_radius(
             navigation_node.global_costmap, costmap_center, 2
         )
-        print(len(test_radius))
         assert len(test_radius) > 1
 
     def test_position_to_index(self, navigation_node: NavigationNode) -> None:
-        navigation_node = NavigationNode()
         index = navigation_node.position_to_index(navigation_node.global_costmap, (0, 0))
         assert index > 0
 
     def test_index_to_position(self, navigation_node: NavigationNode) -> None:
-        navigation_node = NavigationNode()
         position = navigation_node.index_to_position(navigation_node.global_costmap, 0)
         assert position[0] == navigation_node.global_costmap.info.origin.position.x
         assert position[1] == navigation_node.global_costmap.info.origin.position.y
@@ -100,13 +97,21 @@ class TestNavigationNode:
         assert position2[1] == position[1]
 
     def test_find_cheapest(self, navigation_node: NavigationNode) -> None:
-        navigation_node = NavigationNode()
-        test_list = [(0, 5), (0, 4), (0, 3)]
-        cheapest_node = navigation_node.find_lowest_cost_node(test_list, mock_costmap())
-        assert cheapest_node != (0.0)
+        # test_list = [(0, 5), (0, 4), (0, 3)]
+        costmap_center = int(
+            navigation_node.global_costmap.info.width
+            * navigation_node.global_costmap.info.height
+            / 2
+        )
+        test_radius = navigation_node.collect_radius(
+            navigation_node.global_costmap, costmap_center, 2
+        )
+        cheapest_node = navigation_node.find_lowest_cost_node(
+            test_radius, navigation_node.global_costmap
+        )
+        assert cheapest_node != (0, 0)
 
     def test_plan_path(self, navigation_node: NavigationNode) -> None:
-        navigation_node = NavigationNode()
-        test_path = navigation_node.planPath(mock_costmap)
+        test_path = navigation_node.planPath(navigation_node.global_costmap)
         assert hasattr(navigation_node, "path")
         assert isinstance(navigation_node.path.poses, list)
