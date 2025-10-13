@@ -236,7 +236,7 @@ class NavigationNode(Node):
             self.end_goal_waypoint[0],
             self.end_goal_waypoint[1],
         )
-        while distance_to_goal > 1:
+        while distance_to_goal > 2:
             self.get_logger().info(
                 f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
             )
