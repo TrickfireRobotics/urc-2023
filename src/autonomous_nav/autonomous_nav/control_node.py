@@ -3,9 +3,6 @@ This node is the middleman between the decision_making_node and the drivebase.
 Subscribes to wheel velocity commands from decision_making_node and republishes to drivebase.
 """
 
-# from rclpy.node import Node
-# from std_msgs.msg import Float32
-
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
