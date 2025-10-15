@@ -52,7 +52,7 @@ class NavigationNode(Node):
         self.current_lat = 0
         self.current_lon = 0.0
         self.current_alt = 0.0
-        self.end_goal_waypoint: Tuple[float, float]
+        self.end_goal_waypoint: Tuple[float, float] = (2, 2)
         self.path: Path
         self.global_costmap: OccupancyGrid
         # ---- Subscribers ----
@@ -195,14 +195,18 @@ class NavigationNode(Node):
     def updateNavigation(self) -> None:
         # If anchor not received, publish status but do not navigate
         if not self.anchor_received:
-            self.publishStatus("No anchor received; Navigation Stopped.")
-            return
+            self.get_logger().info("anchor not received, creating fake navigation data for testing")
+            # self.publishStatus("No anchor received; Navigation Stopped.")
+            # return
 
         # If no active waypoint
         if self.active_waypoint is None:
             # plan a set of waypoints using a queue
-            self.publishStatus("No waypoint provided; Navigation Stopped.")
-            return
+            self.get_logger().info("anchor not received, no navigation")
+            self.active_waypoint = (2, 2)
+            self.end_goal_waypoint = (2, 2)
+            # self.publishStatus("No waypoint provided; Navigation Stopped.")
+            # return
 
         # Compute distance to the waypoint
         goal_x, goal_y = self.active_waypoint
