@@ -95,6 +95,7 @@ class DecisionMakingNode(Node):
 
     def odometry_callback(self, msg: Odometry) -> None:
         """Update global pose from odometry."""
+        self.get_logger().info("Received odometry update")
         self.global_x = msg.pose.pose.position.x
         self.global_y = msg.pose.pose.position.y
 
@@ -137,18 +138,21 @@ class DecisionMakingNode(Node):
 
     def path_callback(self, msg: Path) -> None:
         """Receive new waypoint queue."""
+        self.get_logger().info("Received new path")
+        
         self.waypoint_list.clear()
 
         # Take first 10 waypoints
         for pose_stamped in msg.poses[:10]:
             x = pose_stamped.pose.position.x
             y = pose_stamped.pose.position.y
-            self.waypoint_queue.append((x, y))
+            self.waypoint_list.append((x, y))
 
-        self.get_logger().info(f"Received path with {len(self.waypoint_queue)} waypoints")
+        self.get_logger().info(f"Received path with {len(self.waypoint_list)} waypoints")
 
     def nav_status_callback(self, msg: String) -> None:
         """Update navigation status."""
+        self.get_logger().info(f"Navigation Status: {msg.data}")
         self.navigation_status = msg.data
 
     # ===== MAIN LOGIC =====
@@ -162,18 +166,18 @@ class DecisionMakingNode(Node):
             return
 
         # Check if we have waypoints
-        if not self.waypoint_queue:
+        if not self.waypoint_list:
             self.stop_rover()
             return
 
         # Get current waypoint
-        current_goal_global = self.waypoint_queue.poses[0]
+        current_goal_global = self.waypoint_list[0]
         if current_goal_global is None:
             self.stop_rover()
             return
         current_goal_global = (
-            current_goal_global.pose.position.x,
-            current_goal_global.pose.position.y,
+            current_goal_global[0],
+            current_goal_global[1],
         )
 
         # Check if reached current waypoint
@@ -183,15 +187,15 @@ class DecisionMakingNode(Node):
         )
 
         if distance_to_goal < self.waypoint_reached_threshold:
-            self.waypoint_queue.popleft()
-            self.get_logger().info(f"Reached waypoint! {len(self.waypoint_queue)} remaining")
+            self.waypoint_list.pop(0)
+            self.get_logger().info(f"Reached waypoint! {len(self.waypoint_list)} remaining")
 
-            if not self.waypoint_queue:
+            if not self.waypoint_list:
                 self.stop_rover()
                 return
 
             # Update to next waypoint
-            current_goal_global = self.waypoint_queue[0]
+            current_goal_global = self.waypoint_list[0]
 
         # Transform goal from global (odom) to local (robot/costmap frame)
         goal_local = self.transform_global_to_local(current_goal_global)
@@ -243,11 +247,11 @@ class DecisionMakingNode(Node):
     def transform_path_to_list(self) -> List[Tuple[float, float]]:
         """Convert Path message to waypoint queue."""
         # self.waypoint_queue.clear()
-        path_list: List = List()
-        for pose_stamped in self.waypoint_queue.poses():
-            x = pose_stamped.pose.position.x
-            y = pose_stamped.pose.position.y
-            path_list.put((x, y))
+        path_list: List[Tuple[float, float]] = []
+        for pose_stamped in self.waypoint_list:
+            x = pose_stamped[0]
+            y = pose_stamped[1]
+            path_list.append((x, y))
         return path_list
 
     def stop_rover(self) -> None:
@@ -268,7 +272,7 @@ def main(args: list[str] | None = None) -> None:
         rclpy.spin(decision_making_node)
 
         # Entry point for business logic
-        decision_making_node.update_decision()
+        # decision_making_node.update_decision()
 
     except KeyboardInterrupt:
         pass
