@@ -1,9 +1,6 @@
 {
-    "name": "Decision Processing Node Dev Environment",
-    "build": {
-        "context": "../",
-        "dockerfile": "Dockerfile"
-    },
+    "context": "../",
+    "dockerFile": "Dockerfile",
     "containerUser": "trickfire",
     "remoteUser": "trickfire",
     "workspaceMount": "source=${localWorkspaceFolder},target=/home/trickfire/${localWorkspaceFolderBasename},type=bind",

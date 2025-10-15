@@ -1,9 +1,28 @@
 #!/usr/bin/env bash
 
+# Run ZED dependency setup first
+./setup_zed_dependencies.sh
+
 source /opt/ros/$ROS_DISTRO/setup.bash
+
+# build zed components first
+colcon build \
+--symlink-install \
+--base-paths /home/trickfire/jon-merge-jake-voxel/urc-2023 \
+--packages-select zed_components \
+--cmake-args \
+-DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+colcon build \
+--symlink-install \
+--base-paths /home/trickfire/jon-merge-jake-voxel/urc-2023 \
+--packages-select zed_wrapper \
+--cmake-args \
+-DCMAKE_BUILD_TYPE=RelWithDebInfo
 
 colcon build \
     --symlink-install \
-    --base-paths /home/trickfire/urc-2023\
+    --base-paths /home/trickfire/jon-merge-jake-voxel/urc-2023\
+/urc-2023\
     --cmake-args \
-        -DCMAKE_BUILD_TYPE=Debug
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo
