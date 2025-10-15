@@ -1,9 +1,7 @@
 import math
 import sys
 from pathlib import Path
-from typing import Tuple
 
-import numpy as np
 import pytest
 
 # Add parent directory to path for imports
@@ -225,7 +223,7 @@ class TestDWAPlanner:
         assert dwa_planner.global_pose == new_global_pose
 
     def test_plan_returns_wheel_velocities(self, dwa_planner: DWAPlanner) -> None:
-        """Test that plan() returns wheel velocities."""
+        """Test that plan() returns normalized wheel velocities."""
         left, right = dwa_planner.plan()
 
         # Check that velocities are returned
@@ -237,8 +235,63 @@ class TestDWAPlanner:
         assert not math.isnan(right)
         assert not math.isinf(left)
         assert not math.isinf(right)
-        assert left >= 0 and left <= 1
-        assert right >= 0 and right <= 1
+
+        # Check that velocities are in normalized range
+        # Outputs should be normalized for drivebase interface
+        # Range: [min_normalized, 1.0] where min can be negative for reverse
+        min_expected = (
+            dwa_planner.min_linear_vel
+            / dwa_planner.wheel_radius
+            / dwa_planner.drivebase_speed_multiplier
+        )
+        assert (
+            left >= min_expected and left <= 1.0
+        ), f"Left velocity {left} out of range [{min_expected}, 1.0]"
+        assert (
+            right >= min_expected and right <= 1.0
+        ), f"Right velocity {right} out of range [{min_expected}, 1.0]"
+
+    def test_different_goals_produce_different_outputs(
+        self, dwa_planner: DWAPlanner, mock_costmap: PyCostmap2D
+    ) -> None:
+        """Test that different goal positions result in different velocity commands."""
+        # Store outputs for different goals
+        outputs = []
+
+        test_goals = [
+            (2.0, 0.0),  # Straight ahead
+            (2.0, 2.0),  # Forward and right
+            (0.0, 2.0),  # Pure right
+            (2.0, -2.0),  # Forward and left
+        ]
+
+        for goal in test_goals:
+            dwa_planner.update_state(
+                costmap=mock_costmap,
+                current_position=(0.0, 0.0),
+                current_theta=0.0,
+                current_velocity=(1.0, 1.0),
+                goal=goal,
+                global_pose=(0.0, 0.0, 0.0),
+            )
+            output = dwa_planner.plan()
+            outputs.append((goal, output))
+
+        # Verify that not all outputs are the same
+        unique_outputs = set(outputs[i][1] for i in range(len(outputs)))
+        assert len(unique_outputs) > 1, f"All goals produced same output: {outputs[0][1]}"
+
+        # Verify that forward goal produces forward motion
+        forward_output = outputs[0][1]  # (2.0, 0.0) goal
+        assert (
+            forward_output[0] > 0 or forward_output[1] > 0
+        ), "Forward goal should produce forward motion"
+
+        # Verify that outputs are not all zeros (unless robot is stuck)
+        non_zero_outputs = [out for _, out in outputs if out != (0.0, 0.0)]
+        assert (
+            len(non_zero_outputs) > 0
+        ), "All outputs are zero - robot may be stuck or planner not working"
 
 
 # Main function for running tests directly

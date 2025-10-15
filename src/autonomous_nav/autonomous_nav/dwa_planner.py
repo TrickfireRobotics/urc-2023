@@ -24,11 +24,11 @@ class Trajectory:
         self.points = points if points is not None else []
         self.cost = float("inf")
 
-        # Cost weights for different objectives
-        self.obstacle_cost_weight = 5.0
-        self.goal_cost_weight = 1.0
-        self.velocity_cost_weight = 0.5
+        # Cost weights for different objectives - priority can be changed.
+        self.obstacle_cost_weight = 10.0
+        self.goal_cost_weight = 5.0
         self.heading_cost_weight = 2.0
+        self.velocity_cost_weight = 1.0
 
     def add_point(self, x: float, y: float, theta: float) -> None:
         """Add a point to the trajectory."""
@@ -36,7 +36,7 @@ class Trajectory:
 
     # EVALUATE BASED ON THE DISTANCE TO THE NEXT PATH POSE. CLOSER TO THE NEXT POINT MEANS LOWER
     # COST GIVEN THE ROVER IS AT THE CURRENT WAYPOINT
-    def evaluate_trajectory(
+    def has_collision(
         self,
         costmap: PyCostmap2D,
         goal: Tuple[float, float],
@@ -69,19 +69,16 @@ class Trajectory:
 
         # Check each point in trajectory for collision
         for x, y, _ in self.points:
-            # CRITICAL: Transform from odom frame to costmap frame
-            # If costmap is centered on robot, trajectory points are already in robot frame
-            # If costmap has its own origin, transform: world → costmap
             map_x = (x - origin_x) / resolution
             map_y = (y - origin_y) / resolution
 
             # Check bounds
             if not (0 <= map_x < size_x and 0 <= map_y < size_y):
-                return False  # Trajectory goes outside costmap bounds
+                return False
 
-            # Check robot footprint (circle approximation)
+            # Check rover footprint (circle approximation)
             footprint_checks = []
-            num_angles = 8  # Check 8 points around robot circumference
+            num_angles = 8  # Check 8 points around rover circumference
             for angle_idx in range(num_angles):
                 angle = 2 * math.pi * angle_idx / num_angles
                 check_x = x + robot_radius * math.cos(angle)
@@ -96,29 +93,33 @@ class Trajectory:
                     cost = float(costmap.getCostXY(check_map_x, check_map_y))
                     footprint_checks.append(cost)
 
-                    # Lethal obstacle check
+                    # Lethal obstacle check - value to be set based on capabilites of the rover
                     if cost >= 253:
-                        return False  # Collision!
+                        return False
 
                     # Accumulate obstacle proximity cost
                     if cost > 0:
                         obstacle_cost += cost
                         min_clearance = min(min_clearance, (252 - cost) / 252.0)
 
-        # Average obstacle cost across trajectory
+        # Average obstacle cost across trajectory (normalized to [0, 1])
         avg_obstacle_cost = obstacle_cost / len(self.points) if self.points else 0.0
+        avg_obstacle_cost = avg_obstacle_cost / 252.0  # Normalize to [0, 1] - value can be changed
 
         # Goal distance cost
         final_x, final_y, final_theta = self.points[-1]
         goal_distance = math.sqrt((final_x - goal[0]) ** 2 + (final_y - goal[1]) ** 2)
-        goal_cost = goal_distance
+        # Normalize by maximum distance robot could travel
+        max_travel_distance = max_linear_vel * 2.0
+        goal_cost = goal_distance / max(max_travel_distance, 0.1)
 
-        # Heading cost
+        # Heading cost (normalized to [0, 1] since heading_diff is in [0, π])
         goal_angle = math.atan2(goal[1] - final_y, goal[0] - final_x)
         heading_diff = abs(self.normalize_angle(goal_angle - final_theta))
-        heading_cost = heading_diff
+        heading_cost = heading_diff / math.pi  # Normalize to [0, 1]
 
-        # Velocity cost (prefer higher velocities)
+        # Velocity cost (prefer higher velocities) - lower cost for higher speed
+        # This is correct: high speed → low cost → preferred
         velocity_cost = (max_linear_vel - abs(self.linear_vel)) / max_linear_vel
 
         # Total weighted cost
@@ -149,11 +150,11 @@ class DWAPlanner:
         self,
         costmap: PyCostmap2D,
         robot_radius: float,
-        current_velocity: Tuple[float, float],  # (left_wheel, right_wheel) velocities
-        current_position: Tuple[float, float],  # (x, y) position
+        current_velocity: Tuple[float, float],
+        current_position: Tuple[float, float],
         time_delta: float,
         goal: Tuple[float, float],
-        theta: float,  # current yaw/heading
+        theta: float,
     ):
         """
         Initialize the DWA planner with robot parameters.
@@ -168,27 +169,32 @@ class DWAPlanner:
         self.current_theta = theta
         self.global_pose = (0.0, 0.0, 0.0)
 
-        # Robot physical parameters (adjust these to match your rover)
-        self.wheel_base = 0.5  # Distance between left and right wheels in meters
-        self.wheel_radius = 0.11  # Radius of wheels in meters
-
-        # Gear ratio or encoder scaling factor
-        # This converts between motor commands and actual wheel velocities
-        self.wheel_vel_scaling = 1 / 16  # Adjust based on your hardware
+        # Robot physical parameters - rough estimates from rover
+        self.wheel_base = 0.5
+        self.wheel_radius = 0.11
 
         # Velocity limits (in m/s and rad/s)
-        self.max_linear_vel = 1.0  # Maximum forward velocity
-        self.min_linear_vel = -0.5  # Maximum backward velocity (negative)
-        self.max_angular_vel = 1.0  # Maximum rotation rate
+        self.max_linear_vel = 1.0
+        self.min_linear_vel = -0.5
+        self.max_angular_vel = 1.0
+
+        # Drivebase interface expects normalized values [0, 1] that it multiplies by SPEED
+        # SPEED = 6.28 * 2.5 = 15.7 rad/s (from drivebase.py)
+        self.drivebase_speed_multiplier = 6.28 * 2.5
+
+        # Calculate maximum wheel velocity for normalization
+        self.max_wheel_linear = self.max_linear_vel + (self.max_angular_vel * self.wheel_base / 2.0)
+        self.max_wheel_angular_velocity = self.max_wheel_linear / self.wheel_radius
 
         # Acceleration limits (in m/s² and rad/s²)
-        self.max_linear_accel = 1.0
-        self.max_angular_accel = 1.0
+        # Need specific data based on rover
+        self.max_linear_accel = 2.0
+        self.max_angular_accel = 3.0
 
         # DWA parameters
-        self.prediction_time = 2.0  # How far ahead to simulate trajectories
-        self.linear_vel_samples = 11  # Number of linear velocity samples
-        self.angular_vel_samples = 21  # Number of angular velocity samples
+        self.prediction_time = 2.0
+        self.linear_vel_samples = 11
+        self.angular_vel_samples = 21
 
         # Minimum trajectory points for valid evaluation
         self.min_trajectory_points = 10
@@ -242,7 +248,7 @@ class DWAPlanner:
             trajectory = self.simulate_trajectory(linear_vel, angular_vel)
 
             # Evaluate trajectory (computes cost and checks collisions)
-            if trajectory.evaluate_trajectory(
+            if trajectory.has_collision(
                 self.costmap,
                 self.goal,
                 self.max_linear_vel,
@@ -258,13 +264,23 @@ class DWAPlanner:
         # Select the best trajectory (lowest cost)
         best_trajectory = min(valid_trajectories, key=lambda t: t.cost)
 
-        # Convert the best trajectory's velocities back to wheel velocities
+        # Convert the best trajectory's velocities back to wheel velocities (rad/s)
         left_wheel, right_wheel = self.robot_to_wheel_velocities(
             best_trajectory.linear_vel, best_trajectory.angular_vel
         )
 
-        # Apply scaling factor for motor commands
-        return (left_wheel * self.wheel_vel_scaling, right_wheel * self.wheel_vel_scaling)
+        # Normalize to [0, 1] range for drivebase interface
+        # Drivebase will multiply by SPEED to get back to rad/s
+        left_normalized = left_wheel / self.drivebase_speed_multiplier
+        right_normalized = right_wheel / self.drivebase_speed_multiplier
+
+        # Clamp to valid range [min_vel_normalized, 1.0]
+        # Allow negative for reverse motion
+        min_normalized = self.min_linear_vel / self.wheel_radius / self.drivebase_speed_multiplier
+        left_clamped = max(min_normalized, min(1.0, left_normalized))
+        right_clamped = max(min_normalized, min(1.0, right_normalized))
+
+        return (left_clamped, right_clamped)
 
     def wheel_to_robot_velocities(self, wheel_vels: Tuple[float, float]) -> Tuple[float, float]:
         """

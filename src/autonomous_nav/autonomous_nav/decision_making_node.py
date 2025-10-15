@@ -82,11 +82,9 @@ class DecisionMakingNode(Node):
 
         # ===== PUBLISHERS =====
 
-        self.left_drive_pub = self.create_publisher(Float32, "move_left_drivebase_side_message", 10)
+        self.left_drive_pub = self.create_publisher(Float32, "/left_wheel_velocity", 10)
 
-        self.right_drive_pub = self.create_publisher(
-            Float32, "move_right_drivebase_side_message", 10
-        )
+        self.right_drive_pub = self.create_publisher(Float32, "/right_wheel_velocity", 10)
 
         # ===== TIMER =====
         self.timer = self.create_timer(0.1, self.update_decision)  # 10 Hz
@@ -210,6 +208,8 @@ class DecisionMakingNode(Node):
 
         # Plan and execute
         left_vel, right_vel = self.dwa_planner.plan()
+
+        self.get_logger().info(f"Left Vel: {left_vel:.2f}, Right Vel: {right_vel:.2f}")
 
         # Store for next cycle
         self.last_left_vel = left_vel
