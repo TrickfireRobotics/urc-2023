@@ -125,7 +125,7 @@ class SensorProcessingNode(Node):
             self.cloud_frame_count += 1
             if self.cloud_frame_count % 20 != 0:
                 return
-            self.get_logger().info(f"Processing point cloud frame {self.cloud_frame_count}")
+            # self.get_logger().info(f"Processing point cloud frame {self.cloud_frame_count}")
             points = self.extract_all_points(msg)
 
             # if no points were extracted, log a warning
@@ -202,7 +202,7 @@ class SensorProcessingNode(Node):
                     except struct.error as e:
                         self.get_logger().error(f"Struct error at point index {point_index}: {e}")
                         continue
-            self.get_logger().info(f"Extracted {valid_count} valid points out of {total_points}")
+            # self.get_logger().info(f"Extracted {valid_count} valid points out of {total_points}")
             return points
         except Exception as e:
             self.get_logger().error(f"Error extracting points: {e}")
