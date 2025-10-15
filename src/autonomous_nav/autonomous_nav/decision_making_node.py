@@ -8,235 +8,260 @@ Functionality:
     - Publishes commands to the drivebase to move or stop.
 """
 
-import sys
 import math
-from typing import Optional
+import sys
+from typing import List, Optional, Tuple
 
 import rclpy
+from nav2_simple_commander.costmap_2d import PyCostmap2D
+
+# from geometry_msgs.msg import Pose2D, PoseStamped
+from nav_msgs.msg import OccupancyGrid, Odometry, Path
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-
-from geometry_msgs.msg import Pose2D
-from std_msgs.msg import String, Bool, Float32, Float32MultiArray
+from std_msgs.msg import Float32, String
+from transforms3d.euler import quat2euler
 
 from lib.color_codes import ColorCodes, colorStr
 
+from .dwa_planner import DWAPlanner
+
 
 class DecisionMakingNode(Node):
-    """
-    A ROS 2 node that handles decision-making for a robot.
-
-    Subscriptions:
-      - /navigation_feedback (Pose2D): (dx, dy, dtheta) from the NavigationNode.
-      - /navigation_status (String): e.g. "En route...", "No waypoint...", "Reached waypoint"
-      - /obstacle_detected (Bool): True if a large obstacle is present.
-      - /obstacle_info (Float32MultiArray): Additional obstacle data (e.g. average distance).
-
-    Publications:
-      - /move_left_drivebase_side_message (Float32)
-      - /move_right_drivebase_side_message (Float32)
-
-    Basic finite-state logic:
-      1. If no waypoint or it's reached, stop.
-      2. If obstacle is present, pivot left until clear, then drive forward for 3s
-         to ensure we bypass the obstacle.
-      3. Otherwise, steer toward the waypoint using heading error.
-    """
-
     def __init__(self) -> None:
         super().__init__("decision_making_node")
 
-        # ---- State Variables ----
-        self.obstacle_detected: bool = False
-        self.obstacle_info: list[float] = []  # Mypy: typed list of floats
+        # ===== STATE VARIABLES =====
 
-        self.navigation_status: str = "No waypoint provided; Navigation Stopped."
-        self.nav_feedback = Pose2D()
+        # Global pose tracking (from odometry)
+        self.global_x = 0.0
+        self.global_y = 0.0
+        self.global_theta = 0.0
 
-        # Finite-state variable for obstacle avoidance
-        # Mypy fix: allow str or None
-        self.avoid_state: Optional[str] = None
-        self.avoid_start_time = self.get_clock().now()
+        # Local/costmap frame tracking
+        # self.local_x = 0.0
+        # self.local_y = 0.0
 
-        # ---- Subscribers ----
-        self.create_subscription(Bool, "/obstacle_detected", self.obstacleCallback, 10)
-        self.create_subscription(Float32MultiArray, "/obstacle_info", self.obstacleInfoCallback, 10)
-        self.create_subscription(String, "/navigation_status", self.navStatusCallback, 10)
-        self.create_subscription(Pose2D, "/navigation_feedback", self.navFeedbackCallback, 10)
+        # Velocity tracking
+        self.current_wheel_vel = (0.0, 0.0)
+        self.last_left_vel = 0.0
+        self.last_right_vel = 0.0
 
-        # ---- Publishers (to Drivebase) ----
-        self.left_drive_pub = self.create_publisher(Float32, "move_left_drivebase_side_message", 10)
-        self.right_drive_pub = self.create_publisher(
-            Float32, "move_right_drivebase_side_message", 10
+        # Waypoint queue (stores waypoints in global frame)  - Updated to Path message
+        self.waypoint_list: List[Tuple[float, float]] = []
+        self.waypoint_reached_threshold = 0.5  # meters
+
+        # Costmap
+        self.costmap: Optional[PyCostmap2D] = None
+
+        # DWA Planner (persistent)
+        self.dwa_planner: Optional[DWAPlanner] = None
+
+        # Navigation status
+        self.navigation_status = "No waypoint provided"
+
+        # ===== SUBSCRIBERS =====
+
+        # Odometry for global pose tracking
+        self.create_subscription(
+            Odometry, "/odometry/filtered", self.odometry_callback, 10  # or '/odom'
         )
 
-        # Timer to run decision logic at ~10Hz
-        self.timer = self.create_timer(0.1, self.updateDecision)
+        # Costmap (rolling window)
+        self.create_subscription(
+            OccupancyGrid, "/local_costmap/costmap", self.costmap_callback, 10  # or '/costmap'
+        )
 
-        self.get_logger().info(colorStr("DecisionMakingNode started.", ColorCodes.BLUE_OK))
+        # Waypoint path (queue of waypoints)
+        self.create_subscription(
+            Path, "/planned_path", self.path_callback, 10  # Navigation node publishes this
+        )
 
-    # --------------------------------------------------------------------------
-    #   Subscription Callbacks
-    # --------------------------------------------------------------------------
-    def obstacleCallback(self, msg: Bool) -> None:
-        self.obstacle_detected = msg.data
+        # Navigation status
+        self.create_subscription(String, "/navigation_status", self.nav_status_callback, 10)
 
-    def obstacleInfoCallback(self, msg: Float32MultiArray) -> None:
-        self.obstacle_info = list(msg.data)
+        # ===== PUBLISHERS =====
 
-    def navStatusCallback(self, msg: String) -> None:
+        self.left_drive_pub = self.create_publisher(Float32, "/left_wheel_velocity", 10)
+
+        self.right_drive_pub = self.create_publisher(Float32, "/right_wheel_velocity", 10)
+
+        # ===== TIMER =====
+        self.timer = self.create_timer(0.1, self.update_decision)  # 10 Hz
+
+        self.get_logger().info("DecisionMakingNode initialized")
+
+    # ===== CALLBACKS =====
+
+    def odometry_callback(self, msg: Odometry) -> None:
+        """Update global pose from odometry."""
+        self.get_logger().info("Received odometry update")
+        self.global_x = msg.pose.pose.position.x
+        self.global_y = msg.pose.pose.position.y
+
+        # Extract yaw from quaternion
+        orientation = msg.pose.pose.orientation
+        _, _, self.global_theta = quat2euler(
+            [orientation.w, orientation.x, orientation.y, orientation.z], "sxyz"
+        )
+
+        # Extract wheel velocities from twist (if available)
+        # Or estimate from linear/angular velocity
+        linear_vel = msg.twist.twist.linear.x
+        angular_vel = msg.twist.twist.angular.z
+
+        # Convert to wheel velocities (inverse kinematics)
+        wheel_base = 0.5  # Match DWA planner
+        wheel_radius = 0.11
+
+        left_linear = linear_vel - (angular_vel * wheel_base / 2.0)
+        right_linear = linear_vel + (angular_vel * wheel_base / 2.0)
+
+        self.current_wheel_vel = (left_linear / wheel_radius, right_linear / wheel_radius)
+
+    def costmap_callback(self, msg: OccupancyGrid) -> None:
+        """Update costmap and initialize planner if needed."""
+        self.costmap = PyCostmap2D(msg)
+
+        # Initialize DWA planner on first costmap
+        if self.dwa_planner is None:
+            self.dwa_planner = DWAPlanner(
+                costmap=self.costmap,
+                robot_radius=0.3,
+                current_velocity=self.current_wheel_vel,
+                current_position=(0.0, 0.0),  # Robot at costmap center
+                time_delta=0.1,
+                goal=(1.0, 0.0),  # Dummy goal
+                theta=0.0,
+            )
+            self.get_logger().info("DWA Planner initialized")
+
+    def path_callback(self, msg: Path) -> None:
+        """Receive new waypoint queue."""
+        self.get_logger().info("Received new path")
+        
+        self.waypoint_list.clear()
+
+        # Take first 10 waypoints
+        for pose_stamped in msg.poses[:10]:
+            x = pose_stamped.pose.position.x
+            y = pose_stamped.pose.position.y
+            self.waypoint_list.append((x, y))
+
+        self.get_logger().info(f"Received path with {len(self.waypoint_list)} waypoints")
+
+    def nav_status_callback(self, msg: String) -> None:
+        """Update navigation status."""
+        self.get_logger().info(f"Navigation Status: {msg.data}")
         self.navigation_status = msg.data
-        # self.get_logger().info(
-        #     colorStr(f"Navigation Status: {self.navigation_status}", ColorCodes.YELLOW_WARN)
-        # )
 
-    def navFeedbackCallback(self, msg: Pose2D) -> None:
-        self.nav_feedback = msg
+    # ===== MAIN LOGIC =====
 
-    # --------------------------------------------------------------------------
-    #   Main Decision Logic
-    # --------------------------------------------------------------------------
-    def updateDecision(self) -> None:
-        """
-        Periodically checks obstacles, waypoint status, and decides how to drive.
-        """
-        # If no waypoint or reached
-        if (
-            "No waypoint provided" in self.navigation_status
-            or "Successfully reached" in self.navigation_status
-        ):
-            self.stopRover()
-            self.avoid_state = None  # Reset
+    def update_decision(self) -> None:
+        """Main control loop - runs at 10 Hz."""
+
+        # Check if we have necessary data
+        if self.costmap is None or self.dwa_planner is None:
+            self.stop_rover()
             return
 
-        # Obstacle logic
-        if self.obstacle_detected or self.avoid_state is not None:
-            self.handleObstacleAvoidance()
+        # Check if we have waypoints
+        if not self.waypoint_list:
+            self.stop_rover()
             return
 
-        # Normal waypoint driving
-        self.driveTowardWaypoint()
+        # Get current waypoint
+        current_goal_global = self.waypoint_list[0]
+        if current_goal_global is None:
+            self.stop_rover()
+            return
+        current_goal_global = (
+            current_goal_global[0],
+            current_goal_global[1],
+        )
 
-    def handleObstacleAvoidance(self) -> None:
-        """
-        Simple finite-state obstacle avoidance:
-          - TURN LEFT while obstacle is detected.
-          - Once clear, drive forward for 3 seconds,
-            then resume normal navigation.
-        """
-        now = self.get_clock().now()
+        # Check if reached current waypoint
+        distance_to_goal = math.sqrt(
+            (current_goal_global[0] - self.global_x) ** 2
+            + (current_goal_global[1] - self.global_y) ** 2
+        )
 
-        # If obstacle is present
-        if self.obstacle_detected:
-            if self.avoid_state is None:
-                self.avoid_state = "TURNING_LEFT"
-                self.avoid_start_time = now
-                self.get_logger().info(
-                    colorStr("Obstacle detected - start turning left", ColorCodes.RED_ERR)
-                )
+        if distance_to_goal < self.waypoint_reached_threshold:
+            self.waypoint_list.pop(0)
+            self.get_logger().info(f"Reached waypoint! {len(self.waypoint_list)} remaining")
 
-            if self.avoid_state == "TURNING_LEFT":
-                self.turnLeft()
+            if not self.waypoint_list:
+                self.stop_rover()
                 return
 
-            if self.avoid_state == "DRIVING_FORWARD":
-                # If new obstacle arrives while driving forward
-                self.avoid_state = "TURNING_LEFT"
-                self.avoid_start_time = now
-                self.turnLeft()
-                return
-        else:
-            # Obstacle not detected
-            if self.avoid_state == "TURNING_LEFT":
-                # Switch to driving forward once obstacle is gone
-                self.avoid_state = "DRIVING_FORWARD"
-                self.avoid_start_time = now
-                self.get_logger().info(
-                    colorStr(
-                        "Finished turning, drive forward to bypass obstacle", ColorCodes.RED_ERR
-                    )
-                )
+            # Update to next waypoint
+            current_goal_global = self.waypoint_list[0]
 
-            if self.avoid_state == "DRIVING_FORWARD":
-                # Drive forward for 3 seconds
-                elapsed = (now - self.avoid_start_time).nanoseconds / 1e9
-                if elapsed < 3.0:
-                    self.driveStraight(0.25)
-                    return
-                else:
-                    # Done avoiding
-                    self.avoid_state = None
-                    self.get_logger().info(
-                        colorStr(
-                            "Done avoiding obstacle. Resuming normal navigation.",
-                            ColorCodes.GREEN_OK,
-                        )
-                    )
-                    return
+        # Transform goal from global (odom) to local (robot/costmap frame)
+        goal_local = self.transform_global_to_local(current_goal_global)
 
-        # If no condition matched, just stop as a fallback
-        self.stopRover()
+        # Update DWA planner state
+        self.dwa_planner.update_state(
+            costmap=self.costmap,
+            current_position=(0.0, 0.0),  # Robot at center of rolling costmap
+            current_theta=0.0,  # Always facing forward in own frame
+            current_velocity=self.current_wheel_vel,
+            goal=goal_local,
+            global_pose=(self.global_x, self.global_y, self.global_theta),
+        )
 
-    def turnLeft(self, speed: float = 0.2) -> None:
+        # Plan and execute
+        left_vel, right_vel = self.dwa_planner.plan()
+
+        self.get_logger().info(f"Left Vel: {left_vel:.2f}, Right Vel: {right_vel:.2f}")
+
+        # Store for next cycle
+        self.last_left_vel = left_vel
+        self.last_right_vel = right_vel
+
+        self.publish_drive_commands(left_vel, right_vel)
+
+    # ===== HELPER FUNCTIONS =====
+
+    def transform_global_to_local(self, global_point: Tuple[float, float]) -> Tuple[float, float]:
         """
-        Turn left in place at a given speed.
+        Transform a point from global (odom) frame to local (robot) frame.
+
+        For rolling window costmap centered on robot:
+        - Robot is at (0, 0) in costmap frame
+        - Need to rotate and translate global point to robot's perspective
         """
-        self.publishDriveCommands(-speed, speed)
+        # Vector from robot to goal in global frame
+        dx_global = global_point[0] - self.global_x
+        dy_global = global_point[1] - self.global_y
 
-    def driveStraight(self, speed: float) -> None:
-        """
-        Drive forward at a given speed on both sides.
-        """
-        self.publishDriveCommands(speed, speed)
+        # Rotate to robot's local frame
+        cos_theta = math.cos(-self.global_theta)
+        sin_theta = math.sin(-self.global_theta)
 
-    def driveTowardWaypoint(self) -> None:
-        """
-        Normal navigation logic: correct heading error, move forward to waypoint.
-        """
-        dx = self.nav_feedback.x
-        dy = self.nav_feedback.y
-        heading_error = self.nav_feedback.theta
+        local_x = dx_global * cos_theta - dy_global * sin_theta
+        local_y = dx_global * sin_theta + dy_global * cos_theta
 
-        angular_tolerance = 0.2  # ~11 degrees
-        base_linear_speed = 0.3
-        base_turn_speed = 0.2
+        return (local_x, local_y)
 
-        distance = math.sqrt(dx * dx + dy * dy)
+    def transform_path_to_list(self) -> List[Tuple[float, float]]:
+        """Convert Path message to waypoint queue."""
+        # self.waypoint_queue.clear()
+        path_list: List[Tuple[float, float]] = []
+        for pose_stamped in self.waypoint_list:
+            x = pose_stamped[0]
+            y = pose_stamped[1]
+            path_list.append((x, y))
+        return path_list
 
-        # Turn in place if heading error too big
-        if abs(heading_error) > angular_tolerance:
-            turn_speed = base_turn_speed * self.sign(heading_error)
-            self.publishDriveCommands(-turn_speed, turn_speed)
-            return
-
-        # Otherwise, go straight
-        forward_speed = base_linear_speed
-        # Optionally scale by distance if desired
-        # forward_speed = min(base_linear_speed, distance * 0.1)
-
-        self.publishDriveCommands(forward_speed, forward_speed)
-
-    # --------------------------------------------------------------------------
-    #   Helper Functions
-    # --------------------------------------------------------------------------
-    def stopRover(self) -> None:
+    def stop_rover(self) -> None:
         """Publish zero velocity."""
-        self.publishDriveCommands(0.0, 0.0)
+        self.publish_drive_commands(0.0, 0.0)
 
-    def publishDriveCommands(self, left_speed: float, right_speed: float) -> None:
-        """
-        Publishes Float32 speeds to the drivebase.
-        Positive => forward, negative => reverse.
-        """
+    def publish_drive_commands(self, left_speed: float, right_speed: float) -> None:
+        """Publish motor commands."""
         self.left_drive_pub.publish(Float32(data=left_speed))
         self.right_drive_pub.publish(Float32(data=right_speed))
-
-    @staticmethod
-    def sign(value: float) -> float:
-        """
-        Returns +1.0 if value >= 0.0, else -1.0.
-        """
-        return 1.0 if value >= 0.0 else -1.0
 
 
 def main(args: list[str] | None = None) -> None:
@@ -245,6 +270,10 @@ def main(args: list[str] | None = None) -> None:
     try:
         decision_making_node = DecisionMakingNode()
         rclpy.spin(decision_making_node)
+
+        # Entry point for business logic
+        # decision_making_node.update_decision()
+
     except KeyboardInterrupt:
         pass
     except ExternalShutdownException:
