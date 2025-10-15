@@ -3,8 +3,15 @@ This node is the middleman between the decision_making_node and the drivebase.
 Subscribes to wheel velocity commands from decision_making_node and republishes to drivebase.
 """
 
+# from rclpy.node import Node
+# from std_msgs.msg import Float32
+
+import rclpy
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import Float32
+
+from lib.color_codes import ColorCodes, colorStr
 
 
 class ControlNode(Node):
@@ -44,3 +51,28 @@ class ControlNode(Node):
         left_msg = Float32()
         left_msg.data = self.left_wheel_velocity
         self.left_wheel_pub.publish(left_msg)
+
+
+def main(args: list[str] | None = None) -> None:
+    rclpy.init(args=args)
+    control_node = None
+    try:
+        control_node = ControlNode()
+        rclpy.spin(control_node)
+
+    except KeyboardInterrupt:
+        pass
+    except ExternalShutdownException:
+        if control_node is not None:
+            control_node.get_logger().info(
+                colorStr("Shutting down control_node", ColorCodes.BLUE_OK)
+            )
+    finally:
+        if control_node is not None:
+            control_node.destroy_node()
+        rclpy.shutdown()
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
