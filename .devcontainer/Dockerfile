@@ -1,76 +1,76 @@
-# Explicitly use ARM64 version of ROS Humble
-FROM --platform=linux/arm64 arm64v8/ros:humble
+# Base image: Ubuntu 20.04 with ROS2 Humble installed
+FROM ros:humble
 
-# Remove existing ROS repos and keys completely
-RUN rm -rf /etc/apt/sources.list.d/ros* && \
-    rm -rf /usr/share/keyrings/ros* && \
-    # Clean apt cache
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# 1. Add Stereolabs repo for ZED SDK 4.0 on Ubuntu 22 with CUDA 11.7
+RUN echo "deb https://download.stereolabs.com/zedsdk/4.0/ubuntu22_cuda11.7/ ./" \
+    | tee /etc/apt/sources.list.d/zed.list && \
+    apt-get update && apt-get install -y wget gnupg2
 
-# Install basic tools first
-RUN apt-get update && \
-    apt-get install -y \
-    curl \
-    wget \
-    gnupg2 \
-    lsb-release \
-    ca-certificates \
-    software-properties-common
+# 2. Add the repository's GPG key to avoid security warnings
+RUN wget -qO - https://download.stereolabs.com/zedsdk/4.0/apt_key.pub \
+    | apt-key add -
 
-# Set up the new ROS repository with updated key
-RUN mkdir -p /usr/share/keyrings && \
-    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key | gpg --dearmor -o /usr/share/keyrings/ros-archive-keyring.gpg && \
-    echo "deb [arch=arm64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu jammy main" > /etc/apt/sources.list.d/ros2.list && \
-    apt-get update
-
-# Install ROS packages and dependencies
+# Install dependencies from apt
 RUN apt-get update && apt-get install -y \
-    git \
-    python3-pip \
-    ssh-client \
-    python3-rosdep \
-    python3-colcon-common-extensions \
-    usbutils \
-    can-utils \
-    iproute2 \
-    kmod \
-    python3-numpy \
-    libboost-python-dev \
-    libopencv-dev \
-    python3-opencv \
-    && (apt-get install -y \
-    ros-humble-nav2-simple-commander \
-    ros-humble-nav-msgs \
-    #ros-humble-tf-transformations \
-    || echo "Warning: Some ROS packages may not be available") \
-    && rm -rf /var/lib/apt/lists/*
+  # To use git in the container
+  git \
+  # pip is a package manager for Python
+  python3-pip \
+  # To let us sync with GitHub over SSH
+  ssh-client \
+  ros-humble-rosbridge-server \
+  # To use rosdep for installing system dependencies
+  python3-rosdep \
+  python3-colcon-common-extensions \
+  # Install usb utilities
+  usbutils \ 
+  can-utils \
+  iproute2 \
+  kmod \ 
+  # Used for cv_bridge
+  python3-numpy \
+  libboost-python-dev \
+  # OpenCV
+  libopencv-dev \
+  python3-opencv \
+  libzed-sdk4.0 \
+  # Clean out the apt lists after `apt-get update`
+  && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-RUN pip3 install moteus pyusb opencv-python pydocstyle transforms3d
 
-# Clone and build tf_transformations from source
-RUN mkdir -p /tmp/tf_ws/src && \
-    cd /tmp/tf_ws/src && \
-    git clone https://github.com/DLu/tf_transformations.git && \
-    cd /tmp/tf_ws && \
-    . /opt/ros/humble/setup.sh && \
-    colcon build && \
-    cp -r /tmp/tf_ws/install/tf_transformations /opt/ros/humble/ && \
-    rm -rf /tmp/tf_ws
+#Install moteus python library https://github.com/mjbots/moteus/tree/main/lib/python
+RUN pip3 install moteus
 
-# Create user
+# Install additional Python dependencies
+RUN pip3 install pyusb opencv-python
+
+# Update pydocstyle to remove a deprecation warning when testing for PEP257
+RUN pip install --upgrade pydocstyle
+
+# Add a user so we can remote into this container with a non-root user
 RUN useradd trickfire \
-    --shell /bin/bash \
-    --create-home \
-    --no-log-init \
-    -G video
+  # Bash will be its default shell
+  --shell /bin/bash \
+  # Give it a directory in /home
+  --create-home \
+  # Don't make a giant log file for login data, we don't care about it
+  --no-log-init \
+  # Allow the user to access video cameras.
+  -G video
 
-# Set up bashrc (create a basic one if the file doesn't exist)
-RUN echo "source /opt/ros/humble/setup.bash" >> /home/trickfire/.bashrc
+# Copy all the bash customizations over to the user.
+COPY .devcontainer/trickfire.bashrc /home/trickfire/.bashrc
 
-# Set working directory
-WORKDIR /home/trickfire
+# ----------------------------------------
+# Clone the ZED ROS2 Wrapper repository (and its submodules) into the workspace
+# ----------------------------------------
+  RUN mkdir -p /home/trickfire/urc-2023/src/zed-ros2-wrapper
+  WORKDIR /home/trickfire/urc-2023/src/zed-ros2-wrapper
+  # Either use git submodule commands or a direct recursive clone
+  RUN git clone --recursive https://github.com/stereolabs/zed-ros2-wrapper.git .  
 
-# Switch to the user
-USER trickfire
+# ---- ROSDEP SETUP ----
+# Initialize, update and install rosdep dependencies
+RUN rosdep init && \
+    rosdep update && \
+    rosdep install --from-paths /home/trickfire/urc-2023/src --ignore-src -r -y

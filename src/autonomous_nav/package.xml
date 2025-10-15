@@ -30,7 +30,10 @@
 
   <!-- ZED wrapper and interfaces -->
   <exec_depend>zed_wrapper</exec_depend>
-  <exec_depend>zed_interfaces</exec_depend>
+  <exec_depend>zed_msgs</exec_depend>
+
+  <!-- Voxel map dependencies-->
+
 
   <!-- Localization -->
   <depend>robot_localization</depend>
