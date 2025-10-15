@@ -68,7 +68,6 @@ def main(args: list[str] | None = None) -> None:
         if control_node is not None:
             control_node.destroy_node()
         rclpy.shutdown()
-        sys.exit(0)
 
 
 if __name__ == "__main__":
