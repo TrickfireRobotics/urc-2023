@@ -58,12 +58,15 @@ class NavigationNode(Node):
         # ---- Subscribers ----
         # latitude, longitude, altitude
         self.global_costmap_subscription = self.create_subscription(
-            OccupancyGrid, "/global_costmap/costmap", self.costmap_callback, 10
+            OccupancyGrid, "/nav_msgs/msg/OccupancyGrid", self.costmap_callback, 10
         )
 
         self.anchor_sub = self.create_subscription(
             Float64MultiArray, "/anchor_position", self.anchorCallback, 10
         )
+        #
+        #
+        # nav_msgs/msg/OccupancyGrid
 
         self.latlon_sub = self.create_subscription(
             NavSatFix, "/goal_latlon", self.processLatLonGoal, 10
