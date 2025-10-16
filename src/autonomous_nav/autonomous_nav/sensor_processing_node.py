@@ -29,7 +29,6 @@ class SensorProcessingNode(Node):
 
     def __init__(self) -> None:
         super().__init__("sensor_processing_node")
-
         self.get_logger().info("Initializing sensor_processing_node...")
 
         self.bridge = CvBridge()

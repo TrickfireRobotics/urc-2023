@@ -29,7 +29,7 @@ class NavigationNode(Node):
 
     def __init__(self) -> None:
         super().__init__("navigation_node")
-        self.get_logger().info(f"Navigation Node has been started successfully ()()")
+        self.get_logger().info(f"Navigation Node has been started successfully...")
 
         # ---- Configuration / Parameters ----
         self.reached_threshold = 1.0  # meters
@@ -59,7 +59,7 @@ class NavigationNode(Node):
         # ---- Subscribers ----
         # latitude, longitude, altitude
         self.global_costmap_subscription = self.create_subscription(
-            OccupancyGrid, "/nav_msgs/msg/OccupancyGrid", self.costmap_callback, 10
+            OccupancyGrid, "/projected_map", self.costmap_callback, 10
         )
 
         self.anchor_sub = self.create_subscription(
@@ -401,7 +401,6 @@ class NavigationNode(Node):
 def main(args: list[str] | None = None) -> None:
     rclpy.init(args=args)
     node = NavigationNode()
-
     try:
         rclpy.spin(node)
     except Exception as e:
