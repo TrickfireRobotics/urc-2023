@@ -34,7 +34,7 @@ fi
 # Setup zed-ros2-examples (optional)
 if [ ! -d "zed-ros2-examples" ]; then
     echo -e "${BLUE}[ZED SETUP] Cloning zed-ros2-examples...${NC}"
-    git clone https://github.com/stereolabs/zed-ros2-examples.git
+    git clone -b humble-v4.2.5 https://github.com/stereolabs/zed-ros2-examples.git
     echo -e "${GREEN}[ZED SETUP] zed-ros2-examples cloned successfully${NC}"
 else
     echo -e "${YELLOW}[ZED SETUP] zed-ros2-examples already exists, skipping...${NC}"
