@@ -29,7 +29,7 @@ class NavigationNode(Node):
 
     def __init__(self) -> None:
         super().__init__("navigation_node")
-        self.get_logger().info(f"Navigation Node has been started successfully")
+        self.get_logger().info(f"Navigation Node has been started successfully ()()")
 
         # ---- Configuration / Parameters ----
         self.reached_threshold = 1.0  # meters
@@ -55,6 +55,7 @@ class NavigationNode(Node):
         self.end_goal_waypoint: Tuple[float, float] = (2, 2)
         self.path: Path
         self.global_costmap: OccupancyGrid
+        self.get_logger().info(f"Navigation Node has initialized first arguments")
         # ---- Subscribers ----
         # latitude, longitude, altitude
         self.global_costmap_subscription = self.create_subscription(
@@ -64,9 +65,6 @@ class NavigationNode(Node):
         self.anchor_sub = self.create_subscription(
             Float64MultiArray, "/anchor_position", self.anchorCallback, 10
         )
-        #
-        #
-        # nav_msgs/msg/OccupancyGrid
 
         self.latlon_sub = self.create_subscription(
             NavSatFix, "/goal_latlon", self.processLatLonGoal, 10
@@ -76,8 +74,6 @@ class NavigationNode(Node):
             Odometry, "/odometry/filtered", self.odomCallback, 10
         )
         self.gps_sub = self.create_subscription(NavSatFix, "/fix", self.gpsCallback, 10)
-
-        # TODO subscribe to the cost map right here
 
         # ---- Publishers ----
         self.status_pub = self.create_publisher(String, "/navigation_status", 10)
