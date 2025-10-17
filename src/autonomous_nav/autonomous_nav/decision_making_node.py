@@ -159,7 +159,9 @@ class DecisionMakingNode(Node):
 
     def update_decision(self) -> None:
         """Main control loop - runs at 2 Hz."""
-
+        
+        self.get_logger().info("Updating decision making...")
+        
         # Check if we have necessary data
         if self.costmap is None or self.dwa_planner is None:
             # Create fake costmap for testing
@@ -276,10 +278,10 @@ def main(args: list[str] | None = None) -> None:
     rclpy.init(args=args)
     decision_making_node = None
     try:
+        
+        decision_making_node.get_logger().info("Starting DecisionMakingNode...")
         decision_making_node = DecisionMakingNode()
         rclpy.spin(decision_making_node)
-
-        decision_making_node.get_logger().info("Starting DecisionMakingNode...")
 
     except KeyboardInterrupt:
         pass
