@@ -54,7 +54,7 @@ class NavigationNode(Node):
         self.current_alt = 0.0
         self.end_goal_waypoint: Tuple[float, float] = (2, 2)
         self.path: Path
-        self.global_costmap: OccupancyGrid
+        self.global_costmap: Optional[OccupancyGrid] = None
         self.get_logger().info(f"Navigation Node has initialized first arguments")
         # ---- Subscribers ----
         # latitude, longitude, altitude
@@ -218,7 +218,7 @@ class NavigationNode(Node):
             self.publishStatus(f"Successfully reached waypoint ({goal_x:.2f}, {goal_y:.2f})")
             self.active_waypoint = None
             return
-        else:
+        elif self.global_costmap != None:
             self.planPath(self.global_costmap)
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
         self.publishFeedback(goal_x, goal_y)
