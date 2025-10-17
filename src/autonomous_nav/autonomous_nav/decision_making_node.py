@@ -87,7 +87,7 @@ class DecisionMakingNode(Node):
         self.right_drive_pub = self.create_publisher(Float32, "/right_wheel_velocity", 10)
 
         # ===== TIMER =====
-        self.timer = self.create_timer(0.1, self.update_decision)  # 10 Hz
+        self.timer = self.create_timer(0.5, self.update_decision)  # 2 Hz
 
         self.get_logger().info("DecisionMakingNode initialized")
 
@@ -285,7 +285,6 @@ def main(args: list[str] | None = None) -> None:
         if decision_making_node is not None:
             decision_making_node.destroy_node()
         rclpy.shutdown()
-        sys.exit(0)
 
 
 if __name__ == "__main__":
