@@ -80,7 +80,7 @@ class NavigationNode(Node):
         self.feedback_pub = self.create_publisher(Pose2D, "/navigation_feedback", 10)
         self.path_pub = self.create_publisher(Path, "/path", 10)
         # ---- Timers ----
-        self.timer = self.create_timer(0.1, self.updateNavigation)  # 10 Hz
+        self.timer = self.create_timer(0.5, self.updateNavigation)  # 2 Hz
 
         """self.get_logger().info(
             colorStr("NavigationNode (dynamic anchor) initialized", ColorCodes.BLUE_OK)
@@ -326,9 +326,9 @@ class NavigationNode(Node):
         col = target_index % grid.info.width
         x_position = grid.info.origin.position.x + (col) * grid.info.resolution
         y_position = grid.info.origin.position.y + (row) * grid.info.resolution
-        self.get_logger().info(
-            f"occupancy grid has an origin of {grid.info.origin.position.x},{grid.info.origin.position.y}"
-        )
+        # self.get_logger().info(
+        #     f"occupancy grid has an origin of {grid.info.origin.position.x},{grid.info.origin.position.y}"
+        # )
         # self.get_logger().info(f"index {target_index} has a position of {x_position},{y_position}")
         return (x_position, y_position)
 
