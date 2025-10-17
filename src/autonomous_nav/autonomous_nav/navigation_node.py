@@ -53,7 +53,7 @@ class NavigationNode(Node):
         self.current_lon = 0.0
         self.current_alt = 0.0
         self.end_goal_waypoint: Tuple[float, float] = (2, 2)
-        self.path: Path
+        self.path: Path = Path()
         self.global_costmap: Optional[OccupancyGrid] = None
         self.get_logger().info(f"Navigation Node has initialized first arguments")
         # ---- Subscribers ----
