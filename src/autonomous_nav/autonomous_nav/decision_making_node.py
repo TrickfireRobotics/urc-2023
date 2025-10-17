@@ -32,7 +32,7 @@ class DecisionMakingNode(Node):
         super().__init__("decision_making_node")
 
         # ===== STATE VARIABLES =====
-
+        
         # Global pose tracking (from odometry)
         self.global_x = 0.0
         self.global_y = 0.0
@@ -54,7 +54,7 @@ class DecisionMakingNode(Node):
         # Costmap
         self.costmap: Optional[PyCostmap2D] = None
 
-        # DWA Planner (persistent)
+        # DWA Planner
         self.dwa_planner: Optional[DWAPlanner] = None
 
         # Navigation status

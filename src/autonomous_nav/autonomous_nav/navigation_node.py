@@ -329,7 +329,7 @@ class NavigationNode(Node):
         self.get_logger().info(
             f"occupancy grid has an origin of {grid.info.origin.position.x},{grid.info.origin.position.y}"
         )
-        self.get_logger().info(f"index {target_index} has a position of {x_position},{y_position}")
+        # self.get_logger().info(f"index {target_index} has a position of {x_position},{y_position}")
         return (x_position, y_position)
 
     def turnTowardGoal(self, goal_Location: Tuple[float, float]) -> None:
