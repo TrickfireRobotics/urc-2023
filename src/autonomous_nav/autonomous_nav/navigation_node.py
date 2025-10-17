@@ -332,7 +332,7 @@ class NavigationNode(Node):
         col = target_index % grid.info.width
         x_position = grid.info.origin.position.x + (col) * grid.info.resolution
         y_position = grid.info.origin.position.y + (row) * grid.info.resolution
-        self.get_logger().info(f"index {target_index} has a position of {x_position},{y_position}")
+        # self.get_logger().info(f"index {target_index} has a position of {x_position},{y_position}")
         return (x_position, y_position)
 
     def turnTowardGoal(self, goal_Location: Tuple[float, float]) -> None:
