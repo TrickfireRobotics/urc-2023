@@ -185,9 +185,6 @@ class NavigationNode(Node):
     def costmap_callback(self, msg: OccupancyGrid) -> None:
         self.get_logger().info(f"Received costmap: {msg.info.width} x {msg.info.height}")
         self.global_costmap = msg
-        self.get_logger().info(
-            f"occupancy grid has an origin of {self.global_costmap.info.origin.position.x},{self.global_costmap.info.origin.position.y}"
-        )
         # check first 10 cells
         print(msg.data[:10])
 
@@ -197,13 +194,14 @@ class NavigationNode(Node):
     def updateNavigation(self) -> None:
         # If anchor not received, publish status but do not navigate
         if not self.anchor_received:
-            #self.get_logger().info("anchor not received, creating fake navigation data for testing")
+            self.get_logger().info("anchor not received, creating fake navigation data for testing")
             # self.publishStatus("No anchor received; Navigation Stopped.")
             # return
 
         # If no active waypoint
         if self.active_waypoint is None:
-            #plan a set of waypoints using a queue
+            # plan a set of waypoints using a queue
+            self.get_logger().info("anchor not received, no navigation")
             self.active_waypoint = (2, 2)
             self.end_goal_waypoint = (2, 2)
             # self.publishStatus("No waypoint provided; Navigation Stopped.")
@@ -288,20 +286,17 @@ class NavigationNode(Node):
         return minimum_position
 
     def append_path(self, new_pose: Tuple[float, float]) -> None:
-
         self.path.header.frame_id = "map"
         pose = PoseStamped()
         pose.header.frame_id = "map"
         pose.pose.position.x = new_pose[0]
         pose.pose.position.y = new_pose[1]
         pose.pose.orientation.w = 1.0
-        self.get_logger().info(f"adding position {new_pose[0]} x {new_pose[1]}")
         self.path.poses.append(pose)
 
     def collect_radius(
         self, grid: OccupancyGrid, current_index: int, radius: int
     ) -> list[Tuple[int, int]]:
-        self.get_logger().info("collecting radius")
         points_in_radius: list[Tuple[int, int]] = []
         row_width = grid.info.width
         num_rows = int(radius / grid.info.resolution)
@@ -331,7 +326,10 @@ class NavigationNode(Node):
         col = target_index % grid.info.width
         x_position = grid.info.origin.position.x + (col) * grid.info.resolution
         y_position = grid.info.origin.position.y + (row) * grid.info.resolution
-        self.get_logger().info(f"index {target_index} has a position of {x_position},{y_position}")
+        self.get_logger().info(
+            f"occupancy grid has an origin of {grid.info.origin.position.x},{grid.info.origin.position.y}"
+        )
+        # self.get_logger().info(f"index {target_index} has a position of {x_position},{y_position}")
         return (x_position, y_position)
 
     def turnTowardGoal(self, goal_Location: Tuple[float, float]) -> None:
