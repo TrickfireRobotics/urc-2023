@@ -69,12 +69,12 @@ class DecisionMakingNode(Node):
 
         # Costmap (rolling window)
         self.create_subscription(
-            OccupancyGrid, "/local_costmap/costmap", self.costmap_callback, 10  # or '/costmap'
+            OccupancyGrid, "/local_costmap/costmap", self.costmap_callback, 10
         )
 
         # Waypoint path (queue of waypoints)
         self.create_subscription(
-            Path, "/planned_path", self.path_callback, 10  # Navigation node publishes this
+            Path, "/path", self.path_callback, 10  # Navigation node publishes this
         )
 
         # Navigation status
@@ -162,8 +162,16 @@ class DecisionMakingNode(Node):
 
         # Check if we have necessary data
         if self.costmap is None or self.dwa_planner is None:
-            self.stop_rover()
-            return
+            # Create fake costmap for testing
+            self.get_logger().info("Costmap or DWA planner not initialized, creating fake costmap for testing")
+            fake_grid = OccupancyGrid()
+            fake_grid.info.resolution = 0.1
+            fake_grid.info.width = 100
+            fake_grid.info.height = 100
+            fake_grid.info.origin.position.x = self.global_x - 5.0
+            fake_grid.info.origin.position.y = self.global_y - 5.0              
+            # self.stop_rover()
+            # return
 
         # Check if we have waypoints
         if not self.waypoint_list:
