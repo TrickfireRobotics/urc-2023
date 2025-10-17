@@ -158,7 +158,7 @@ class DecisionMakingNode(Node):
     # ===== MAIN LOGIC =====
 
     def update_decision(self) -> None:
-        """Main control loop - runs at 10 Hz."""
+        """Main control loop - runs at 2 Hz."""
 
         # Check if we have necessary data
         if self.costmap is None or self.dwa_planner is None:
@@ -271,8 +271,7 @@ def main(args: list[str] | None = None) -> None:
         decision_making_node = DecisionMakingNode()
         rclpy.spin(decision_making_node)
 
-        # Entry point for business logic
-        # decision_making_node.update_decision()
+        decision_making_node.get_logger().info("Starting DecisionMakingNode...")
 
     except KeyboardInterrupt:
         pass

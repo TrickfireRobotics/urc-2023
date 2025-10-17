@@ -197,13 +197,14 @@ class NavigationNode(Node):
     def updateNavigation(self) -> None:
         # If anchor not received, publish status but do not navigate
         if not self.anchor_received:
-            #self.get_logger().info("anchor not received, creating fake navigation data for testing")
+            self.get_logger().info("anchor not received, creating fake navigation data for testing")
             # self.publishStatus("No anchor received; Navigation Stopped.")
             # return
 
         # If no active waypoint
         if self.active_waypoint is None:
-            #plan a set of waypoints using a queue
+            # Plan a set of waypoints using a queue
+            self.get_logger().info("No active waypoint, setting a default one for testing")
             self.active_waypoint = (2, 2)
             self.end_goal_waypoint = (2, 2)
             # self.publishStatus("No waypoint provided; Navigation Stopped.")
