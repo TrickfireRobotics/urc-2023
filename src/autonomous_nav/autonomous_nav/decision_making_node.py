@@ -22,7 +22,7 @@ from rclpy.node import Node
 from std_msgs.msg import Float32, String
 from transforms3d.euler import quat2euler
 
-from lib.color_codes import ColorCodes, colorStr
+# from lib.color_codes import ColorCodes, colorStr
 
 from .dwa_planner import DWAPlanner
 
@@ -287,8 +287,11 @@ def main(args: list[str] | None = None) -> None:
         pass
     except ExternalShutdownException:
         if decision_making_node is not None:
+            # decision_making_node.get_logger().info(
+            #     colorStr("Shutting down decision_making_node", ColorCodes.BLUE_OK)
+            # )
             decision_making_node.get_logger().info(
-                colorStr("Shutting down decision_making_node", ColorCodes.BLUE_OK)
+                "Shutting down decision_making_node"
             )
     finally:
         if decision_making_node is not None:
