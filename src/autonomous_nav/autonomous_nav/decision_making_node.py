@@ -278,8 +278,6 @@ def main(args: list[str] | None = None) -> None:
     rclpy.init(args=args)
     decision_making_node = None
     try:
-        
-        decision_making_node.get_logger().info("Starting DecisionMakingNode...")
         decision_making_node = DecisionMakingNode()
         rclpy.spin(decision_making_node)
 
