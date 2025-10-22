@@ -210,9 +210,23 @@ class DecisionMakingNode(Node):
         # Transform goal from global (odom) to local (robot/costmap frame)
         goal_local = self.transform_global_to_local(current_goal_global)
 
+        if self.dwa_planner is None:
+            self.get_logger().info("DWA planner not initialized")
+            # Initialize DWA planner with default params
+            self.dwa_planner = DWAPlanner(
+                costmap=self.costmap,
+                robot_radius=0.3,
+                current_velocity=self.current_wheel_vel,
+                current_position=(0.0, 0.0),  # Robot at costmap center
+                time_delta=0.1,
+                goal=goal_local,
+                theta=self.global_theta,
+            )
+
         # Update DWA planner state
         self.dwa_planner.update_state(
             costmap=self.costmap,
+            robot_radius=0.3,
             current_position=(0.0, 0.0),  # Robot at center of rolling costmap
             current_theta=0.0,  # Always facing forward in own frame
             current_velocity=self.current_wheel_vel,
