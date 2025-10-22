@@ -243,6 +243,9 @@ class DWAPlanner:
         velocity_samples = self.generate_velocity_samples(dynamic_window)
 
         # Generate and evaluate all trajectory candidates
+        if self.costmap is None:
+            return (0.0, 0.0)
+        
         valid_trajectories = []
         for linear_vel, angular_vel in velocity_samples:
             trajectory = self.simulate_trajectory(linear_vel, angular_vel)
