@@ -64,17 +64,18 @@ class DecisionMakingNode(Node):
 
         # Odometry for global pose tracking
         self.create_subscription(
-            Odometry, "/odometry/filtered", self.odometry_callback, 10  # or '/odom'
+            Odometry, "/odometry/filtered", self.odometry_callback, 10
         )
 
         # Costmap (rolling window)
         self.create_subscription(
-            OccupancyGrid, "/local_costmap/costmap", self.costmap_callback, 10
+            # OccupancyGrid, "/local_costmap/costmap", self.costmap_callback, 10
+            OccupancyGrid, "/projected_map", self.costmap_callback, 10
         )
 
-        # Waypoint path (queue of waypoints)
+        # Waypoint path
         self.create_subscription(
-            Path, "/path", self.path_callback, 10  # Navigation node publishes this
+            Path, "/path", self.path_callback, 10
         )
 
         # Navigation status
@@ -82,9 +83,16 @@ class DecisionMakingNode(Node):
 
         # ===== PUBLISHERS =====
 
-        self.left_drive_pub = self.create_publisher(Float32, "/left_wheel_velocity", 10)
+        # Publishers to be used if the control node is used
+        # self.left_drive_pub = self.create_publisher(Float32, "/left_wheel_velocity", 10)
+        # self.right_drive_pub = self.create_publisher(Float32, "/right_wheel_velocity", 10)
 
-        self.right_drive_pub = self.create_publisher(Float32, "/right_wheel_velocity", 10)
+        self.left_drive_pub = self.create_publisher(
+            Float32, "/move_left_drivebase_side_message", 10
+        )
+        self.right_drive_pub = self.create_publisher(
+            Float32, "/move_right_drivebase_side_message", 10
+        )
 
         # ===== TIMER =====
         self.timer = self.create_timer(0.5, self.update_decision)  # 2 Hz
@@ -122,19 +130,7 @@ class DecisionMakingNode(Node):
     def costmap_callback(self, msg: OccupancyGrid) -> None:
         """Update costmap and initialize planner if needed."""
         self.costmap = PyCostmap2D(msg)
-
-        # Initialize DWA planner on first costmap
-        if self.dwa_planner is None:
-            self.dwa_planner = DWAPlanner(
-                costmap=self.costmap,
-                robot_radius=0.3,
-                current_velocity=self.current_wheel_vel,
-                current_position=(0.0, 0.0),  # Robot at costmap center
-                time_delta=0.1,
-                goal=(1.0, 0.0),  # Dummy goal
-                theta=0.0,
-            )
-            self.get_logger().info("DWA Planner initialized")
+        self.get_logger().info(f"Costmap updated with {msg.info.width} x {msg.info.height} grid")
 
     def path_callback(self, msg: Path) -> None:
         """Receive new waypoint queue."""
@@ -163,7 +159,7 @@ class DecisionMakingNode(Node):
         self.get_logger().info("Updating decision making...")
         
         # Check if we have necessary data
-        if self.costmap is None or self.dwa_planner is None:
+        if self.costmap is None:
             # Create fake costmap for testing
             self.get_logger().info("Costmap or DWA planner not initialized, creating fake costmap for testing")
             fake_grid = OccupancyGrid()
