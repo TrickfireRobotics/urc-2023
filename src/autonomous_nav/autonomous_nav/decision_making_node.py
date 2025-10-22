@@ -135,6 +135,7 @@ class DecisionMakingNode(Node):
             #upon detecting obstacle, see if ideal to reprioritize
             #if so,
             # do global navigation(a*) to find new path then continue using local nav
+            
             #identify road hazard(spikes) and dropoffs as obstacles in handleObstaceAvoidance() by setting them to lethal cost (254) to avoid area
             self.handleObstacleAvoidance()
             return
