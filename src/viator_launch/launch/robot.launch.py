@@ -51,6 +51,15 @@ navigation_node = Node(
 sensor_processing_node = Node(
     package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
 )
+costmap_config = os.path.join(
+    get_package_share_directory("autonomous_nav"), "config", "params.yaml"
+)
+global_costmap_node = Node(
+    package="nav2_costmap_2d",
+    executable="nav2_costmap_2d",
+    name="global_costmap",
+    parameters=[costmap_config],
+)
 
 # Include the ZED camera launch file from zed_wrapper
 zed_launch = IncludeLaunchDescription(
@@ -59,6 +68,7 @@ zed_launch = IncludeLaunchDescription(
     ),
     launch_arguments={"camera_model": "zed2i", "composable_node": "False"}.items(),
 )
+
 
 gps_node = Node(
     package="ublox_gps",
@@ -151,6 +161,6 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             navsat_transform,
             ekf_node,
             static_tf,
-            octomap_node,
+            global_costmap_node,
         ]
     )
