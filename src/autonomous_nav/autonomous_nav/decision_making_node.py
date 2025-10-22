@@ -226,9 +226,8 @@ class DecisionMakingNode(Node):
         # Update DWA planner state
         self.dwa_planner.update_state(
             costmap=self.costmap,
-            robot_radius=0.3,
-            current_position=(0.0, 0.0),  # Robot at center of rolling costmap
-            current_theta=0.0,  # Always facing forward in own frame
+            current_position=(0.0, 0.0),
+            current_theta=0.0,
             current_velocity=self.current_wheel_vel,
             goal=goal_local,
             global_pose=(self.global_x, self.global_y, self.global_theta),
@@ -270,7 +269,7 @@ class DecisionMakingNode(Node):
 
     def transform_path_to_list(self) -> List[Tuple[float, float]]:
         """Convert Path message to waypoint queue."""
-        # self.waypoint_queue.clear()
+        self.waypoint_list.clear()
         path_list: List[Tuple[float, float]] = []
         for pose_stamped in self.waypoint_list:
             x = pose_stamped[0]
