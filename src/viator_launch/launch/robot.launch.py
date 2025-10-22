@@ -3,9 +3,9 @@ import os
 import launch
 from ament_index_python import get_package_share_directory
 from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 can_moteus_node = Node(package="can_moteus", executable="can_moteus", name="can_moteus_node")
 
@@ -50,6 +50,9 @@ navigation_node = Node(
 )
 sensor_processing_node = Node(
     package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
+)
+stuck_detection_node = Node(
+    package="autonomous_nav", executable="stuck_detection_node", name="stuck_detection_node"
 )
 
 # Include the ZED camera launch file from zed_wrapper
@@ -136,6 +139,7 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             gps_anchor_node,
             navigation_node,
             sensor_processing_node,
+            stuck_detection_node,
             launch_include,
             gps_node,
             zed_launch,
