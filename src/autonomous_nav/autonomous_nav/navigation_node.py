@@ -205,7 +205,9 @@ class NavigationNode(Node):
         if self.active_waypoint is None:
             # Plan a set of waypoints using a queue
             self.get_logger().info("No active waypoint, setting a default one for testing")
-            self.active_waypoint = (2, 2)
+            # self.active_waypoint = (2, 2)
+            path_length: int = len(self.path.poses)
+            self.active_waypoint = (self.path.poses[path_length - 1].pose.position.x, self.path.poses[path_length - 1].pose.position.y)
             self.end_goal_waypoint = (2, 2)
             # self.publishStatus("No waypoint provided; Navigation Stopped.")
             # return

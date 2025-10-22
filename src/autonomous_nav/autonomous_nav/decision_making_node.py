@@ -213,7 +213,7 @@ class DecisionMakingNode(Node):
                 costmap=self.costmap,
                 robot_radius=0.3,
                 current_velocity=self.current_wheel_vel,
-                current_position=(0.0, 0.0),  # Robot at costmap center
+                current_position=(0.0, 0.0),
                 time_delta=0.1,
                 goal=goal_local,
                 theta=self.global_theta,
