@@ -52,7 +52,7 @@ class NavigationNode(Node):
         self.current_lat = 0
         self.current_lon = 0.0
         self.current_alt = 0.0
-        self.end_goal_waypoint: Tuple[float, float] = (2, 2)
+        self.end_goal_waypoint: Tuple[float, float] = (0, 2)
         self.path: Path = Path()
         self.global_costmap: Optional[OccupancyGrid] = None
         self.get_logger().info(f"Navigation Node has initialized first arguments")
@@ -208,7 +208,10 @@ class NavigationNode(Node):
             self.active_waypoint = (2, 2)
             if len(self.path.poses) > 0:
                 path_length: int = max(len(self.path.poses) - 1, 0)
-                self.active_waypoint = (self.path.poses[path_length].pose.position.x, self.path.poses[path_length].pose.position.y)
+                self.active_waypoint = (
+                    self.path.poses[path_length].pose.position.x,
+                    self.path.poses[path_length].pose.position.y,
+                )
             self.end_goal_waypoint = (2, 2)
             # self.publishStatus("No waypoint provided; Navigation Stopped.")
             # return
@@ -272,6 +275,7 @@ class NavigationNode(Node):
             self.current_position
         )  # the lowest cost position (AKA the position we will add next)
         for item in target_area:
+            self.get_logger().info(f"index {item[1]} has a raw cost of {item[0]}")
             item_position = self.index_to_position(
                 grid, item[1]
             )  # the x,y position of a point currently in the target area
