@@ -311,7 +311,6 @@ class NavigationNode(Node):
     ) -> list[Tuple[int, int]]:
         self.get_logger().info("collecting radius")
         points_in_radius: list[Tuple[int, int]] = []
-        row_width = grid.info.width
         num_rows = int(radius / grid.info.resolution)
         starting_index = int(
             current_index - ((grid.info.width * (radius / 2) / grid.info.resolution))
@@ -320,11 +319,12 @@ class NavigationNode(Node):
             current_index + ((grid.info.width * (radius / 2) / grid.info.resolution))
         )
         for i in range(0, num_rows):
-            for j in range(0, row_width):
-                index = int(starting_index + (i * row_width) + j)
+            for j in range(0, num_rows):
+                index = int(starting_index + (i * num_rows) + j)
                 if index < len(grid.data):
                     data = int(grid.data[index])
                     points_in_radius.append((data, index))
+        self.get_logger().info(f"Collected  {len(points_in_radius)} points")
         return points_in_radius
 
     def position_to_index(self, grid: OccupancyGrid, current_position: Tuple[float, float]) -> int:
