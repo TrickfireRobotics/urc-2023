@@ -249,7 +249,7 @@ class NavigationNode(Node):
             self.end_goal_waypoint[1],
         )
         while distance_to_goal > 2:
-            self.get_logger().info(
+            self.get_logger().warn(
                 f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
             )
             target_area = self.collect_radius(
@@ -273,7 +273,7 @@ class NavigationNode(Node):
         minimum_cost = 100.0
         minimum_position: Tuple[float, float] = (
             self.current_position
-        )  # the lowest cost position (AKA the position we will add next)
+        )  # the lowest cost position (AKA the position we will add next
         for item in target_area:
             self.get_logger().info(f"index {item[1]} has a raw cost of {item[0]}")
 
@@ -292,10 +292,6 @@ class NavigationNode(Node):
             if item_cost < minimum_cost and item_cost != 100 and item_cost != -1:
                 minimum_position = item_position
                 minimum_cost = item_cost
-            if item_cost == -1:
-                self.publishStatus(
-                    f"position ({item_position[0]:.2f}, {item_position[1]:.2f}) has been chosen as unknown)"
-                )
 
         return minimum_position
 
