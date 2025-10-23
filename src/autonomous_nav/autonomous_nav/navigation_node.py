@@ -276,9 +276,13 @@ class NavigationNode(Node):
         )  # the lowest cost position (AKA the position we will add next)
         for item in target_area:
             self.get_logger().info(f"index {item[1]} has a raw cost of {item[0]}")
+
             item_position = self.index_to_position(
                 grid, item[1]
             )  # the x,y position of a point currently in the target area
+            self.get_logger().info(
+                f"index {item[1]} has a raw cost of {item[0]} and position of {item_position[0]}, {item_position[1]}"
+            )
             item_cost = item[0] + self.distance_2d(
                 item_position[0],
                 item_position[1],
