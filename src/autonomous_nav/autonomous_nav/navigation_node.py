@@ -248,6 +248,8 @@ class NavigationNode(Node):
             self.end_goal_waypoint[0],
             self.end_goal_waypoint[1],
         )
+        checkVal = self.position_to_index(grid, (0, 2))
+        self.get_logger().info(f"index of goal is  {checkVal} with a cost of {grid.data[checkVal]}")
         while distance_to_goal > 1:
             self.get_logger().warn(
                 f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
@@ -329,6 +331,10 @@ class NavigationNode(Node):
         row = (current_position[1] - grid.info.origin.position.y) / grid.info.resolution
         column = (current_position[0] - grid.info.origin.position.x) / grid.info.resolution
         current_index = int((row * grid.info.width) + column)
+        if current_index > len(grid.data):
+            self.get_logger().warn(
+                f"the position  {current_position[0]}, {current_position[1]} is outside the occupancy grid"
+            )
         return current_index
 
     def index_to_position(self, grid: OccupancyGrid, target_index: int) -> Tuple[float, float]:
