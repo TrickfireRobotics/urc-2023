@@ -45,7 +45,7 @@ class NavigationNode(Node):
         self.start_alt = 0.0
 
         # ---- Internal State ----
-        self.active_waypoint: Optional[Tuple[float, float]] = None
+        self.active_waypoint: Optional[Tuple[float, float]] = (0, 2)
         self.current_position = (0.0, 0.0)  # x, y
         self.current_yaw = 0.0
         self.current_global_yaw = 0.0
@@ -205,14 +205,13 @@ class NavigationNode(Node):
         if self.active_waypoint is None:
             # Plan a set of waypoints using a queue
             self.get_logger().info("No active waypoint, setting a default one for testing")
-            self.active_waypoint = (2, 2)
+
             if len(self.path.poses) > 0:
                 path_length: int = max(len(self.path.poses) - 1, 0)
                 self.active_waypoint = (
                     self.path.poses[path_length].pose.position.x,
                     self.path.poses[path_length].pose.position.y,
                 )
-            self.end_goal_waypoint = (2, 2)
             # self.publishStatus("No waypoint provided; Navigation Stopped.")
             # return
 
@@ -275,14 +274,9 @@ class NavigationNode(Node):
             self.current_position
         )  # the lowest cost position (AKA the position we will add next
         for item in target_area:
-            self.get_logger().info(f"index {item[1]} has a raw cost of {item[0]}")
-
             item_position = self.index_to_position(
                 grid, item[1]
-            )  # the x,y position of a point currently in the target area
-            self.get_logger().info(
-                f"index {item[1]} has a raw cost of {item[0]} and position of {item_position[0]}, {item_position[1]}"
-            )
+            )  # the x,y position of a point currently in the target are
             item_cost = item[0] + self.distance_2d(
                 item_position[0],
                 item_position[1],
@@ -290,6 +284,9 @@ class NavigationNode(Node):
                 self.end_goal_waypoint[1],
             )  # item cost is the cost from the occupancy grid (item[1]) + distance to the goal
             if item_cost < minimum_cost and item_cost != 100 and item_cost != -1:
+                self.get_logger().info(
+                    f"index {item[1]} has a raw cost of {item[0]} and position of {item_position[0]}, {item_position[1]}"
+                )
                 minimum_position = item_position
                 minimum_cost = item_cost
 
@@ -312,6 +309,7 @@ class NavigationNode(Node):
         self.get_logger().info("collecting radius")
         points_in_radius: list[Tuple[int, int]] = []
         num_rows = int(radius / grid.info.resolution)
+        # originally had grid.wdith in j spot
         starting_index = int(
             current_index - ((grid.info.width * (radius / 2) / grid.info.resolution))
         )
