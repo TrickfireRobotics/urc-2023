@@ -281,6 +281,9 @@ class NavigationNode(Node):
                 self.end_goal_waypoint[0],
                 self.end_goal_waypoint[1],
             )  # item cost is the cost from the occupancy grid (item[1]) + distance to the goal
+            self.get_logger().info(
+                f"index {item[1]} has a raw cost of {item[0]} and position of {item_position[0]}, {item_position[1]}"
+            )
             if item_cost < minimum_cost and item_cost != 100 and item_cost != -1:
                 self.get_logger().info(
                     f"index {item[1]} has a raw cost of {item[0]} and position of {item_position[0]}, {item_position[1]}"
