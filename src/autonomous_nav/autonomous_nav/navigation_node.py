@@ -227,6 +227,7 @@ class NavigationNode(Node):
             self.active_waypoint = None
             return
         elif self.global_costmap != None:
+            self.get_logger().warn("RRunning path planner")
             self.planPath(self.global_costmap)
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
         self.publishFeedback(goal_x, goal_y)
