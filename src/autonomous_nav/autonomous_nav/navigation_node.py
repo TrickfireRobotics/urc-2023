@@ -268,11 +268,9 @@ class NavigationNode(Node):
     def find_lowest_cost_node(
         self, target_area: list[Tuple[int, int]], grid: OccupancyGrid
     ) -> Tuple[float, float]:
-        print(len(target_area))
+        self.get_logger().info(f"target area is this large: {len(target_area)}")
         minimum_cost = 100.0
-        minimum_position: Tuple[float, float] = (
-            self.current_position
-        )  # the lowest cost position (AKA the position we will add next
+        minimum_position: Tuple[float, float] = target_area[0]
         for item in target_area:
             item_position = self.index_to_position(
                 grid, item[1]
