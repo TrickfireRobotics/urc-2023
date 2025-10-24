@@ -184,6 +184,7 @@ class NavigationNode(Node):
 
     def costmap_callback(self, msg: OccupancyGrid) -> None:
         self.get_logger().info(f"Received costmap: {msg.info.width} x {msg.info.height}")
+        self.get_logger().info(f"Resolution: {msg.info.resolution}")
         self.global_costmap = msg
         self.get_logger().info(
             f"occupancy grid has an origin of {self.global_costmap.info.origin.position.x},{self.global_costmap.info.origin.position.y}"
