@@ -250,7 +250,9 @@ class NavigationNode(Node):
             self.end_goal_waypoint[1],
         )
         checkVal = self.position_to_index(grid, (0, 2))
+        checkItP = self.index_to_position(grid, checkVal)
         self.get_logger().info(f"index of goal is  {checkVal} with a cost of {grid.data[checkVal]}")
+        self.get_logger().info(f"position of goal is  {checkItP[0]} , {checkItP[1]}")
         while distance_to_goal > 1:
             self.get_logger().warn(
                 f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
