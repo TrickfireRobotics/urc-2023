@@ -230,7 +230,7 @@ class NavigationNode(Node):
             self.active_waypoint = None
             return
         elif self.global_costmap != None:
-            test_index = self.position_to_index(self.global_costmap, (2.0, 0.0))
+            test_index = self.position_to_index(self.global_costmap, (2.0, 2.0))
             test_coordinate = self.index_to_position(self.global_costmap, test_index)
             self.get_logger().info(
                 f"predicted position of point is  {test_coordinate[0]} , {test_coordinate[1]}"
@@ -241,7 +241,7 @@ class NavigationNode(Node):
             self.get_logger().info(f"test origin index is  {test_origin[0]}, {test_origin[1]}")
             self.append_path((0.0, 0.0))
             self.get_logger().warn("RRunning path planner")
-            self.planPath(self.global_costmap)
+            # self.planPath(self.global_costmap)
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
         self.publishFeedback(goal_x, goal_y)
 
