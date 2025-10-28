@@ -228,10 +228,10 @@ class NavigationNode(Node):
             self.active_waypoint = None
             return
         elif self.global_costmap != None:
-            self.append_path((0, 0))
-            self.append_path((1, 1))
-            self.append_path((1, 2))
-            self.append_path((2, 0))
+            self.append_path((0.0, 0.0))
+            self.append_path((1.0, 1.0))
+            self.append_path((1.0, 2.0))
+            self.append_path((2.0, 0.0))
             self.path_pub.publish(self.path)
             self.get_logger().warn("RRunning path planner")
             self.planPath(self.global_costmap)
