@@ -240,10 +240,20 @@ class NavigationNode(Node):
             test_origin_index = self.position_to_index(self.global_costmap, test_origin)
             self.get_logger().info(f"test origin index is  {test_origin[0]}, {test_origin[1]}")
             self.append_path((0.0, 0.0))
-            self.get_logger().warn("RRunning path planner")
+            self.get_logger().warn("RRunning test")
+            self.test_via_fire(self.global_costmap)
             # self.planPath(self.global_costmap)
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
         self.publishFeedback(goal_x, goal_y)
+
+    def test_via_fire(self, grid: OccupancyGrid) -> None:
+        length = 1
+        starting_index = self.position_to_index(grid, (0.0, 0.0))
+        self.get_logger().info(f"plotting point beginning at index  {starting_index}")
+        counter = int(length / grid.info.resolution)
+        for i in range(0, counter):
+            index = starting_index + (i * grid.info.width)
+            self.get_logger().info(f"index  {index} has a value of {grid.data[index]}")
 
     def planPath(
         self,
