@@ -233,8 +233,8 @@ class NavigationNode(Node):
             self.append_path((1.0, 2.0))
             self.append_path((2.0, 0.0))
             self.path_pub.publish(self.path)
-            self.get_logger().warn("RRunning path planner")
-            self.planPath(self.global_costmap)
+            # self.get_logger().warn("RRunning path planner")
+            # self.planPath(self.global_costmap)
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
         self.publishFeedback(goal_x, goal_y)
 
