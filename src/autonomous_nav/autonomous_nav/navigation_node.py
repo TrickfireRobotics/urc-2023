@@ -56,6 +56,7 @@ class NavigationNode(Node):
         self.path: Path = Path()
         self.global_costmap: Optional[OccupancyGrid] = None
         self.get_logger().info(f"Navigation Node has initialized first arguments")
+        self.spun_once = False
         # ---- Subscribers ----
         # latitude, longitude, altitude
         self.global_costmap_subscription = self.create_subscription(
@@ -227,16 +228,14 @@ class NavigationNode(Node):
             self.publishStatus(f"Successfully reached waypoint ({goal_x:.2f}, {goal_y:.2f})")
             self.active_waypoint = None
             return
-        elif self.global_costmap != None:
+        elif self.global_costmap != None and self.spun_once == False:
             self.append_path((2.0, 0.0))
             test_index = self.position_to_index(self.global_costmap, (2.0, 0.0))
-            self.get_logger().info("predicted index of point is  {test_index}")
+            self.get_logger().info(f"predicted index of point is  {test_index}")
             test_coordinate = self.index_to_position(self.global_costmap, test_index)
-            self.get_logger().info(
-                "converted coordinate is {test_coordinate[0]} , {test_coordinate[1]}"
-            )
             self.append_path(test_coordinate)
             self.path_pub.publish(self.path)
+            self.spun_once = True
             # self.get_logger().warn("RRunning path planner")
             # self.planPath(self.global_costmap)
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
