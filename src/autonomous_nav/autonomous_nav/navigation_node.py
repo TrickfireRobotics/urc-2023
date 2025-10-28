@@ -55,6 +55,7 @@ class NavigationNode(Node):
         self.end_goal_waypoint: Tuple[float, float] = (2, 2)
         self.path: Path = Path()
         self.global_costmap: Optional[OccupancyGrid] = None
+        self.end_goal_index: int = 0
         self.get_logger().info(f"Navigation Node has initialized first arguments")
         # ---- Subscribers ----
         # latitude, longitude, altitude
@@ -186,6 +187,7 @@ class NavigationNode(Node):
         self.get_logger().info(f"Received costmap: {msg.info.width} x {msg.info.height}")
         self.get_logger().info(f"Resolution: {msg.info.resolution}")
         self.global_costmap = msg
+        self.end_goal_index = self.position_to_index(self.global_costmap, self.end_goal_waypoint)
         self.get_logger().info(
             f"occupancy grid has an origin of {self.global_costmap.info.origin.position.x},{self.global_costmap.info.origin.position.y}"
         )
@@ -281,18 +283,21 @@ class NavigationNode(Node):
         self, target_area: list[Tuple[int, int]], grid: OccupancyGrid
     ) -> Tuple[float, float]:
         self.get_logger().info(f"target area is this large: {len(target_area)}")
-        minimum_cost = 100.0
+        minimum_cost = sys.float_info.max
         minimum_position: Tuple[float, float] = target_area[0]
         for item in target_area:
             item_position = self.index_to_position(
                 grid, item[1]
             )  # the x,y position of a point currently in the target are
-            item_cost = item[0] + self.distance_2d(
-                item_position[0],
-                item_position[1],
-                self.end_goal_waypoint[0],
-                self.end_goal_waypoint[1],
-            )  # item cost is the cost from the occupancy grid (item[1]) + distance to the goal
+            # item_cost = item[0] + self.distance_2d(
+            #    item_position[0],
+            #   item_position[1],
+            #   self.end_goal_waypoint[0],
+            #   self.end_goal_waypoint[1],
+            # )  # item cost is the cost from the occupancy grid (item[1]) + distance to the goal
+            item_cost = (self.end_goal_index) - item[1]
+            if item_cost < 0:
+                item_cost *= -1
             if item_cost < minimum_cost and item_cost != 100 and item_cost != -1:
                 self.get_logger().info(
                     f"index {item[1]} has a raw cost of {item[0]} and position of {item_position[0]}, {item_position[1]}"
