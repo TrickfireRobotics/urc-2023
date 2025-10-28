@@ -228,10 +228,14 @@ class NavigationNode(Node):
             self.active_waypoint = None
             return
         elif self.global_costmap != None:
-            self.append_path((0.0, 0.0))
-            self.append_path((1.0, 1.0))
-            self.append_path((1.0, 2.0))
             self.append_path((2.0, 0.0))
+            test_index = self.position_to_index(self.global_costmap, (2.0, 0.0))
+            self.get_logger().info("predicted index of point is  {test_index}")
+            test_coordinate = self.index_to_position(self.global_costmap, test_index)
+            self.get_logger().info(
+                "converted coordinate is {test_coordinate[0]} , {test_coordinate[1]}"
+            )
+            self.append_path(test_coordinate)
             self.path_pub.publish(self.path)
             # self.get_logger().warn("RRunning path planner")
             # self.planPath(self.global_costmap)
