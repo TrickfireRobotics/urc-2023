@@ -45,14 +45,14 @@ class NavigationNode(Node):
         self.start_alt = 0.0
 
         # ---- Internal State ----
-        self.active_waypoint: Optional[Tuple[float, float]] = (0, 2)
+        self.active_waypoint: Optional[Tuple[float, float]] = (2, 2)
         self.current_position = (0.0, 0.0)  # x, y
         self.current_yaw = 0.0
         self.current_global_yaw = 0.0
         self.current_lat = 0
         self.current_lon = 0.0
         self.current_alt = 0.0
-        self.end_goal_waypoint: Tuple[float, float] = (0, 2)
+        self.end_goal_waypoint: Tuple[float, float] = (2, 2)
         self.path: Path = Path()
         self.global_costmap: Optional[OccupancyGrid] = None
         self.get_logger().info(f"Navigation Node has initialized first arguments")
