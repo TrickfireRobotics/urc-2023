@@ -338,8 +338,13 @@ class NavigationNode(Node):
 
     def position_to_index(self, grid: OccupancyGrid, current_position: Tuple[float, float]) -> int:
         # this function takes in the occupancy grid and an index within in it, and returns the map coordinates of that point
-        row = (current_position[1] - grid.info.origin.position.y) / grid.info.resolution
-        column = (current_position[0] - grid.info.origin.position.x) / grid.info.resolution
+        # for testing, i have swapped the row and column variables (10/28/2025)
+        row = (
+            current_position[0] - grid.info.origin.position.x
+        ) / grid.info.resolution  # the number of cells forward
+        column = (
+            current_position[1] - grid.info.origin.position.y
+        ) / grid.info.resolution  # the number of cells side to side
         current_index = int((row * grid.info.width) + column)
         if current_index > len(grid.data):
             self.get_logger().warn(
@@ -348,10 +353,10 @@ class NavigationNode(Node):
         return current_index
 
     def index_to_position(self, grid: OccupancyGrid, target_index: int) -> Tuple[float, float]:
-        row = target_index // grid.info.width
+        row = target_index // grid.info.width  # the number of rows we have gone up or down
         col = target_index % grid.info.width
-        x_position = grid.info.origin.position.x + (col) * grid.info.resolution
-        y_position = grid.info.origin.position.y + (row) * grid.info.resolution
+        x_position = grid.info.origin.position.x + (row) * grid.info.resolution
+        y_position = grid.info.origin.position.y + (col) * grid.info.resolution
         # self.get_logger().info(f"index {target_index} has a position of {x_position},{y_position}")
         return (x_position, y_position)
 
