@@ -239,11 +239,8 @@ class NavigationNode(Node):
             test_origin_index = self.position_to_index(self.global_costmap, test_origin)
             self.get_logger().info(f"test origin index is  {test_origin[0]}, {test_origin[1]}")
             self.append_path((0.0, 0.0))
-            self.append_path((1.0, 0.0))
-            self.append_path(test_coordinate)
-            self.path_pub.publish(self.path)
-            # self.get_logger().warn("RRunning path planner")
-            # self.planPath(self.global_costmap)
+            self.get_logger().warn("RRunning path planner")
+            self.planPath(self.global_costmap)
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
         self.publishFeedback(goal_x, goal_y)
 
@@ -255,7 +252,7 @@ class NavigationNode(Node):
         This algorithm looks at the global occupancy grid in order to plan a path through it for the rover using an A* style search algorithm.
         """
         # gather points within a certain radius
-        search_radius: int = 2
+        search_radius: float = 0.5
         lowest_cost_position = self.current_position
         distance_to_goal = self.distance_2d(
             lowest_cost_position[0],
@@ -263,10 +260,6 @@ class NavigationNode(Node):
             self.end_goal_waypoint[0],
             self.end_goal_waypoint[1],
         )
-        checkVal = self.position_to_index(grid, (0, 2))
-        checkItP = self.index_to_position(grid, checkVal)
-        self.get_logger().info(f"index of goal is  {checkVal} with a cost of {grid.data[checkVal]}")
-        self.get_logger().info(f"position of goal is  {checkItP[0]} , {checkItP[1]}")
         while distance_to_goal > 1:
             self.get_logger().warn(
                 f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
@@ -322,7 +315,7 @@ class NavigationNode(Node):
         self.path.poses.append(pose)
 
     def collect_radius(
-        self, grid: OccupancyGrid, current_index: int, radius: int
+        self, grid: OccupancyGrid, current_index: int, radius: float
     ) -> list[Tuple[int, int]]:
         self.get_logger().info("collecting radius")
         points_in_radius: list[Tuple[int, int]] = []
