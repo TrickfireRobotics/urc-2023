@@ -240,10 +240,13 @@ class NavigationNode(Node):
             test_origin_index = self.position_to_index(self.global_costmap, test_origin)
             self.get_logger().info(f"test origin index is  {test_origin[0]}, {test_origin[1]}")
             self.append_path((0.0, 0.0))
-            self.append_path((0.024999991431832402, 0.47500037439167464))
+            self.append_path(
+                (0.024999991431832402, 0.47500037439167464)
+            )  # the looks more like y,x, my index to position is not accounting for the difference in rotation
             self.path_pub.publish(self.path)
             self.get_logger().warn("RRunning test")
             self.test_via_fire(self.global_costmap)
+            self.path_pub.publish(self.path)
             # self.planPath(self.global_costmap)
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
         self.publishFeedback(goal_x, goal_y)
@@ -255,7 +258,9 @@ class NavigationNode(Node):
         counter = int(length / grid.info.resolution)
         for i in range(0, counter):
             index = starting_index + (i * grid.info.width)
-            x, y = self.index_to_position(grid, index)
+            x, y = self.index_to_position(grid, index)  # this is working correctly
+            self.append_path((x, y))
+            # going forwards by one row bring me to the left
             self.get_logger().info(
                 f"index  {index} has a value of {grid.data[index]} and a position of {x},{y}"
             )
@@ -359,10 +364,10 @@ class NavigationNode(Node):
         # this function takes in the occupancy grid and an index within in it, and returns the map coordinates of that point
         # for testing, i have swapped the row and column variables (10/28/2025)
         x, y = position
-        col = int(
+        row = int(
             (x - grid.info.origin.position.x) / grid.info.resolution
         )  # the number of cells forward
-        row = int(
+        col = int(
             (y - grid.info.origin.position.y) / grid.info.resolution
         )  # the number of cells side to side
         current_index = int((row * grid.info.width) + col)
@@ -371,8 +376,8 @@ class NavigationNode(Node):
         return current_index
 
     def index_to_position(self, grid: OccupancyGrid, target_index: int) -> Tuple[float, float]:
-        x_grid = target_index % grid.info.width  # the number of rows we have gone up or down
-        y_grid = target_index // grid.info.width
+        x_grid = target_index // grid.info.width  # the number of rows we have gone up or down
+        y_grid = target_index % grid.info.width
         x_position = grid.info.origin.position.x + (x_grid + 0.5) * grid.info.resolution
         y_position = grid.info.origin.position.y + (y_grid + 0.5) * grid.info.resolution
         # self.get_logger().info(f"index {target_index} has a position of {x_position},{y_position}")
