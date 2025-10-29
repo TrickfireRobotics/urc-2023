@@ -255,9 +255,7 @@ class NavigationNode(Node):
         self.get_logger().info(f"plotting point beginning at index  {starting_index} at 0,0")
         counter = int(length / grid.info.resolution)
         for i in range(0, counter):
-            index = starting_index + (
-                i * grid.info.width
-            )  # increasing the width takes you directly to the left
+            index = starting_index + (i * 20)  # increasing the width takes you directly to the left
             x, y = self.index_to_position(grid, index)  #
             self.append_path((x, y))
             # going forwards by one row bring me to the left
