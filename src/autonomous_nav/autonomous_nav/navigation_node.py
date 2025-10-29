@@ -191,6 +191,7 @@ class NavigationNode(Node):
         self.get_logger().info(
             f"occupancy grid has an origin of {self.global_costmap.info.origin.position.x},{self.global_costmap.info.origin.position.y}"
         )
+        self.get_logger().info(f"resolution: {self.global_costmap.info.resolution}")
         # check first 10 cells
         print(msg.data[:10])
 
