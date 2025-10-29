@@ -258,7 +258,7 @@ class NavigationNode(Node):
         self.get_logger().info(f"plotting point beginning at index  {starting_index} at 0,0")
         counter = int(length / grid.info.resolution)
         for i in range(0, counter):
-            index = starting_index + (i * 20)  # increasing the width takes you directly to the left
+            index = starting_index + (i)  # increasing the width takes you directly to the left
             x, y = self.index_to_position(grid, index)  #
             self.append_path((x, y))
             # going forwards by one row bring me to the left
@@ -273,8 +273,6 @@ class NavigationNode(Node):
         """
         This algorithm looks at the global occupancy grid in order to plan a path through it for the rover using an A* style search algorithm.
         """
-        # gather points within a certain radius
-        search_radius: float = 0.5
         lowest_cost_position = self.current_position
         distance_to_goal = self.distance_2d(
             lowest_cost_position[0],
@@ -286,8 +284,8 @@ class NavigationNode(Node):
             self.get_logger().warn(
                 f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
             )
-            target_area = self.collect_radius(
-                grid, self.position_to_index(grid, lowest_cost_position), search_radius
+            target_area = self.collect_adjacent(
+                grid, self.position_to_index(grid, lowest_cost_position)
             )
             lowest_cost_position = self.find_lowest_cost_node(target_area, grid)
 
@@ -307,18 +305,8 @@ class NavigationNode(Node):
         minimum_cost = sys.float_info.max
         minimum_position: Tuple[float, float] = target_area[0]
         for item in target_area:
-            item_position = self.index_to_position(
-                grid, item[1]
-            )  # the x,y position of a point currently in the target are
-            # item_cost = item[0] + self.distance_2d(
-            #    item_position[0],
-            #   item_position[1],
-            #   self.end_goal_waypoint[0],
-            #   self.end_goal_waypoint[1],
-            # )  # item cost is the cost from the occupancy grid (item[1]) + distance to the goal
-            item_cost = (self.end_goal_index) - item[1]
-            if item_cost < 0:
-                item_cost *= -1
+            item_position = self.index_to_position(grid, item[1])
+            item_cost = self.distance_between_indicies(grid, item[1], self.end_goal_index)
             if item_cost < minimum_cost and item_cost != 100 and item_cost != -1:
                 self.get_logger().info(
                     f"index {item[1]} has a raw cost of {item[0]} and position of {item_position[0]}, {item_position[1]}"
@@ -339,27 +327,26 @@ class NavigationNode(Node):
         # self.get_logger().info(f"adding position {new_pose[0]} x {new_pose[1]}")
         self.path.poses.append(pose)
 
-    def collect_radius(
-        self, grid: OccupancyGrid, current_index: int, radius: float
-    ) -> list[Tuple[int, int]]:
-        self.get_logger().info("collecting radius")
-        points_in_radius: list[Tuple[int, int]] = []
-        num_rows = int(radius / grid.info.resolution)
-        # originally had grid.wdith in j spot
-        starting_index = int(
-            current_index - ((grid.info.width * (radius / 2) / grid.info.resolution))
+    def distance_between_indicies(self, grid: OccupancyGrid, ind1: int, ind2: int) -> float:
+        # distance = distance in sqrt((row_distance)^2+(collumn_distance)^2)
+        row1 = ind1 // grid.info.width
+        col1 = ind1 % grid.info.width
+        row2 = ind2 // grid.info.width
+        col2 = ind2 % grid.info.width
+        distance = math.sqrt((row1 - row2) ** 2 + (col1 - col2) ** 2)
+        return distance
+
+    def collect_adjacent(self, grid: OccupancyGrid, current_index: int) -> list[Tuple[int, int]]:
+        adjacent_points: list[Tuple[int, int]] = []
+        adjacent_points.append((grid.data[current_index - 1], current_index - 1))
+        adjacent_points.append((grid.data[current_index + 1], current_index + 1))
+        adjacent_points.append(
+            (grid.data[current_index - grid.info.width], current_index - grid.info.width)
         )
-        ending_index = int(
-            current_index + ((grid.info.width * (radius / 2) / grid.info.resolution))
+        adjacent_points.append(
+            (grid.data[current_index + grid.info.width], current_index + grid.info.width)
         )
-        for i in range(0, num_rows):
-            for j in range(0, num_rows):
-                index = int(starting_index + (i * num_rows) + j)
-                if index < len(grid.data):
-                    data = int(grid.data[index])
-                    points_in_radius.append((data, index))
-        self.get_logger().info(f"Collected  {len(points_in_radius)} points")
-        return points_in_radius
+        return adjacent_points
 
     def position_to_index(self, grid: OccupancyGrid, position: Tuple[float, float]) -> int:
         # this function takes in the occupancy grid and an index within in it, and returns the map coordinates of that point
