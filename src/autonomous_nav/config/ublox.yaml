@@ -1,0 +1,9 @@
+ublox_gps_node:
+  ros__parameters:
+    device: "/dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver-if00"
+    baudrate: 115200
+
+    rate: 1.0
+    nav_rate: 1
+
+

@@ -175,7 +175,7 @@ class SensorProcessingNode(Node):
             total_points = cloud_msg.width * cloud_msg.height
             points = np.full((total_points, 3), np.nan, dtype=np.float32)
 
-            self.get_logger().info(f"Extracting {total_points} points from PointCloud2")
+            # self.get_logger().info(f"Extracting {total_points} points from PointCloud2")
 
             point_step = cloud_msg.point_step
             row_step = cloud_msg.row_step
@@ -206,7 +206,7 @@ class SensorProcessingNode(Node):
                     except struct.error as e:
                         self.get_logger().error(f"Struct error at point index {point_index}: {e}")
                         continue
-            self.get_logger().info(f"Extracted {valid_count} valid points out of {total_points}")
+            # self.get_logger().info(f"Extracted {valid_count} valid points out of {total_points}")
             return points
         except Exception as e:
             self.get_logger().error(f"Error extracting points: {e}")
