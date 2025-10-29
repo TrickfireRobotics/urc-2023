@@ -249,11 +249,14 @@ class NavigationNode(Node):
     def test_via_fire(self, grid: OccupancyGrid) -> None:
         length = 1
         starting_index = self.position_to_index(grid, (0.0, 0.0))  # position to index is broken
-        self.get_logger().info(f"plotting point beginning at index  {starting_index}")
+        self.get_logger().info(f"plotting point beginning at index  {starting_index} at 0,0")
         counter = int(length / grid.info.resolution)
         for i in range(0, counter):
             index = starting_index + (i * grid.info.width)
-            self.get_logger().info(f"index  {index} has a value of {grid.data[index]}")
+            x, y = self.index_to_position(grid, index)
+            self.get_logger().info(
+                f"index  {index} has a value of {grid.data[index]} and a position of {x},{y}"
+            )
 
     def planPath(
         self,
