@@ -248,7 +248,7 @@ class NavigationNode(Node):
 
     def test_via_fire(self, grid: OccupancyGrid) -> None:
         length = 1
-        starting_index = self.position_to_index(grid, (0.0, 0.0))
+        starting_index = self.position_to_index(grid, (0.0, 0.0))  # position to index is broken
         self.get_logger().info(f"plotting point beginning at index  {starting_index}")
         counter = int(length / grid.info.resolution)
         for i in range(0, counter):
@@ -350,27 +350,26 @@ class NavigationNode(Node):
         self.get_logger().info(f"Collected  {len(points_in_radius)} points")
         return points_in_radius
 
-    def position_to_index(self, grid: OccupancyGrid, current_position: Tuple[float, float]) -> int:
+    def position_to_index(self, grid: OccupancyGrid, position: Tuple[float, float]) -> int:
         # this function takes in the occupancy grid and an index within in it, and returns the map coordinates of that point
         # for testing, i have swapped the row and column variables (10/28/2025)
-        row = (
-            current_position[0] - grid.info.origin.position.x
-        ) / grid.info.resolution  # the number of cells forward
-        column = (
-            current_position[1] - grid.info.origin.position.y
-        ) / grid.info.resolution  # the number of cells side to side
-        current_index = int((row * grid.info.width) + column)
+        x, y = position
+        col = int(
+            (x - grid.info.origin.position.x) / grid.info.resolution
+        )  # the number of cells forward
+        row = int(
+            (y - grid.info.origin.position.y) / grid.info.resolution
+        )  # the number of cells side to side
+        current_index = int((row * grid.info.width) + col)
         if current_index > len(grid.data):
-            self.get_logger().warn(
-                f"the position  {current_position[0]}, {current_position[1]} is outside the occupancy grid"
-            )
+            self.get_logger().warn(f"the position  {x}, {y} is outside the occupancy grid")
         return current_index
 
     def index_to_position(self, grid: OccupancyGrid, target_index: int) -> Tuple[float, float]:
-        row = target_index // grid.info.width  # the number of rows we have gone up or down
-        col = target_index % grid.info.width
-        x_position = grid.info.origin.position.x + (row) * grid.info.resolution
-        y_position = grid.info.origin.position.y + (col) * grid.info.resolution
+        x_grid = target_index % grid.info.width  # the number of rows we have gone up or down
+        y_grid = target_index // grid.info.width
+        x_position = grid.info.origin.position.x + (x_grid + 0.5) * grid.info.resolution
+        y_position = grid.info.origin.position.y + (y_grid + 0.5) * grid.info.resolution
         # self.get_logger().info(f"index {target_index} has a position of {x_position},{y_position}")
         return (x_position, y_position)
 
