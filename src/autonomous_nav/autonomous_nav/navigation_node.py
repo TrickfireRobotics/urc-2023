@@ -201,7 +201,7 @@ class NavigationNode(Node):
     def updateNavigation(self) -> None:
         # If anchor not received, publish status but do not navigate
         if not self.anchor_received:
-            self.get_logger().info("anchor not received, creating fake navigation data for testing")
+            #self.get_logger().info("anchor not received, creating fake navigation data for testing")
             # self.publishStatus("No anchor received; Navigation Stopped.")
             # return
 
@@ -270,7 +270,7 @@ class NavigationNode(Node):
             self.end_goal_waypoint[0],
             self.end_goal_waypoint[1],
         )
-        while distance_to_goal > 1:
+        while distance_to_goal > 0.5:
             self.get_logger().warn(
                 f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
             )
@@ -286,6 +286,7 @@ class NavigationNode(Node):
                 self.end_goal_waypoint[0],
                 self.end_goal_waypoint[1],
             )
+        self.get_logger().info(f"plotted to goal successfully")
         self.path_pub.publish(self.path)
 
     def find_lowest_cost_node(
@@ -298,9 +299,9 @@ class NavigationNode(Node):
             item_position = self.index_to_position(grid, item[1])
             item_cost = self.distance_between_indicies(grid, item[1], self.end_goal_index)
             if item_cost < minimum_cost and item_cost != 100 and item_cost != -1:
-                self.get_logger().info(
-                    f"index {item[1]} has a raw cost of {item[0]} and position of {item_position[0]}, {item_position[1]}"
-                )
+                #self.get_logger().info(
+                #    f"index {item[1]} has a raw cost of {item[0]} and position of {item_position[0]}, {item_position[1]}"
+                #)
                 minimum_position = item_position
                 minimum_cost = item_cost
 
@@ -314,7 +315,7 @@ class NavigationNode(Node):
         pose.pose.position.x = new_pose[0]
         pose.pose.position.y = new_pose[1]
         pose.pose.orientation.w = 1.0
-        # self.get_logger().info(f"adding position {new_pose[0]} x {new_pose[1]}")
+        self.get_logger().info(f"adding position {new_pose[0]} x {new_pose[1]}")
         self.path.poses.append(pose)
 
     def distance_between_indicies(self, grid: OccupancyGrid, ind1: int, ind2: int) -> float:
