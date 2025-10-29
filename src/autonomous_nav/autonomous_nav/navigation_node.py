@@ -201,10 +201,9 @@ class NavigationNode(Node):
     def updateNavigation(self) -> None:
         # If anchor not received, publish status but do not navigate
         if not self.anchor_received:
-            #self.get_logger().info("anchor not received, creating fake navigation data for testing")
+            self.get_logger().info("anchor not received, creating fake navigation data for testing")
             # self.publishStatus("No anchor received; Navigation Stopped.")
             # return
-
         # If no active waypoint
         if self.active_waypoint is None:
             # Plan a set of waypoints using a queue
@@ -299,9 +298,9 @@ class NavigationNode(Node):
             item_position = self.index_to_position(grid, item[1])
             item_cost = self.distance_between_indicies(grid, item[1], self.end_goal_index)
             if item_cost < minimum_cost and item_cost != 100 and item_cost != -1:
-                #self.get_logger().info(
+                # self.get_logger().info(
                 #    f"index {item[1]} has a raw cost of {item[0]} and position of {item_position[0]}, {item_position[1]}"
-                #)
+                # )
                 minimum_position = item_position
                 minimum_cost = item_cost
 
