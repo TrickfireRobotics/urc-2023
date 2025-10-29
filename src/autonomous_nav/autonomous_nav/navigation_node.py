@@ -240,6 +240,8 @@ class NavigationNode(Node):
             test_origin_index = self.position_to_index(self.global_costmap, test_origin)
             self.get_logger().info(f"test origin index is  {test_origin[0]}, {test_origin[1]}")
             self.append_path((0.0, 0.0))
+            self.append_path((0.024999991431832402, 0.47500037439167464))
+            self.path_pub.publish(self.path)
             self.get_logger().warn("RRunning test")
             self.test_via_fire(self.global_costmap)
             # self.planPath(self.global_costmap)
