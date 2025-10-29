@@ -61,7 +61,7 @@ zed_launch = IncludeLaunchDescription(
 )
 
 ublox_config_path = os.path.join(
-    get_package_share_directory("autonomous_nav"), "config", "ublox.yaml
+    get_package_share_directory("autonomous_nav"), "config", "ublox.yaml"
     )
 gps_node = Node(
     package="ublox_gps",
