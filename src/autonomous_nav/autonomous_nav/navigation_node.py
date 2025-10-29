@@ -240,9 +240,6 @@ class NavigationNode(Node):
             test_origin_index = self.position_to_index(self.global_costmap, test_origin)
             self.get_logger().info(f"test origin index is  {test_origin[0]}, {test_origin[1]}")
             self.append_path((0.0, 0.0))
-            self.append_path(
-                (0.024999991431832402, 0.47500037439167464)
-            )  # the looks more like y,x, my index to position is not accounting for the difference in rotation
             self.path_pub.publish(self.path)
             self.get_logger().warn("RRunning test")
             self.test_via_fire(self.global_costmap)
@@ -335,7 +332,7 @@ class NavigationNode(Node):
         pose.pose.position.x = new_pose[0]
         pose.pose.position.y = new_pose[1]
         pose.pose.orientation.w = 1.0
-        self.get_logger().info(f"adding position {new_pose[0]} x {new_pose[1]}")
+        # self.get_logger().info(f"adding position {new_pose[0]} x {new_pose[1]}")
         self.path.poses.append(pose)
 
     def collect_radius(
