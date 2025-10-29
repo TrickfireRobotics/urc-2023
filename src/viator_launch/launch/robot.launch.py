@@ -68,7 +68,22 @@ gps_node = Node(
     executable="ublox_gps_node",
     name="gps_node",
     output="screen",
-    parameters=[ublox_config_path],
+    parameters=[
+        ublox_config_path,
+        {
+            "frame_id": "gps",
+            "dynamic_model": "automotive",  # better for a wheeled rover than "portable"
+            "enable_pps": True,             # keep if you wire/use PPS
+            "tmode3": 0,                    # 0 = rover mode
+            # RTK/NTRIP (keep only if you actually use a caster):
+            "rtcm_caster_address": "3.143.243.81",
+            "rtcm_caster_port": 2101,
+            "mount_point": "BOTHWA",
+            "username": "jakek927@gmail.com",
+            "password": "none",
+            "publish_rtcm": True,
+            },
+        ],
 )
 
 # Path to your navsat_transform config
