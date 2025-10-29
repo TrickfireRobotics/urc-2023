@@ -236,20 +236,23 @@ class NavigationNode(Node):
             self.get_logger().info(
                 f"predicted position of point is  {test_coordinate[0]} , {test_coordinate[1]}"
             )
-            test_origin = self.index_to_position(self.global_costmap, 0)
+            test_origin = self.index_to_position(self.global_costmap, 50)
             self.get_logger().info(f"test origin value is  {test_origin[0]}, {test_origin[1]}")
             test_origin_index = self.position_to_index(self.global_costmap, test_origin)
             self.get_logger().info(f"test origin index is  {test_origin[0]}, {test_origin[1]}")
             self.append_path((0.0, 0.0))
             self.path_pub.publish(self.path)
             self.get_logger().warn("RRunning test")
-            self.test_via_fire(self.global_costmap)
             self.path_pub.publish(self.path)
             # self.planPath(self.global_costmap)
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
         self.publishFeedback(goal_x, goal_y)
 
     def test_via_fire(self, grid: OccupancyGrid) -> None:
+        # this is a test function that "fires" in a stright line on the occupancy grid
+        # to use this function, throw a bunch of boxes in front of the camera, and esnure that it shows up on the costmap as blocked
+        # if the translation functions are working, it should give you cost values that line up with the mapo
+        # if it doesnt, good luck
         length = 1
         starting_index = self.position_to_index(grid, (0.0, 0.0))  #
         self.get_logger().info(f"plotting point beginning at index  {starting_index} at 0,0")
