@@ -75,7 +75,7 @@ class WaypointManagerNode(Node):
                 lat_lon.append([float(row[0]), float(row[1])])
                 # lat.append(float(row[0]))
                 # lon.append(float(row[1]))
-                x_y.append([wgs84_to_enu(lat-1, lon[-1], lat0, lon0)])
+                x_y.append([wgs84_to_enu(lat[-1], lon[-1], lat0, lon0)])
                 # x.append(wgs84_to_enu(lat[-1], lon[-1], lat0, lon0)[0])
                 # y.append(wgs84_to_enu(lat[-1], lon[-1], lat0, lon0)[1])
                 dist.append(math.dist((lat0, lon0), x_y[-1]))
