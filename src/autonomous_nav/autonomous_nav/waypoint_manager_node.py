@@ -16,7 +16,7 @@ from lib.interface.robot_interface import RobotInterface  # Send data
 
 
 
-def wgs84_to_enu(lat, lon, lat0, lon0):
+def wgs84_to_enu(lat: float, lon: float, lat0: float, lon0: float) -> tuple[float, float]:
     """Tiny flat-earth geometry conversion"""
     R = 6378137.0
     x = math.radians(lon - lon0) * R * math.cos(math.radians((lat + lat0)/2))
@@ -61,18 +61,36 @@ class WaypointManagerNode(Node):
 
         with open(csv_path, newline='') as f:
             reader = csv.reader(f)
+            lat_lon = []
+            lat = []
+            lon = []
+            x_y = []
+            x = []
+            y = []
+            dist = []
+            ranking = []
             for i, row in enumerate(reader):
                 if len(row) < 2:
                     continue
-                lat, lon = float(row[0]), float(row[1])
-                x, y = wgs84_to_enu(lat, lon, lat0, lon0)
-                pose = PoseStamped()
-                pose.header.frame_id = 'map'
-                pose.pose.position.x = x
-                pose.pose.position.y = y
-                pose.pose.orientation.w = 1.0
-                path_msg.poses.append(pose)
-                self.get_logger().info(f'Loaded waypoint {i}: lat={lat}, lon={lon} → x={x:.1f}, y={y:.1f}')
+                lat_lon.append([float(row[0]), float(row[1])])
+                # lat.append(float(row[0]))
+                # lon.append(float(row[1]))
+                x_y.append([wgs84_to_enu(lat-1, lon[-1], lat0, lon0)])
+                # x.append(wgs84_to_enu(lat[-1], lon[-1], lat0, lon0)[0])
+                # y.append(wgs84_to_enu(lat[-1], lon[-1], lat0, lon0)[1])
+                dist.append(math.dist((lat0, lon0), x_y[-1]))
+                self.get_logger().info(f"Lat & Lon: {lat_lon[-1]}")
+                self.get_logger().info(f"X & Y: {x_y[-1]}")
+                self.get_logger().info(f"Distance: {dist}")
+                
+            
+            pose = PoseStamped()
+            pose.header.frame_id = 'map'
+            pose.pose.position.x = x
+            pose.pose.position.y = y
+            pose.pose.orientation.w = 1.0
+            path_msg.poses.append(pose)
+            self.get_logger().info(f'Loaded waypoint {i}: lat={lat}, lon={lon} → x={x:.1f}, y={y:.1f}')
 
         self.pub.publish(path_msg)
         self.get_logger().info(colorStr(f"Published {len(path_msg.poses)} waypoints from {csv_path}", ColorCodes.GREEN_OK))
