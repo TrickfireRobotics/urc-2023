@@ -47,7 +47,7 @@ class DecisionMakingNode(Node):
         self.last_left_vel = 0.0
         self.last_right_vel = 0.0
 
-        # Waypoint queue (stores waypoints in global frame)  - Updated to Path message
+        # Waypoint list (stores waypoints in global frame)  - Updated to Path message
         self.waypoint_list: List[Tuple[float, float]] = []
         self.waypoint_reached_threshold = 0.5  # meters
 
@@ -55,7 +55,15 @@ class DecisionMakingNode(Node):
         self.costmap: Optional[PyCostmap2D] = None
 
         # DWA Planner
-        self.dwa_planner: Optional[DWAPlanner] = None
+        self.dwa_planner: DWAPlanner = DWAPlanner(
+                costmap=self.costmap,
+                robot_radius=0.3,
+                current_velocity=self.current_wheel_vel,
+                current_position=(0.0, 0.0),
+                time_delta=0.1,
+                goal=self.waypoint_list[0],
+                theta=self.global_theta,
+            )
 
         # Navigation status
         self.navigation_status = "No waypoint provided"
@@ -185,6 +193,7 @@ class DecisionMakingNode(Node):
             current_goal_global[0],
             current_goal_global[1],
         )
+        self.get_logger.info(f"Navigating to waypoint ({current_goal_global[0]}, {current_goal_global[1]})")
 
         # Check if reached current waypoint
         distance_to_goal = math.sqrt(
@@ -194,32 +203,24 @@ class DecisionMakingNode(Node):
 
         if distance_to_goal < self.waypoint_reached_threshold:
             self.waypoint_list.pop(0)
-            self.get_logger().info(f"Reached waypoint! {len(self.waypoint_list)} remaining")
+            self.get_logger().info(f"Reached waypoint!")
 
             if not self.waypoint_list:
                 self.stop_rover()
                 return
 
             # Update to next waypoint
-            current_goal_global = self.waypoint_list[0]
+            # current_goal_global = self.waypoint_list[0]
 
         # Transform goal from global (odom) to local (robot/costmap frame)
         goal_local = self.transform_global_to_local(current_goal_global)
 
         if self.dwa_planner is None:
             self.get_logger().info("DWA planner not initialized")
-            # Initialize DWA planner with default params
-            self.dwa_planner = DWAPlanner(
-                costmap=self.costmap,
-                robot_radius=0.3,
-                current_velocity=self.current_wheel_vel,
-                current_position=(0.0, 0.0),
-                time_delta=0.1,
-                goal=goal_local,
-                theta=self.global_theta,
-            )
+            return
 
         # Update DWA planner state
+        self.get_logger().info("Updating states")
         self.dwa_planner.update_state(
             costmap=self.costmap,
             current_position=(0.0, 0.0),
