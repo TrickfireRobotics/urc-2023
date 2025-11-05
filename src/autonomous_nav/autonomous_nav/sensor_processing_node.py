@@ -11,7 +11,7 @@ from cv_bridge import CvBridge
 from octomap_msgs.msg import Octomap as OctomapMsg
 from rclpy.node import Node
 from rclpy.time import Time
-from sensor_msgs.msg import CameraInfo, Image, PointCloud2, PointField
+from sensor_msgs.msg import CameraInfo, Image, PointCloud2, PointField, NavSatFix
 from std_msgs.msg import Bool, Float32MultiArray, Header
 
 # Install: pip install "ultralytics>=8.1.0" "torch>=1.8"
