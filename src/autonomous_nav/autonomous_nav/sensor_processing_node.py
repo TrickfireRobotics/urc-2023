@@ -127,7 +127,7 @@ class SensorProcessingNode(Node):
             self.cloud_frame_count += 1
             if self.cloud_frame_count % 20 != 0:
                 return
-            self.get_logger().info(
+            #self.get_logger().info(
                 f"Processing point cloud frame {self.cloud_frame_count}"
             )
             points = self.extract_all_points(msg)
@@ -146,7 +146,7 @@ class SensorProcessingNode(Node):
             valid_points = points[combined_mask]
 
             if len(valid_points) > 0:
-                self.get_logger().info(f"Publishing {len(valid_points)} valid points...")
+               # self.get_logger().info(f"Publishing {len(valid_points)} valid points...")
                 self.publish_filtered_cloud(valid_points, msg.header)
             else:
                 self.get_logger().warning("No valid points found after filtering")
