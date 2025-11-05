@@ -231,7 +231,9 @@ class DecisionMakingNode(Node):
         )
 
         # Plan and execute
+        self.get_logger().info("Getting wheel velocities")
         left_vel, right_vel = self.dwa_planner.plan()
+        self.get_logger().info(f"Left and right velocities: {left_vel}, {right_vel}")
 
         self.get_logger().info(f"Left Vel: {left_vel:.2f}, Right Vel: {right_vel:.2f}")
 
