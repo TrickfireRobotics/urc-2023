@@ -55,7 +55,11 @@ class SensorProcessingNode(Node):
         self.cloud_sub = self.create_subscription(
             PointCloud2, "/zed/zed_node/point_cloud/cloud_registered", self.cloudCallBack, 10
         )
-
+        
+        self.gps_sub = self.create_subscription(
+            Float32MultiArray, "/gps/fix", self.gpsCallback, 10
+        )
+        
         # ----------------------------------------------------------------------
         # Publishers
         self.filtered_cloud_pub = self.create_publisher(
@@ -118,6 +122,22 @@ class SensorProcessingNode(Node):
     #     cv2.imshow("YOLO World Detection", disp)
     #     cv2.waitKey(1)
 
+    
+    # --------------------------------------------------------------------------
+    #   GPS Processing
+    # --------------------------------------------------------------------------
+    def gpsCallback(self, msg: Float32MultiArray) -> None:
+        """
+        Print GPS coordinates from Float32MultiArray message.
+        """
+        if len(msg.data) < 2:
+            self.get_logger().warning("Received GPS data with insufficient length.")
+            return
+
+        latitude = msg.data[0]
+        longitude = msg.data[1]
+        self.get_logger().info(f"GPS Coordinates - Latitude: {latitude}, Longitude: {longitude}")
+    
     # --------------------------------------------------------------------------
     #   Point Cloud Processing
     # --------------------------------------------------------------------------
