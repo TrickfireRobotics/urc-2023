@@ -57,7 +57,7 @@ class SensorProcessingNode(Node):
         )
         
         self.gps_sub = self.create_subscription(
-            Float32MultiArray, "/gps/fix", self.gpsCallback, 10
+            NavSatFix, "/fix", self.gpsCallback, 10
         )
         
         # ----------------------------------------------------------------------
@@ -126,17 +126,17 @@ class SensorProcessingNode(Node):
     # --------------------------------------------------------------------------
     #   GPS Processing
     # --------------------------------------------------------------------------
-    def gpsCallback(self, msg: Float32MultiArray) -> None:
+    def gpsCallback(self, msg: NavSatFix) -> None:
         """
         Print GPS coordinates from Float32MultiArray message.
         """
-        if len(msg.data) < 2:
-            self.get_logger().warning("Received GPS data with insufficient length.")
-            return
+        latitude = msg.latitude
+        longitude = msg.longitude
+        altitude = msg.altitude
 
-        latitude = msg.data[0]
-        longitude = msg.data[1]
-        self.get_logger().info(f"GPS Coordinates - Latitude: {latitude}, Longitude: {longitude}")
+        fix_status = msg.status.status
+        self.get_logger().info(f"GPS Coordinates - Lat: {latitude:.6f}, Lon: {longitude:.6f}, "f"Alt: {altitude:.2f}m, Status: {fix_status}"
+    )
     
     # --------------------------------------------------------------------------
     #   Point Cloud Processing
