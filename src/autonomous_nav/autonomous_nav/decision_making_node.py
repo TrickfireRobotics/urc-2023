@@ -193,7 +193,7 @@ class DecisionMakingNode(Node):
             current_goal_global[0],
             current_goal_global[1],
         )
-        self.get_logger.info(f"Navigating to waypoint ({current_goal_global[0]}, {current_goal_global[1]})")
+        self.get_logger().info(f"Navigating to waypoint ({current_goal_global[0]}, {current_goal_global[1]})")
 
         # Check if reached current waypoint
         distance_to_goal = math.sqrt(
