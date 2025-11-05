@@ -48,7 +48,7 @@ class DecisionMakingNode(Node):
         self.last_right_vel = 0.0
 
         # Waypoint list (stores waypoints in global frame)  - Updated to Path message
-        self.waypoint_list: List[Tuple[float, float]] = []
+        self.waypoint_list: List[Tuple[float, float]] = [0, 0]
         self.waypoint_reached_threshold = 0.5  # meters
 
         # Costmap
