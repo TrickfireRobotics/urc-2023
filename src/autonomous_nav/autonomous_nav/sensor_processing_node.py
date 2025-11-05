@@ -127,9 +127,7 @@ class SensorProcessingNode(Node):
             self.cloud_frame_count += 1
             if self.cloud_frame_count % 20 != 0:
                 return
-            #self.get_logger().info(
-                f"Processing point cloud frame {self.cloud_frame_count}"
-            )
+            #self.get_logger().info(f"Processing point cloud frame {self.cloud_frame_count}")
             points = self.extract_all_points(msg)
 
             # if no points were extracted, log a warning
