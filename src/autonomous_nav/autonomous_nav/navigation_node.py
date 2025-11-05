@@ -270,9 +270,9 @@ class NavigationNode(Node):
             self.end_goal_waypoint[1],
         )
         while distance_to_goal > 0.5:
-            self.get_logger().warn(
-                f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
-            )
+            # self.get_logger().warn(
+            #     f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
+            # )
             target_area = self.collect_adjacent(
                 grid, self.position_to_index(grid, lowest_cost_position)
             )
