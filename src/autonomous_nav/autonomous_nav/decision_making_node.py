@@ -39,8 +39,8 @@ class DecisionMakingNode(Node):
         self.global_theta = 0.0
 
         # Local/costmap frame tracking
-        # self.local_x = 0.0
-        # self.local_y = 0.0
+        self.local_x = 0.0
+        self.local_y = 0.0
 
         # Velocity tracking
         self.current_wheel_vel = (0.0, 0.0)
@@ -49,7 +49,7 @@ class DecisionMakingNode(Node):
 
         # Waypoint list (stores waypoints in global frame)  - Updated to Path message
         self.waypoint_list: List[Tuple[float, float]] = [(0, 0)]
-        self.waypoint_reached_threshold = 0.5  # meters
+        self.waypoint_reached_threshold = 0.05  # meters
 
         # Costmap
         self.costmap: Optional[PyCostmap2D] = None
@@ -211,6 +211,8 @@ class DecisionMakingNode(Node):
 
             # Update to next waypoint
             # current_goal_global = self.waypoint_list[0]
+            
+        self.local_x = 527/2
 
         # Transform goal from global (odom) to local (robot/costmap frame)
         goal_local = self.transform_global_to_local(current_goal_global)
@@ -224,7 +226,7 @@ class DecisionMakingNode(Node):
         self.dwa_planner.update_state(
             costmap=self.costmap,
             current_position=(0.0, 0.0),
-            current_theta=0.0,
+            current_theta=self.global_theta,
             current_velocity=self.current_wheel_vel,
             goal=goal_local,
             global_pose=(self.global_x, self.global_y, self.global_theta),
@@ -233,8 +235,6 @@ class DecisionMakingNode(Node):
         # Plan and execute
         self.get_logger().info("Getting wheel velocities")
         left_vel, right_vel = self.dwa_planner.plan()
-        self.get_logger().info(f"Left and right velocities: {left_vel}, {right_vel}")
-
         self.get_logger().info(f"Left Vel: {left_vel:.2f}, Right Vel: {right_vel:.2f}")
 
         # Store for next cycle
@@ -278,6 +278,7 @@ class DecisionMakingNode(Node):
 
     def stop_rover(self) -> None:
         """Publish zero velocity."""
+        self.get_logger.info("Stopping rover")
         self.publish_drive_commands(0.0, 0.0)
 
     def publish_drive_commands(self, left_speed: float, right_speed: float) -> None:
