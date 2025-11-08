@@ -62,35 +62,21 @@ class WaypointManagerNode(Node):
         with open(csv_path, newline='') as f:
             reader = csv.reader(f)
             lat_lon = []
-            lat = []
-            lon = []
             x_y = []
-            x = []
-            y = []
-            dist = []
-            ranking = []
             for i, row in enumerate(reader):
                 if len(row) < 2:
                     continue
                 lat_lon.append([float(row[0]), float(row[1])])
-                # lat.append(float(row[0]))
-                # lon.append(float(row[1]))
-                x_y.append([wgs84_to_enu(lat[-1], lon[-1], lat0, lon0)])
-                # x.append(wgs84_to_enu(lat[-1], lon[-1], lat0, lon0)[0])
-                # y.append(wgs84_to_enu(lat[-1], lon[-1], lat0, lon0)[1])
-                dist.append(math.dist((lat0, lon0), x_y[-1]))
-                self.get_logger().info(f"Lat & Lon: {lat_lon[-1]}")
-                self.get_logger().info(f"X & Y: {x_y[-1]}")
-                self.get_logger().info(f"Distance: {dist}")
+                x_y.append([wgs84_to_enu(lat_lon[-1][0], lat_lon[-1][1], lat0, lon0)])
+
                 
-            
-            pose = PoseStamped()
-            pose.header.frame_id = 'map'
-            pose.pose.position.x = x
-            pose.pose.position.y = y
-            pose.pose.orientation.w = 1.0
-            path_msg.poses.append(pose)
-            self.get_logger().info(f'Loaded waypoint {i}: lat={lat}, lon={lon} → x={x:.1f}, y={y:.1f}')
+                pose = PoseStamped()
+                pose.header.frame_id = 'map'
+                pose.pose.position.x = x_y[-1][0]
+                pose.pose.position.y = x_y[-1][1]
+                pose.pose.orientation.w = 1.0
+                path_msg.poses.append(pose)
+                self.get_logger().info(f'Loaded waypoint {i}: lat={lat_lon[-1][0]}, lon={lat_lon[-1][1]} → x={x_y[-1][0]:.1f}, y={x_y[-1][1]:.1f}')
 
         self.pub.publish(path_msg)
         self.get_logger().info(colorStr(f"Published {len(path_msg.poses)} waypoints from {csv_path}", ColorCodes.GREEN_OK))
