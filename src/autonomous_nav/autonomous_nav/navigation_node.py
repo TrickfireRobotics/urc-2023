@@ -80,7 +80,7 @@ class NavigationNode(Node):
         self.status_pub = self.create_publisher(String, "/navigation_status", 10)
         self.feedback_pub = self.create_publisher(Pose2D, "/navigation_feedback", 10)
         self.path_pub = self.create_publisher(Path, "/path", 10)
-        self.pos_pub = self.create_publisher(Tuple[float, float], "/pos", 10)
+        self.pos_pub = self.create_publisher(Pose2D, "/pos", 10)
         # ---- Timers ----
         self.timer = self.create_timer(0.5, self.updateNavigation)  # 2 Hz
 
@@ -228,7 +228,11 @@ class NavigationNode(Node):
             self.current_position[0], self.current_position[1], goal_x, goal_y
         )
 
-        self.pos_pub.publish((self.current_position[0], self.current_position[1]))
+        pos_msg = Pose2D()
+        pos_msg.x = self.current_position[0]
+        pos_msg.y = self.current_position[1]
+        pos_msg.theta = self.current_yaw
+        self.pos_pub.publish(pos_msg)
 
         if dist_to_goal < self.reached_threshold:
             # Reached => Publish success, clear waypoint
