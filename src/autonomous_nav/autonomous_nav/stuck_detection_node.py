@@ -1,12 +1,13 @@
 import sys
 import time
-from typing import Callable, Dict, Optional, Tuple
+from dataclasses import dataclass
+from typing import Callable, Dict, Tuple
 
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.subscription import Subscription
-from std_msgs.msg import Bool, String
+from std_msgs.msg import Bool, String, UInt8
 
 from lib.color_codes import ColorCodes, colorStr
 from lib.configs import MoteusMotorConfig, MotorConfigs
@@ -15,9 +16,31 @@ from lib.moteus_motor_state import MoteusMotorState, MoteusRunSettings
 NODE_NAME = "stuck_detection_node"
 
 
+@dataclass
+class StuckReason:
+    ros_message: str
+    """ The message sent to the ROS topic. """
+    stuck_duration: float
+    """ How many seconds tripped before marked as stuck. """
+    mask: int
+    """ How to encode/decode this reason. """
+
+
+class StuckReasons:
+    """Reasons for why we are stuck."""
+
+    WHEELS_CANT_SPIN = StuckReason("wheels-cant-spin", 1.0, 1)
+    FREE_SPINNING = StuckReason("free-spinning", 1.0, 1 << 1)
+
+
 class StuckDetectionNode(Node):
     """
     Determines whether the rover is currently "stuck".
+
+    Publications:
+     - /stuck_detection/is_stuck [Bool]
+     - /stuck_detection/reason [UInt8]
+        - Reasons are encoded by a bitmask (see StuckReasons for usage).
     """
 
     # Initialization
@@ -39,9 +62,10 @@ class StuckDetectionNode(Node):
         self.target_states: Dict[int, MoteusRunSettings] = {}
         self.current_states: Dict[int, MoteusMotorState] = {}
 
-        self.effort_stuck_start: Optional[float] = None
+        self.stuck_start: Dict[StuckReason, float] = {}
 
-        self.stuck_publisher = self.create_publisher(Bool, "/stuck", 10)
+        self.stuck_publisher = self.create_publisher(Bool, "/stuck_detection/is_stuck", 10)
+        self.stuck_reason_publisher = self.create_publisher(UInt8, "/stuck_detection/reason", 10)
 
         self.timer = self.create_timer(0.1, self.update)
 
@@ -85,14 +109,25 @@ class StuckDetectionNode(Node):
 
     # Detection
 
-    def calculate_per_motor_effort(self) -> bool:
+    def update_stuck_reason(self, reason: StuckReason, is_active: bool) -> bool:
+        now = time.time()
+        if is_active:
+            if reason in self.stuck_start:
+                return now - self.stuck_start[reason] > reason.stuck_duration
+            else:
+                self.stuck_start[reason] = now
+        else:
+            self.stuck_start.pop(reason, 0.0)
+
+        return False
+
+    def calculate_per_motor_effort(self) -> list[StuckReason]:
         RMX8_25_RATED_TORQUE = 10  # N/m
         FREE_SPINNING_THRESH = (0.2, 0.9)  # <t, >v
         STUCK_THRESH = (0.5, 0.2)  # >t, <v
         STUCK_WHEEL_MIN_COUNT = 3
-        DURATION = 1.0
 
-        stuck_count = 0
+        cant_spin_count = 0
         free_spinning_count = 0
 
         for config in self.slip_motor_configs:
@@ -121,30 +156,30 @@ class StuckDetectionNode(Node):
                 free_spinning_count += 1
 
             if t_norm > STUCK_THRESH[0] and v_norm < STUCK_THRESH[1]:
-                stuck_count += 1
+                cant_spin_count += 1
 
-        now = time.time()
-        # TODO: Differentiate free-spinning vs. stuck
-        stuck = stuck_count + free_spinning_count > STUCK_WHEEL_MIN_COUNT
-        if stuck:
-            if self.effort_stuck_start is not None:
-                if now - self.effort_stuck_start > DURATION:
-                    return True
-            else:
-                self.effort_stuck_start = now
-        else:
-            self.effort_stuck_start = None
-
-        return False
+        stuck = []
+        if self.update_stuck_reason(
+            StuckReasons.WHEELS_CANT_SPIN, cant_spin_count >= STUCK_WHEEL_MIN_COUNT
+        ):
+            stuck.append(StuckReasons.WHEELS_CANT_SPIN)
+        if self.update_stuck_reason(
+            StuckReasons.FREE_SPINNING, free_spinning_count >= STUCK_WHEEL_MIN_COUNT
+        ):
+            stuck.append(StuckReasons.FREE_SPINNING)
+        return stuck
 
     # Update
 
     def update(self) -> None:
-        effort_stuck = self.calculate_per_motor_effort()
+        stuck = self.calculate_per_motor_effort()
 
-        # TODO: Use custom message with constants for reasons
-        if effort_stuck:
+        if len(stuck) > 0:
             self.stuck_publisher.publish(Bool(data=True))
+            encoded = 0
+            for reason in stuck:
+                encoded |= reason.mask
+            self.stuck_reason_publisher.publish(UInt8(data=encoded))
         else:
             self.stuck_publisher.publish(Bool(data=False))
 
