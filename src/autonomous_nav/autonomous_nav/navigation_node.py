@@ -32,7 +32,7 @@ class NavigationNode(Node):
         self.get_logger().info(f"Navigation Node has been started successfully...")
 
         # ---- Configuration / Parameters ----
-        self.reached_threshold = 1.0  # meters
+        self.reached_threshold = 0.05  # meters
         self.earth_radius = 6371000.0  # Approx Earth radius in meters
 
         # ---- Anchor State (from /anchor_position) ----
@@ -80,6 +80,7 @@ class NavigationNode(Node):
         self.status_pub = self.create_publisher(String, "/navigation_status", 10)
         self.feedback_pub = self.create_publisher(Pose2D, "/navigation_feedback", 10)
         self.path_pub = self.create_publisher(Path, "/path", 10)
+        self.pos_pub = self.create_publisher(Tuple[float, float], "/pos", 10)
         # ---- Timers ----
         self.timer = self.create_timer(0.5, self.updateNavigation)  # 2 Hz
 
@@ -212,17 +213,22 @@ class NavigationNode(Node):
             if len(self.path.poses) > 0:
                 path_length: int = max(len(self.path.poses) - 1, 0)
                 self.active_waypoint = (
-                    self.path.poses[path_length].pose.position.x,
-                    self.path.poses[path_length].pose.position.y,
+                    # self.path.poses[path_length].pose.position.x,
+                    self.path.poses[0].pose.position.x,
+                    # self.path.poses[path_length].pose.position.y,
+                    self.path.poses[0].pose.position.y,
                 )
             # self.publishStatus("No waypoint provided; Navigation Stopped.")
             # return
 
         # Compute distance to the waypoint
         goal_x, goal_y = self.active_waypoint
+        self.get_logger().info(f"Goal X: {goal_x}, Goal Y: {goal_y}")
         dist_to_goal = self.distance_2d(
             self.current_position[0], self.current_position[1], goal_x, goal_y
         )
+
+        self.pos_pub.publish((self.current_position[0], self.current_position[1]))
 
         if dist_to_goal < self.reached_threshold:
             # Reached => Publish success, clear waypoint
@@ -230,7 +236,7 @@ class NavigationNode(Node):
             self.active_waypoint = None
             return
         elif self.global_costmap != None:
-            self.get_logger().warn("RRunning test")
+            self.get_logger().warn("Running test")
             self.planPath(self.global_costmap)
             self.path_pub.publish(self.path)
             # self.planPath(self.global_costmap)

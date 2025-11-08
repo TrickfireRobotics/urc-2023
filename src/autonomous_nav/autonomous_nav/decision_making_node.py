@@ -283,6 +283,7 @@ class DecisionMakingNode(Node):
 
     def publish_drive_commands(self, left_speed: float, right_speed: float) -> None:
         """Publish motor commands."""
+        self.get_logger().info(f"Left Vel: {left_speed:.2f}, Right Vel: {right_speed:.2f}")
         self.left_drive_pub.publish(Float32(data=left_speed))
         self.right_drive_pub.publish(Float32(data=right_speed))
 
