@@ -278,7 +278,7 @@ class DecisionMakingNode(Node):
 
     def stop_rover(self) -> None:
         """Publish zero velocity."""
-        self.get_logger.info("Stopping rover")
+        # self.get_logger.info("Stopping rover")
         self.publish_drive_commands(0.0, 0.0)
 
     def publish_drive_commands(self, left_speed: float, right_speed: float) -> None:
