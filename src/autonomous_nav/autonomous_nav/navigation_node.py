@@ -338,14 +338,18 @@ class NavigationNode(Node):
 
     def collect_adjacent(self, grid: OccupancyGrid, current_index: int) -> list[Tuple[int, int]]:
         adjacent_points: list[Tuple[int, int]] = []
-        adjacent_points.append((grid.data[current_index - 1], current_index - 1))
-        adjacent_points.append((grid.data[current_index + 1], current_index + 1))
-        adjacent_points.append(
-            (grid.data[current_index - grid.info.width], current_index - grid.info.width)
-        )
-        adjacent_points.append(
-            (grid.data[current_index + grid.info.width], current_index + grid.info.width)
-        )
+        if grid.data[current_index - 1] != 100:
+            adjacent_points.append((grid.data[current_index - 1], current_index - 1))
+        if grid.data[current_index + 1] != 100:
+            adjacent_points.append((grid.data[current_index + 1], current_index + 1))
+        if grid.data[current_index - grid.info.width] != 100:
+            adjacent_points.append(
+                (grid.data[current_index - grid.info.width], current_index - grid.info.width)
+            )
+        if grid.data[current_index + grid.info.width] != 100:
+            adjacent_points.append(
+                (grid.data[current_index + grid.info.width], current_index + grid.info.width)
+            )
         return adjacent_points
 
     def position_to_index(self, grid: OccupancyGrid, position: Tuple[float, float]) -> int:
