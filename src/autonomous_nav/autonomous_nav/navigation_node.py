@@ -250,8 +250,7 @@ class NavigationNode(Node):
     def test_via_fire(self, grid: OccupancyGrid) -> None:
         # this is a test function that "fires" in a stright line on the occupancy grid
         # to use this function, throw a bunch of boxes in front of the camera, and esnure that it shows up on the costmap as blocked
-        # if the translation functions are working, it should give you cost values that line up with the mapo
-        # if it doesnt, good luck
+        # if the translation functions are working, it should give you cost values that line up with the map
         length = 1
         starting_index = self.position_to_index(grid, (0.0, 0.0))  #
         self.get_logger().info(f"plotting point beginning at index  {starting_index} at 0,0")
@@ -260,7 +259,7 @@ class NavigationNode(Node):
             index = starting_index + (i)  # increasing the width takes you directly to the left
             x, y = self.index_to_position(grid, index)  #
             self.append_path((x, y))
-            # going forwards by one row bring me to the left
+            # going forwards by one row brings me to the left
             self.get_logger().info(
                 f"index  {index} has a value of {grid.data[index]} and a position of {x},{y}"
             )
