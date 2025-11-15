@@ -52,7 +52,7 @@ sensor_processing_node = Node(
     package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
 )
 vision_processing_node = Node(
-    packege="autonomous_nav", executable="vision_processing_node", name="vision_processing_node"
+    package="autonomous_nav", executable="vision_processing_node", name="vision_processing_node"
 )
 
 # Include the ZED camera launch file from zed_wrapper
