@@ -44,7 +44,7 @@ class VisionProcessingNode(Node):
         # Aruco detector setup
         self.aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
         self.aruco_params = aruco.DetectorParameters()
-        self.aruco_detector = aruco.ArucoDetector(self.aruco_dict, self.parameters)
+        self.aruco_detector = aruco.ArucoDetector(self.aruco_dict, self.aruco_params)
 
         # ----------------------------------------------------------------------
         # Subscriptions
