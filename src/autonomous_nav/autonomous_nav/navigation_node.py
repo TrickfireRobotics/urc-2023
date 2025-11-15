@@ -336,6 +336,7 @@ class NavigationNode(Node):
         distance = math.sqrt((row1 - row2) ** 2 + (col1 - col2) ** 2)
         return distance
 
+    # This function collect all indicies adjacent to the index given, and only collects them if they are unoccupied and unvisited
     def collect_adjacent(self, grid: OccupancyGrid, current_index: int) -> list[Tuple[int, int]]:
         adjacent_points: list[Tuple[int, int]] = []
         grid.data[current_index] = 50
@@ -359,6 +360,7 @@ class NavigationNode(Node):
             )
         return adjacent_points
 
+    # Converts from map fram position to costmap index
     def position_to_index(self, grid: OccupancyGrid, position: Tuple[float, float]) -> int:
         # this function takes in the occupancy grid and an index within in it, and returns the map coordinates of that point
         # for testing, i have swapped the row and column variables (10/28/2025)
