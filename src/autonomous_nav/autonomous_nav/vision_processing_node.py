@@ -138,31 +138,44 @@ class VisionProcessingNode(Node):
 
         corners, ids, _ = self.aruco_detector.detectMarkers(gray_image)
 
-        if ids is not None and len(ids) > 0:
-            self.get_logger().info(f"Detected ArUco markers: {ids.flatten()}")
+        if ids is not None and len(ids) == 0:
+            return
 
-            marker_length = 0.20 # Marker size in meters
+        self.get_logger().info(f"Detected ArUco markers: {ids.flatten()}")
 
-            # OpenCV pose estimation for marker needs corners in:
-            # List of arrays of shape (1,4,2)
-            # marker length in same format
+        marker_length = 0.20 # Marker size in meters
+        half_size = marker_length / 2.0
 
-            rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(
-                corners,
-                marker_length,
+        obj_points = np.array([
+            [-half_size,  half_size, 0],
+            [ half_size,  half_size, 0],
+            [ half_size, -half_size, 0],
+            [-half_size, -half_size, 0],
+        ], dtype=np.float32)
+
+
+        for i, marker_id in enumberate(ids.flatten()):
+            img_points = corners[i][0].astype(np.float32)
+            success, rvec, tvec = cv2.solvePnP(
+                obj_points,
+                img_points,
                 self.camera_matrix,
                 self.dist_coeffs,
+                flags=cv2.SOLVEPNP_ITERATIVE,
             )
 
-            for i, marker_id in enumberate(ids.flatten()):
-                rvec = rvecs[i][0]
-                tvec = tvecs[i][0]
+            if not success:
+                self.get_logger().warning(f"Pose estimation failed for marker ID {int(marker_id)}")
+                continue
 
-                distance = float(np.linalg.norm(tvec))
+            tvec = tvec.flatten(3)
+            rvec  = rvec.flatten(3)
+                
+            distance = float(np.linalg.norm(tvec))
 
-                self.get_logger().info(
-                    f"ID {int(marker_id)} | tvec = {tvec}m | dist = {distance:.2f}m"
-                )
+            self.get_logger().info(
+                f"Marker ID: {int(marker_id)}, Distance: {distance:.2f} m, tvec: {tvec}, rvec: {rvec}"
+            )
 
             cv2.drawFrameAxes(
                 cv_image,
@@ -170,7 +183,7 @@ class VisionProcessingNode(Node):
                 self.dist_coeffs,
                 rvec,
                 tvec,
-                marker_length /2,
+                marker_length /2.0,
             )
     # --------------------------------------------------------------------------
     #   ROS 2 Node Main
