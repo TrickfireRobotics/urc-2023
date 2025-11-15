@@ -16,8 +16,8 @@ setup(
     ],
     install_requires=["setuptools", "ultralytics"],
     zip_safe=True,
-    maintainer="Trickfire / Jake Kemple",
-    maintainer_email="jakek927@uw.edu",
+    maintainer="Trickfire / Jake Knoth",
+    maintainer_email="jknoth2@uw.edu",
     description="Autonomous Navigation Nodes",
     license="Your License",
     tests_require=["pytest"],
@@ -25,6 +25,7 @@ setup(
         "console_scripts": [
             "navigation_node = autonomous_nav.navigation_node:main",
             "sensor_processing_node = autonomous_nav.sensor_processing_node:main",
+            "vision_processing_node = autonomous_nav.vision_processing_node:main",
             "gps_anchor_node = autonomous_nav.gps_anchor_node:main",
             "decision_making_node = autonomous_nav.decision_making_node:main",
         ],

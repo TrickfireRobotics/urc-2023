@@ -22,9 +22,7 @@ from visualization_msgs.msg import MarkerArray
 class SensorProcessingNode(Node):
     """
     A ROS 2 node for processing sensor data with:
-      - ArUco marker detection
       - Point cloud to octomap processing
-      - Custom object detection for "Hammer" + "Bottle" using YOLO World
     """
 
     def __init__(self) -> None:
@@ -32,9 +30,6 @@ class SensorProcessingNode(Node):
 
         self.get_logger().info("Initializing sensor_processing_node...")
 
-        self.bridge = CvBridge()
-        self.camera_matrix: Optional[np.ndarray] = None
-        self.dist_coeffs: Optional[np.ndarray] = None
 
         self.cloud_frame_count = 0  # Counter for point cloud frames
 
@@ -45,13 +40,6 @@ class SensorProcessingNode(Node):
         self.map_frame_id = "map"
         # ----------------------------------------------------------------------
         # Subscriptions
-        self.image_sub = self.create_subscription(
-            Image, "/zed/zed_node/rgb/image_rect_color", self.arucoMarkerDetection, 10
-        )
-        self.camera_info_sub = self.create_subscription(
-            CameraInfo, "/zed/zed_node/rgb/camera_info", self.processCameraInfo, 10
-        )
-
         self.cloud_sub = self.create_subscription(
             PointCloud2, "/zed/zed_node/point_cloud/cloud_registered", self.cloudCallBack, 10
         )
@@ -65,58 +53,6 @@ class SensorProcessingNode(Node):
         self.get_logger().info("sensor_processing_node is up and running.")
         self.get_logger().info("Publishing filtered point clouds to /filtered_point_cloud")
         self.get_logger().info("Start octomap_server with: ros2 run octomap_server octomap_server_node --ros-args -r cloud_in:=/filtered_point_cloud -p resolution:=0.05")
-
-
-
-    # --------------------------------------------------------------------------
-    #   processCameraInfo
-    # --------------------------------------------------------------------------
-    def processCameraInfo(self, msg: CameraInfo) -> None:
-        self.camera_matrix = np.array(msg.k, dtype=np.float64).reshape(3, 3)
-        self.dist_coeffs = np.array(msg.d, dtype=np.float64)
-
-    # --------------------------------------------------------------------------
-    #   YOLO World Object Detection
-    # --------------------------------------------------------------------------
-    def yoloDetectionCallback(self, msg: Image) -> None:
-        """
-        Runs YOLO World detection on the camera feed.
-        """
-        try:
-            frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-        except Exception as e:
-            self.get_logger().error(f"Failed to convert image for YOLO World detection: {e}")
-            return
-
-        # Predict with YOLO World
-        results = self.model(frame, conf=0.3)[0]  # Adjust confidence threshold if needed
-
-        # Get frame dimensions
-        frame_h, frame_w = frame.shape[:2]
-
-        # Filter results for "hammer" and "bottle"
-        for det in results.boxes.data:
-            x1, y1, x2, y2, confidence, class_idx = det.tolist()
-            label = self.model.names[int(class_idx)]  # Get detected object name
-            confidence = float(confidence)
-
-            if confidence < 0.3:  # Adjust confidence threshold if needed
-                 continue
-
-            # Pick color
-            color = (255, 255, 255) if label.lower() == "bottle" else (0, 165, 255)
-
-            # Draw bounding box
-            cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
-            text = f"{label} {confidence:.2f}"
-            cv2.putText(
-                frame, text, (int(x1), int(y1) - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2
-            )
-
-        # Display result
-        disp = cv2.resize(frame, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
-        cv2.imshow("YOLO World Detection", disp)
-        cv2.waitKey(1)
 
     # --------------------------------------------------------------------------
     #   Point Cloud Processing
@@ -234,28 +170,6 @@ class SensorProcessingNode(Node):
         except Exception as e:
             self.get_logger().error(f"Failed to publish filtered cloud: {e}")
             
-    # --------------------------------------------------------------------------
-    #   ArUco Marker Detection
-    # --------------------------------------------------------------------------
-    def arucoMarkerDetection(self, msg: Image) -> None:
-        """
-        Basic ArUco marker detection.
-        """
-        if self.camera_matrix is None or self.dist_coeffs is None:
-            self.get_logger().warning("Camera intrinsics not received yet. Skipping frame.")
-            return
-
-        cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-        gray_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
-
-        aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
-        parameters = aruco.DetectorParameters()
-        aruco_detector = aruco.ArucoDetector(aruco_dict, parameters)
-
-        corners, ids, _ = aruco_detector.detectMarkers(gray_image)
-
-        if ids is not None and len(ids) > 0:
-            self.get_logger().info(f"Detected ArUco markers: {ids.flatten()}")
 
     # --------------------------------------------------------------------------
     #   ROS 2 Node Main
