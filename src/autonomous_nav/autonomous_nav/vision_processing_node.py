@@ -168,8 +168,8 @@ class VisionProcessingNode(Node):
                 self.get_logger().warning(f"Pose estimation failed for marker ID {int(marker_id)}")
                 continue
 
-            tvec = tvec.flatten(3)
-            rvec  = rvec.flatten(3)
+            tvec = tvec.reshape(3)
+            rvec  = rvec.reshape(3)
                 
             distance = float(np.linalg.norm(tvec))
 
