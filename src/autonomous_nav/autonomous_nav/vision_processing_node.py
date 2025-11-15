@@ -154,7 +154,7 @@ class VisionProcessingNode(Node):
         ], dtype=np.float32)
 
 
-        for i, marker_id in enumberate(ids.flatten()):
+        for i, marker_id in enumerate(ids.flatten()):
             img_points = corners[i][0].astype(np.float32)
             success, rvec, tvec = cv2.solvePnP(
                 obj_points,
