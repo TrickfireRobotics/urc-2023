@@ -288,7 +288,7 @@ class NavigationNode(Node):
                 # pop the current position from the path
                 self.path.poses.pop()
                 # make the new lowest position the item at the top of the stack
-                lowest_cost_position = self.path.poses.data[len(self.path.poses) - 1]
+                lowest_cost_position = self.path.poses[-1]
                 # continue loop to avoid find lowest cost node
                 continue
 
