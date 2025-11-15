@@ -51,6 +51,9 @@ navigation_node = Node(
 sensor_processing_node = Node(
     package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
 )
+vision_processing_node = Node(
+    packege="autonomous_nav", executable="vision_processing_node", name="vision_processing_node"
+)
 
 # Include the ZED camera launch file from zed_wrapper
 zed_launch = IncludeLaunchDescription(
@@ -139,6 +142,7 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             gps_anchor_node,
             navigation_node,
             sensor_processing_node,
+            vision_processing_node,
             launch_include,
             gps_node,
             zed_launch,
