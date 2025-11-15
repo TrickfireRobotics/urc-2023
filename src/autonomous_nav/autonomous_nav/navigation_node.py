@@ -240,7 +240,7 @@ class NavigationNode(Node):
             self.publishStatus(f"Successfully reached waypoint ({goal_x:.2f}, {goal_y:.2f})")
             self.active_waypoint = None
             return
-        elif self.global_costmap != None:
+        elif self.global_costmap != None and len(self.path.poses) == 0:
             self.get_logger().warn("Running test")
             self.planPath(self.global_costmap)
             return
@@ -286,6 +286,7 @@ class NavigationNode(Node):
             if len(target_area) == 0:
                 # we have found no suitable indicies
                 # pop the current position from the path
+                self.get_logger.info(f"backtracking")
                 self.path.poses.pop()
                 # make the new lowest position the item at the top of the stack
                 lowest_cost_position = self.path.poses[-1]
