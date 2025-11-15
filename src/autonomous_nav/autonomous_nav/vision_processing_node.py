@@ -126,7 +126,7 @@ class VisionProcessingNode(Node):
     # --------------------------------------------------------------------------
     def arucoMarkerDetection(self, msg: Image) -> None:
         """
-        Basic ArUco marker detection.
+        Basic ArUco marker detection with pose estimation
         """
         if self.camera_matrix is None or self.dist_coeffs is None:
             self.get_logger().warning("Camera intrinsics not received yet. Skipping frame.")
@@ -141,6 +141,37 @@ class VisionProcessingNode(Node):
         if ids is not None and len(ids) > 0:
             self.get_logger().info(f"Detected ArUco markers: {ids.flatten()}")
 
+            marker_length = 0.20 # Marker size in meters
+
+            # OpenCV pose estimation for marker needs corners in:
+            # List of arrays of shape (1,4,2)
+            # marker length in same format
+
+            rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(
+                corners,
+                marker_length,
+                self.camera_matrix,
+                self.dist_coeffs,
+            )
+
+            for i, marker_id in enumberate(ids.flatten()):
+                rvec = rvecs[i][0]
+                tvec = tvecs[i][0]
+
+                distance = float(np.linalg.norm(tvec))
+
+                self.get_logger().info(
+                    f"ID {int(marker_id)} | tvec = {tvec}m | dist = {distance:.2f}m"
+                )
+
+            cv2.drawFrameAxes(
+                cv_image,
+                self.camera_matrix,
+                self.dist_coeffs,
+                rvec,
+                tvec,
+                marker_length /2;
+            )
     # --------------------------------------------------------------------------
     #   ROS 2 Node Main
     # --------------------------------------------------------------------------
