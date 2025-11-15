@@ -272,21 +272,28 @@ class NavigationNode(Node):
         This algorithm looks at the global occupancy grid in order to plan a path through it for the rover using an A* style search algorithm.
         """
         lowest_cost_position = self.current_position
+        previous_position = lowest_cost_position
         distance_to_goal = self.distance_2d(
             lowest_cost_position[0],
             lowest_cost_position[1],
             self.end_goal_waypoint[0],
             self.end_goal_waypoint[1],
         )
-        while distance_to_goal > 0.5:
-            # self.get_logger().warn(
-            #     f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
-            # )
+        while distance_to_goal > 0.2:
             target_area = self.collect_adjacent(
                 grid, self.position_to_index(grid, lowest_cost_position)
             )
-            lowest_cost_position = self.find_lowest_cost_node(target_area, grid)
+            if len(target_area) == 0:
+                # we have found no suitable indicies
+                # pop the current position from the path
+                self.path.poses.pop()
+                # make the new lowest position the item at the top of the stack
+                lowest_cost_position = self.path.poses.data[len(self.path.poses) - 1]
+                # continue loop to avoid find lowest cost node
+                continue
 
+            lowest_cost_node = self.find_lowest_cost_node(target_area, grid)
+            lowest_cost_position = self.index_to_position(grid, lowest_cost_node)
             self.append_path(lowest_cost_position)
             distance_to_goal = self.distance_2d(
                 lowest_cost_position[0],
@@ -297,23 +304,16 @@ class NavigationNode(Node):
         self.get_logger().info(f"plotted to goal successfully")
         self.path_pub.publish(self.path)
 
-    def find_lowest_cost_node(
-        self, target_area: list[Tuple[int, int]], grid: OccupancyGrid
-    ) -> Tuple[float, float]:
+    def find_lowest_cost_node(self, target_area: list[Tuple[int, int]], grid: OccupancyGrid) -> int:
         self.get_logger().info(f"target area is this large: {len(target_area)}")
         minimum_cost = sys.float_info.max
-        minimum_position: Tuple[float, float] = target_area[0]
         for item in target_area:
-            item_position = self.index_to_position(grid, item[1])
             item_cost = self.distance_between_indicies(grid, item[1], self.end_goal_index)
             if item_cost < minimum_cost and item_cost != 100 and item_cost != -1:
-                # self.get_logger().info(
-                #    f"index {item[1]} has a raw cost of {item[0]} and position of {item_position[0]}, {item_position[1]}"
-                # )
-                minimum_position = item_position
                 minimum_cost = item_cost
+                minimum_index = item[1]
 
-        return minimum_position
+        return minimum_index
 
     def append_path(self, new_pose: Tuple[float, float]) -> None:
 
@@ -337,15 +337,22 @@ class NavigationNode(Node):
 
     def collect_adjacent(self, grid: OccupancyGrid, current_index: int) -> list[Tuple[int, int]]:
         adjacent_points: list[Tuple[int, int]] = []
-        if grid.data[current_index - 1] != 100:
+        grid.data[current_index] = 50
+        if grid.data[current_index - 1] != 100 and grid.data[current_index - 1] != 50:
             adjacent_points.append((grid.data[current_index - 1], current_index - 1))
-        if grid.data[current_index + 1] != 100:
+        if grid.data[current_index + 1] != 100 and grid.data[current_index + 1] != 50:
             adjacent_points.append((grid.data[current_index + 1], current_index + 1))
-        if grid.data[current_index - grid.info.width] != 100:
+        if (
+            grid.data[current_index - grid.info.width] != 100
+            and grid.data[current_index - grid.info.width] != 50
+        ):
             adjacent_points.append(
                 (grid.data[current_index - grid.info.width], current_index - grid.info.width)
             )
-        if grid.data[current_index + grid.info.width] != 100:
+        if (
+            grid.data[current_index + grid.info.width] != 100
+            and grid.data[current_index + grid.info.width] != 50
+        ):
             adjacent_points.append(
                 (grid.data[current_index + grid.info.width], current_index + grid.info.width)
             )
