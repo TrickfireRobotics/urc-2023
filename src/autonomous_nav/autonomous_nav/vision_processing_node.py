@@ -170,7 +170,7 @@ class VisionProcessingNode(Node):
                 self.dist_coeffs,
                 rvec,
                 tvec,
-                marker_length /2;
+                marker_length /2,
             )
     # --------------------------------------------------------------------------
     #   ROS 2 Node Main
