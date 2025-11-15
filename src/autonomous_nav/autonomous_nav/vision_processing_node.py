@@ -138,7 +138,7 @@ class VisionProcessingNode(Node):
 
         corners, ids, _ = self.aruco_detector.detectMarkers(gray_image)
 
-        if ids is not None and len(ids) == 0:
+        if ids is None or len(ids) == 0:
             return
 
         self.get_logger().info(f"Detected ArUco markers: {ids.flatten()}")
