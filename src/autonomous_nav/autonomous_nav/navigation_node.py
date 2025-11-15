@@ -218,6 +218,7 @@ class NavigationNode(Node):
                     # self.path.poses[path_length].pose.position.y,
                     self.path.poses[0].pose.position.y,
                 )
+                return
             # self.publishStatus("No waypoint provided; Navigation Stopped.")
             # return
 
