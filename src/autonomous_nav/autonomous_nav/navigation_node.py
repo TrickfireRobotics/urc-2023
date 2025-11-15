@@ -45,14 +45,14 @@ class NavigationNode(Node):
         self.start_alt = 0.0
 
         # ---- Internal State ----
-        self.active_waypoint: Optional[Tuple[float, float]] = (2, 2)
+        self.active_waypoint: Optional[Tuple[float, float]] = (3, 0)
         self.current_position = (0.0, 0.0)  # x, y
         self.current_yaw = 0.0
         self.current_global_yaw = 0.0
         self.current_lat = 0
         self.current_lon = 0.0
         self.current_alt = 0.0
-        self.end_goal_waypoint: Tuple[float, float] = (2, 2)
+        self.end_goal_waypoint: Tuple[float, float] = (3, 0)
         self.path: Path = Path()
         self.global_costmap: Optional[OccupancyGrid] = None
         self.end_goal_index: int = 0
@@ -82,7 +82,7 @@ class NavigationNode(Node):
         self.path_pub = self.create_publisher(Path, "/path", 10)
         self.pos_pub = self.create_publisher(Pose2D, "/pos", 10)
         # ---- Timers ----
-        self.timer = self.create_timer(0.5, self.updateNavigation)  # 2 Hz
+        self.timer = self.create_timer(5, self.updateNavigation)  # 0.2 Hz
 
         """self.get_logger().info(
             colorStr("NavigationNode (dynamic anchor) initialized", ColorCodes.BLUE_OK)
@@ -243,7 +243,7 @@ class NavigationNode(Node):
             self.get_logger().warn("Running test")
             self.planPath(self.global_costmap)
             self.path_pub.publish(self.path)
-            # self.planPath(self.global_costmap)
+            return
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
         self.publishFeedback(goal_x, goal_y)
 
