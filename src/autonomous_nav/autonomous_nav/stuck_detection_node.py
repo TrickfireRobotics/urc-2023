@@ -14,6 +14,14 @@ from lib.configs import MoteusMotorConfig, MotorConfigs
 from lib.moteus_motor_state import MoteusMotorState, MoteusRunSettings
 
 NODE_NAME = "stuck_detection_node"
+DRIVE_MOTOR_CONFIGS = [
+    MotorConfigs.FRONT_LEFT_DRIVE_MOTOR,
+    MotorConfigs.FRONT_RIGHT_DRIVE_MOTOR,
+    MotorConfigs.MID_LEFT_DRIVE_MOTOR,
+    MotorConfigs.MID_RIGHT_DRIVE_MOTOR,
+    MotorConfigs.REAR_LEFT_DRIVE_MOTOR,
+    MotorConfigs.REAR_RIGHT_DRIVE_MOTOR,
+]
 
 
 @dataclass
@@ -24,6 +32,9 @@ class StuckReason:
     """ How many seconds tripped before marked as stuck. """
     mask: int
     """ How to encode/decode this reason. """
+
+    def __hash__(self) -> int:
+        return self.mask
 
 
 class StuckReasons:
@@ -48,14 +59,7 @@ class StuckDetectionNode(Node):
     def __init__(self) -> None:
         super().__init__(NODE_NAME)
 
-        self.slip_motor_configs = [
-            MotorConfigs.FRONT_LEFT_DRIVE_MOTOR,
-            MotorConfigs.FRONT_RIGHT_DRIVE_MOTOR,
-            MotorConfigs.REAR_LEFT_DRIVE_MOTOR,
-            MotorConfigs.REAR_RIGHT_DRIVE_MOTOR,
-        ]
-
-        for config in self.slip_motor_configs:
+        for config in DRIVE_MOTOR_CONFIGS:
             self.subscribe_to_motor(config)
 
         # TODO: Add lifetimes to the values
@@ -130,7 +134,7 @@ class StuckDetectionNode(Node):
         cant_spin_count = 0
         free_spinning_count = 0
 
-        for config in self.slip_motor_configs:
+        for config in DRIVE_MOTOR_CONFIGS:
             target = self.target_states.get(config.can_id)
             state = self.current_states.get(config.can_id)
 
