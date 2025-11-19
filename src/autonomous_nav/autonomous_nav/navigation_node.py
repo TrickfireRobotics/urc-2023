@@ -45,14 +45,14 @@ class NavigationNode(Node):
         self.start_alt = 0.0
 
         # ---- Internal State ----
-        self.active_waypoint: Optional[Tuple[float, float]] = (2, 2)
+        self.active_waypoint: Optional[Tuple[float, float]] = (3, 0)
         self.current_position = (0.0, 0.0)  # x, y
         self.current_yaw = 0.0
         self.current_global_yaw = 0.0
         self.current_lat = 0
         self.current_lon = 0.0
         self.current_alt = 0.0
-        self.end_goal_waypoint: Tuple[float, float] = (2, 2)
+        self.end_goal_waypoint: Tuple[float, float] = (3, 0)
         self.path: Path = Path()
         self.global_costmap: Optional[OccupancyGrid] = None
         self.end_goal_index: int = 0
@@ -82,7 +82,7 @@ class NavigationNode(Node):
         self.path_pub = self.create_publisher(Path, "/path", 10)
         self.pos_pub = self.create_publisher(Pose2D, "/pos", 10)
         # ---- Timers ----
-        self.timer = self.create_timer(0.5, self.updateNavigation)  # 2 Hz
+        self.timer = self.create_timer(5, self.updateNavigation)  # 0.2 Hz
 
         """self.get_logger().info(
             colorStr("NavigationNode (dynamic anchor) initialized", ColorCodes.BLUE_OK)
@@ -218,6 +218,7 @@ class NavigationNode(Node):
                     # self.path.poses[path_length].pose.position.y,
                     self.path.poses[0].pose.position.y,
                 )
+                return
             # self.publishStatus("No waypoint provided; Navigation Stopped.")
             # return
 
@@ -239,19 +240,17 @@ class NavigationNode(Node):
             self.publishStatus(f"Successfully reached waypoint ({goal_x:.2f}, {goal_y:.2f})")
             self.active_waypoint = None
             return
-        elif self.global_costmap != None:
+        elif self.global_costmap != None and len(self.path.poses) == 0:
             self.get_logger().warn("Running test")
             self.planPath(self.global_costmap)
-            self.path_pub.publish(self.path)
-            # self.planPath(self.global_costmap)
+            return
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
         self.publishFeedback(goal_x, goal_y)
 
     def test_via_fire(self, grid: OccupancyGrid) -> None:
         # this is a test function that "fires" in a stright line on the occupancy grid
         # to use this function, throw a bunch of boxes in front of the camera, and esnure that it shows up on the costmap as blocked
-        # if the translation functions are working, it should give you cost values that line up with the mapo
-        # if it doesnt, good luck
+        # if the translation functions are working, it should give you cost values that line up with the map
         length = 1
         starting_index = self.position_to_index(grid, (0.0, 0.0))  #
         self.get_logger().info(f"plotting point beginning at index  {starting_index} at 0,0")
@@ -260,7 +259,7 @@ class NavigationNode(Node):
             index = starting_index + (i)  # increasing the width takes you directly to the left
             x, y = self.index_to_position(grid, index)  #
             self.append_path((x, y))
-            # going forwards by one row bring me to the left
+            # going forwards by one row brings me to the left
             self.get_logger().info(
                 f"index  {index} has a value of {grid.data[index]} and a position of {x},{y}"
             )
@@ -273,21 +272,29 @@ class NavigationNode(Node):
         This algorithm looks at the global occupancy grid in order to plan a path through it for the rover using an A* style search algorithm.
         """
         lowest_cost_position = self.current_position
+        previous_position = lowest_cost_position
         distance_to_goal = self.distance_2d(
             lowest_cost_position[0],
             lowest_cost_position[1],
             self.end_goal_waypoint[0],
             self.end_goal_waypoint[1],
         )
-        while distance_to_goal > 0.5:
-            # self.get_logger().warn(
-            #     f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
-            # )
+        while distance_to_goal > 0.2:
             target_area = self.collect_adjacent(
                 grid, self.position_to_index(grid, lowest_cost_position)
             )
-            lowest_cost_position = self.find_lowest_cost_node(target_area, grid)
+            if len(target_area) == 0:
+                # we have found no suitable indicies
+                # pop the current position from the path
+                self.get_logger.info(f"backtracking")
+                self.path.poses.pop()
+                # make the new lowest position the item at the top of the stack
+                lowest_cost_position = self.path.poses[-1]
+                # continue loop to avoid find lowest cost node
+                continue
 
+            lowest_cost_node = self.find_lowest_cost_node(target_area, grid)
+            lowest_cost_position = self.index_to_position(grid, lowest_cost_node)
             self.append_path(lowest_cost_position)
             distance_to_goal = self.distance_2d(
                 lowest_cost_position[0],
@@ -298,23 +305,16 @@ class NavigationNode(Node):
         self.get_logger().info(f"plotted to goal successfully")
         self.path_pub.publish(self.path)
 
-    def find_lowest_cost_node(
-        self, target_area: list[Tuple[int, int]], grid: OccupancyGrid
-    ) -> Tuple[float, float]:
+    def find_lowest_cost_node(self, target_area: list[Tuple[int, int]], grid: OccupancyGrid) -> int:
         self.get_logger().info(f"target area is this large: {len(target_area)}")
         minimum_cost = sys.float_info.max
-        minimum_position: Tuple[float, float] = target_area[0]
         for item in target_area:
-            item_position = self.index_to_position(grid, item[1])
             item_cost = self.distance_between_indicies(grid, item[1], self.end_goal_index)
             if item_cost < minimum_cost and item_cost != 100 and item_cost != -1:
-                # self.get_logger().info(
-                #    f"index {item[1]} has a raw cost of {item[0]} and position of {item_position[0]}, {item_position[1]}"
-                # )
-                minimum_position = item_position
                 minimum_cost = item_cost
+                minimum_index = item[1]
 
-        return minimum_position
+        return minimum_index
 
     def append_path(self, new_pose: Tuple[float, float]) -> None:
 
@@ -336,18 +336,31 @@ class NavigationNode(Node):
         distance = math.sqrt((row1 - row2) ** 2 + (col1 - col2) ** 2)
         return distance
 
+    # This function collect all indicies adjacent to the index given, and only collects them if they are unoccupied and unvisited
     def collect_adjacent(self, grid: OccupancyGrid, current_index: int) -> list[Tuple[int, int]]:
         adjacent_points: list[Tuple[int, int]] = []
-        adjacent_points.append((grid.data[current_index - 1], current_index - 1))
-        adjacent_points.append((grid.data[current_index + 1], current_index + 1))
-        adjacent_points.append(
-            (grid.data[current_index - grid.info.width], current_index - grid.info.width)
-        )
-        adjacent_points.append(
-            (grid.data[current_index + grid.info.width], current_index + grid.info.width)
-        )
+        grid.data[current_index] = 50
+        if grid.data[current_index - 1] != 100 and grid.data[current_index - 1] != 50:
+            adjacent_points.append((grid.data[current_index - 1], current_index - 1))
+        if grid.data[current_index + 1] != 100 and grid.data[current_index + 1] != 50:
+            adjacent_points.append((grid.data[current_index + 1], current_index + 1))
+        if (
+            grid.data[current_index - grid.info.width] != 100
+            and grid.data[current_index - grid.info.width] != 50
+        ):
+            adjacent_points.append(
+                (grid.data[current_index - grid.info.width], current_index - grid.info.width)
+            )
+        if (
+            grid.data[current_index + grid.info.width] != 100
+            and grid.data[current_index + grid.info.width] != 50
+        ):
+            adjacent_points.append(
+                (grid.data[current_index + grid.info.width], current_index + grid.info.width)
+            )
         return adjacent_points
 
+    # Converts from map fram position to costmap index
     def position_to_index(self, grid: OccupancyGrid, position: Tuple[float, float]) -> int:
         # this function takes in the occupancy grid and an index within in it, and returns the map coordinates of that point
         # for testing, i have swapped the row and column variables (10/28/2025)
