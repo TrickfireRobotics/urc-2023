@@ -167,16 +167,18 @@ class DecisionMakingNode(Node):
         
         self.get_logger().info("Updating decision making...")
         
-        # Check if we have necessary data
-        if self.costmap is None:
+        # Check if we have a valid costmap (non-empty)
+        if self.costmap.getSizeInCellsX() == 0 or self.costmap.getSizeInCellsY() == 0:
             # Create fake costmap for testing
-            self.get_logger().info("Costmap or DWA planner not initialized, creating fake costmap for testing")
+            self.get_logger().info("Costmap not initialized or empty, creating fake costmap for testing")
             fake_grid = OccupancyGrid()
             fake_grid.info.resolution = 0.1
             fake_grid.info.width = 100
             fake_grid.info.height = 100
             fake_grid.info.origin.position.x = self.global_x - 5.0
             fake_grid.info.origin.position.y = self.global_y - 5.0
+            fake_grid.data = [0] * (100 * 100)  # Initialize with free space
+            self.costmap = PyCostmap2D(fake_grid)  # Actually assign the fake costmap
 
         # Check if we have waypoints
         if not self.waypoint_list:
@@ -216,10 +218,6 @@ class DecisionMakingNode(Node):
 
         # Transform goal from global (odom) to local (robot/costmap frame)
         goal_local = self.transform_global_to_local(current_goal_global)
-
-        if self.dwa_planner is None:
-            self.get_logger().info("DWA planner not initialized")
-            return
 
         # Update DWA planner state
         self.get_logger().info("Updating states")
