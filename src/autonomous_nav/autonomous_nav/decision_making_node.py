@@ -51,8 +51,9 @@ class DecisionMakingNode(Node):
         self.waypoint_list: List[Tuple[float, float]] = [(0, 0)]
         self.waypoint_reached_threshold = 0.05  # meters
 
-        # Costmap
-        self.costmap: Optional[PyCostmap2D] = None
+        # Costmap with fake/no data.
+        # self.costmap: Optional[PyCostmap2D] = None
+        self.costmap: PyCostmap2D = PyCostmap2D(OccupancyGrid())
 
         # DWA Planner
         self.dwa_planner: DWAPlanner = DWAPlanner(
@@ -175,9 +176,7 @@ class DecisionMakingNode(Node):
             fake_grid.info.width = 100
             fake_grid.info.height = 100
             fake_grid.info.origin.position.x = self.global_x - 5.0
-            fake_grid.info.origin.position.y = self.global_y - 5.0              
-            # self.stop_rover()
-            # return
+            fake_grid.info.origin.position.y = self.global_y - 5.0
 
         # Check if we have waypoints
         if not self.waypoint_list:
@@ -212,7 +211,8 @@ class DecisionMakingNode(Node):
             # Update to next waypoint
             # current_goal_global = self.waypoint_list[0]
             
-        self.local_x = 527/2
+        if self.costmap is not None:
+            self.local_x  = self.costmap.getSizeInCellsX()
 
         # Transform goal from global (odom) to local (robot/costmap frame)
         goal_local = self.transform_global_to_local(current_goal_global)
@@ -313,3 +313,4 @@ def main(args: list[str] | None = None) -> None:
 
 if __name__ == "__main__":
     main()
+    
