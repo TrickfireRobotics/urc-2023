@@ -16,15 +16,16 @@ from std_msgs.msg import Bool, Float32MultiArray, Float64MultiArray, String
 
 class NavigationNode(Node):
     """
-    A ROS 2 node for handling robot navigation using latitude/longitude waypoints
-    relative to a dynamically received anchor lat/lon.
+    A ROS 2 node for handling robot navigation using latitude/longitudes waypoints
+    relative to a dynamically received anchor lat/lon. This node manages the navigation status
+    (are we there yet?) and plots an initial path to our goal corrdinate.
 
     This node:
         - Subscribes to /anchor_position (Float64MultiArray).
         - Subscribes to /goal_latlon (NavSatFix) for a new lat/lon waypoint.
         - Subscribes to /odometry/filtered (Odometry) for current pose.
         - Publishes /navigation_status (String) and /navigation_feedback (Pose2D).
-
+        - Publishes /path (Path) to be followed by a lower level node.
     """
 
     def __init__(self) -> None:
@@ -199,6 +200,7 @@ class NavigationNode(Node):
     # ----------------------
     #   Main Navigation Logic
     # ----------------------
+    # updateNavigation publishes the current navigation status and runs the path planner if and only if the proper data has been provided and a path has not been planned
     def updateNavigation(self) -> None:
         # If anchor not received, publish status but do not navigate
         if not self.anchor_received:
