@@ -7,7 +7,7 @@ import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.subscription import Subscription
-from std_msgs.msg import Bool, String, UInt8
+from std_msgs.msg import Bool, Float32, String, UInt8
 
 from lib.color_codes import ColorCodes, colorStr
 from lib.configs import MoteusMotorConfig, MotorConfigs
@@ -22,6 +22,7 @@ DRIVE_MOTOR_CONFIGS = [
     MotorConfigs.REAR_LEFT_DRIVE_MOTOR,
     MotorConfigs.REAR_RIGHT_DRIVE_MOTOR,
 ]
+RMX8_25_RATED_TORQUE = 10  # N/m
 
 
 @dataclass
@@ -54,6 +55,8 @@ class StuckDetectionNode(Node):
         - Reasons are encoded by a bitmask (see StuckReasons for usage).
     """
 
+    DEBUG = True
+
     # Initialization
 
     def __init__(self) -> None:
@@ -70,6 +73,14 @@ class StuckDetectionNode(Node):
 
         self.stuck_publisher = self.create_publisher(Bool, "/stuck_detection/is_stuck", 10)
         self.stuck_reason_publisher = self.create_publisher(UInt8, "/stuck_detection/reason", 10)
+
+        if self.DEBUG:
+            self.target_velocity_ratio_publisher = self.create_publisher(
+                Float32, "/stuck_detection/debug/target_velocity_ratio", 10
+            )
+            self.rated_torque_ratio_publisher = self.create_publisher(
+                Float32, "/stuck_detection/debug/rated_torque_ratio", 10
+            )
 
         self.timer = self.create_timer(0.1, self.update)
 
@@ -126,7 +137,6 @@ class StuckDetectionNode(Node):
         return False
 
     def calculate_per_motor_effort(self) -> list[StuckReason]:
-        RMX8_25_RATED_TORQUE = 10  # N/m
         FREE_SPINNING_THRESH = (0.2, 0.9)  # <t, >v
         STUCK_THRESH = (0.5, 0.2)  # >t, <v
         STUCK_WHEEL_MIN_COUNT = 3
@@ -155,6 +165,10 @@ class StuckDetectionNode(Node):
             v_norm = min(v_norm, 1.0)
 
             t_norm = abs(state.torque) / RMX8_25_RATED_TORQUE
+
+            if self.DEBUG:
+                self.target_velocity_ratio_publisher.publish(Float32(data=v_norm))
+                self.rated_torque_ratio_publisher.publish(Float32(data=t_norm))
 
             if t_norm < FREE_SPINNING_THRESH[0] and v_norm > FREE_SPINNING_THRESH[1]:
                 free_spinning_count += 1
