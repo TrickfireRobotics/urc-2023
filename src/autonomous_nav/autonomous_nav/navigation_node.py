@@ -58,6 +58,7 @@ class NavigationNode(Node):
         self.global_costmap: Optional[OccupancyGrid] = None
         self.end_goal_index: int = 0
         self.get_logger().info(f"Navigation Node has initialized first arguments")
+        self.index_count: int = 0
         # ---- Subscribers ----
         # latitude, longitude, altitude
         self.global_costmap_subscription = self.create_subscription(
@@ -244,8 +245,8 @@ class NavigationNode(Node):
             return
         elif self.global_costmap != None and len(self.path.poses) == 0:
             self.get_logger().warn("Running test")
-            self.test_via_fire(self.global_costmap)
-            # self.planPath(self.global_costmap)
+            self.planPath(self.global_costmap)
+            self.get_logger().info(f"total indices queried: {self.index_count}")
             return
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
         self.publishFeedback(goal_x, goal_y)
@@ -343,6 +344,7 @@ class NavigationNode(Node):
     def collect_adjacent(self, grid: OccupancyGrid, current_index: int) -> list[Tuple[int, int]]:
         adjacent_points: list[Tuple[int, int]] = []
         grid.data[current_index] = 50
+        self.index_count = self.index_count + 4
         if grid.data[current_index - 1] != 100 and grid.data[current_index - 1] != 50:
             adjacent_points.append((grid.data[current_index - 1], current_index - 1))
         if grid.data[current_index + 1] != 100 and grid.data[current_index + 1] != 50:
