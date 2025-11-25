@@ -244,7 +244,8 @@ class NavigationNode(Node):
             return
         elif self.global_costmap != None and len(self.path.poses) == 0:
             self.get_logger().warn("Running test")
-            self.planPath(self.global_costmap)
+            self.test_via_fire(self.global_costmap)
+            # self.planPath(self.global_costmap)
             return
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
         self.publishFeedback(goal_x, goal_y)
