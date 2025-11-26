@@ -74,9 +74,17 @@ class VisionProcessingNode(Node):
         """
         Combined callback to run both YOLO World detection and ArUco marker detection.
         """
-        self.arucoMarkerDetection(msg)
 
-        self.yoloDetectionCallback(msg)
+        try:
+            frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        except Exception as e:
+            self.get_logger().error(f"Failed to convert image: {e}")
+            return
+        self.arucoMarkerDetection(frame)
+        
+        # This resizes the frame for yolo, if its not accurate enough maybe increase the size
+        resized = cv2.resize(frame, (640, 360), interpolation=cv2.INTER_AREA)
+        self.yoloDetectionCallback(resized)
     # --------------------------------------------------------------------------
     #   YOLO World Object Detection
     # --------------------------------------------------------------------------
@@ -124,7 +132,7 @@ class VisionProcessingNode(Node):
     # --------------------------------------------------------------------------
     #   ArUco Marker Detection
     # --------------------------------------------------------------------------
-    def arucoMarkerDetection(self, msg: Image) -> None:
+    def arucoMarkerDetection(self, frame: np.ndarray) -> None:
         """
         Basic ArUco marker detection with pose estimation
         """
@@ -132,7 +140,6 @@ class VisionProcessingNode(Node):
             self.get_logger().warning("Camera intrinsics not received yet. Skipping frame.")
             return
 
-        cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
         gray_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
 
 
