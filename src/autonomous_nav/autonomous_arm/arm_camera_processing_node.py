@@ -6,6 +6,9 @@
 import cv2
 import numpy as np
 
+# Subscribe to raw camera data
+
+# write a callback for the subscription
 # --- Settings ---
 MARKER_LENGTH = 0.025  # meters (25 mm marker, change as needed)
 
