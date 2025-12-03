@@ -2,9 +2,7 @@
 # It does this through the following process:
 # Step 1: acquires raw camera image
 # Step 2: collects Aruco marker positions relative to camera
-# Step 3: localizes those points to the robot base fram
-# Step 4: creates an x,y, and z slope (AKA 3d plane) based off point positions
-# Step 5: calculates the positions of all keys based on this plane
+# Step 3: publish those points in an array
 import cv2
 import numpy as np
 
