@@ -245,7 +245,7 @@ class DWAPlanner:
         # Generate and evaluate all trajectory candidates
         if self.costmap is None:
             return (0.0, 0.0)
-        
+
         valid_trajectories = []
         for linear_vel, angular_vel in velocity_samples:
             trajectory = self.simulate_trajectory(linear_vel, angular_vel)
