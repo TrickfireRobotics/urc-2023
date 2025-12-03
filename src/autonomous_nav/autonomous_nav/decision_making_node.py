@@ -9,8 +9,7 @@ Functionality:
 """
 
 import math
-import sys
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import rclpy
 from nav2_simple_commander.costmap_2d import PyCostmap2D
@@ -22,9 +21,9 @@ from rclpy.node import Node
 from std_msgs.msg import Float32, String
 from transforms3d.euler import quat2euler
 
-# from lib.color_codes import ColorCodes, colorStr
-
 from .dwa_planner import DWAPlanner
+
+# from lib.color_codes import ColorCodes, colorStr
 
 
 class DecisionMakingNode(Node):
@@ -32,7 +31,7 @@ class DecisionMakingNode(Node):
         super().__init__("decision_making_node")
 
         # ===== STATE VARIABLES =====
-        
+
         # Global pose tracking (from odometry)
         self.global_x = 0.0
         self.global_y = 0.0
@@ -48,23 +47,23 @@ class DecisionMakingNode(Node):
         self.last_right_vel = 0.0
 
         # Waypoint list (stores waypoints in global frame)  - Updated to Path message
-        self.waypoint_list: List[Tuple[float, float]] = [(0, 0)]
+        self.waypoint_list: List[Tuple[float, float]] = []
         self.waypoint_reached_threshold = 0.05  # meters
 
         # Costmap with fake/no data.
         # self.costmap: Optional[PyCostmap2D] = None
-        self.costmap: PyCostmap2D = PyCostmap2D(OccupancyGrid())
+        self.occupancy_grid: PyCostmap2D = PyCostmap2D(OccupancyGrid())
 
         # DWA Planner
         self.dwa_planner: DWAPlanner = DWAPlanner(
-                costmap=self.costmap,
-                robot_radius=0.3,
-                current_velocity=self.current_wheel_vel,
-                current_position=(0.0, 0.0),
-                time_delta=0.1,
-                goal=self.waypoint_list[0],
-                theta=self.global_theta,
-            )
+            costmap=self.occupancy_grid,
+            robot_radius=0.3,
+            current_velocity=self.current_wheel_vel,
+            current_position=(0.0, 0.0),
+            time_delta=0.1,
+            goal=self.waypoint_list[0],
+            theta=self.global_theta,
+        )
 
         # Navigation status
         self.navigation_status = "No waypoint provided"
@@ -72,20 +71,13 @@ class DecisionMakingNode(Node):
         # ===== SUBSCRIBERS =====
 
         # Odometry for global pose tracking
-        self.create_subscription(
-            Odometry, "/odometry/filtered", self.odometry_callback, 10
-        )
+        self.create_subscription(Odometry, "/odometry/filtered", self.odometry_callback, 10)
 
         # Costmap (rolling window)
-        self.create_subscription(
-            # OccupancyGrid, "/local_costmap/costmap", self.costmap_callback, 10
-            OccupancyGrid, "/projected_map", self.costmap_callback, 10
-        )
+        self.create_subscription(OccupancyGrid, "/projected_map", self.occupancy_grid_callback, 10)
 
         # Waypoint path
-        self.create_subscription(
-            Path, "/path", self.path_callback, 10
-        )
+        self.create_subscription(Path, "/path", self.path_callback, 10)
 
         # Navigation status
         self.create_subscription(String, "/navigation_status", self.nav_status_callback, 10)
@@ -136,15 +128,17 @@ class DecisionMakingNode(Node):
 
         self.current_wheel_vel = (left_linear / wheel_radius, right_linear / wheel_radius)
 
-    def costmap_callback(self, msg: OccupancyGrid) -> None:
+    def occupancy_grid_callback(self, msg: OccupancyGrid) -> None:
         """Update costmap and initialize planner if needed."""
-        self.costmap = PyCostmap2D(msg)
-        self.get_logger().info(f"Costmap updated with {msg.info.width} x {msg.info.height} grid")
+        self.occupancy_grid = msg
+        self.get_logger().info(
+            f"Occupancygrid updated with {msg.info.width} x {msg.info.height} grid"
+        )
 
     def path_callback(self, msg: Path) -> None:
         """Receive new waypoint queue."""
         self.get_logger().info("Received new path")
-        
+
         self.waypoint_list.clear()
 
         # Take first 10 waypoints
@@ -164,21 +158,27 @@ class DecisionMakingNode(Node):
 
     def update_decision(self) -> None:
         """Main control loop - runs at 2 Hz."""
-        
+
         self.get_logger().info("Updating decision making...")
-        
+
         # Check if we have a valid costmap (non-empty)
-        if self.costmap.getSizeInCellsX() == 0 or self.costmap.getSizeInCellsY() == 0:
-            # Create fake costmap for testing
-            self.get_logger().info("Costmap not initialized or empty, creating fake costmap for testing")
-            fake_grid = OccupancyGrid()
-            fake_grid.info.resolution = 0.1
-            fake_grid.info.width = 100
-            fake_grid.info.height = 100
-            fake_grid.info.origin.position.x = self.global_x - 5.0
-            fake_grid.info.origin.position.y = self.global_y - 5.0
-            fake_grid.data = [0] * (100 * 100)  # Initialize with free space
-            self.costmap = PyCostmap2D(fake_grid)  # Actually assign the fake costmap
+        if self.occupancy_grid.getSizeInCellsX() == 0 or self.occupancy_grid.getSizeInCellsY() == 0:
+            self.get_logger().info("No costmap to navigate through")
+            # self.stop_rover()
+            # return
+
+            # Create a PyCostmap2D from OccupancyGrid
+            self.occupancy_grid = PyCostmap2D(self.occupancy_grid)
+            # # Create fake costmap for testing
+            # self.get_logger().info("Costmap not initialized or empty, creating fake costmap for testing")
+            # fake_grid.info.resolution = 0.1
+            # fake_grid = OccupancyGrid()
+            # fake_grid.info.width = 100
+            # fake_grid.info.height = 100
+            # fake_grid.info.origin.position.x = self.global_x - 5.0
+            # fake_grid.info.origin.position.y = self.global_y - 5.0
+            # fake_grid.data = [0] * (100 * 100)  # Initialize with free space
+            # self.costmap = PyCostmap2D(fake_grid)  # Actually assign the fake costmap
 
         # Check if we have waypoints
         if not self.waypoint_list:
@@ -186,15 +186,20 @@ class DecisionMakingNode(Node):
             return
 
         # Get current waypoint
-        current_goal_global = self.waypoint_list[0]
-        if current_goal_global is None:
+        if len(self.waypoint_list) < 1:
+            self.get_logger().info("There are no waypoints to navigate to.")
             self.stop_rover()
             return
+        current_goal_global = self.waypoint_list[0]
+
         current_goal_global = (
             current_goal_global[0],
             current_goal_global[1],
         )
-        self.get_logger().info(f"Navigating to waypoint ({current_goal_global[0]}, {current_goal_global[1]})")
+
+        self.get_logger().info(
+            f"Navigating to waypoint ({current_goal_global[0]}, {current_goal_global[1]})"
+        )
 
         # Check if reached current waypoint
         distance_to_goal = math.sqrt(
@@ -205,16 +210,15 @@ class DecisionMakingNode(Node):
         if distance_to_goal < self.waypoint_reached_threshold:
             self.waypoint_list.pop(0)
             self.get_logger().info(f"Reached waypoint!")
-
             if not self.waypoint_list:
                 self.stop_rover()
                 return
 
             # Update to next waypoint
-            # current_goal_global = self.waypoint_list[0]
-            
-        if self.costmap is not None:
-            self.local_x  = self.costmap.getSizeInCellsX()
+            current_goal_global = self.waypoint_list[0]
+
+        if self.occupancy_grid is not None:
+            self.local_x = self.occupancy_grid.getSizeInCellsX()
 
         # Transform goal from global (odom) to local (robot/costmap frame)
         goal_local = self.transform_global_to_local(current_goal_global)
@@ -222,7 +226,7 @@ class DecisionMakingNode(Node):
         # Update DWA planner state
         self.get_logger().info("Updating states")
         self.dwa_planner.update_state(
-            costmap=self.costmap,
+            costmap=self.occupancy_grid,
             current_position=(0.0, 0.0),
             current_theta=self.global_theta,
             current_velocity=self.current_wheel_vel,
@@ -300,9 +304,7 @@ def main(args: list[str] | None = None) -> None:
             # decision_making_node.get_logger().info(
             #     colorStr("Shutting down decision_making_node", ColorCodes.BLUE_OK)
             # )
-            decision_making_node.get_logger().info(
-                "Shutting down decision_making_node"
-            )
+            decision_making_node.get_logger().info("Shutting down decision_making_node")
     finally:
         if decision_making_node is not None:
             decision_making_node.destroy_node()
@@ -311,4 +313,3 @@ def main(args: list[str] | None = None) -> None:
 
 if __name__ == "__main__":
     main()
-    
