@@ -63,34 +63,37 @@ zed_launch = IncludeLaunchDescription(
     launch_arguments={"camera_model": "zed2i", "composable_node": "False"}.items(),
 )
 
+ublox_config_path = os.path.join(
+    get_package_share_directory("autonomous_nav"), "config", "ublox.yaml"
+    )
 gps_node = Node(
     package="ublox_gps",
     executable="ublox_gps_node",
     name="gps_node",
     output="screen",
     parameters=[
+        ublox_config_path,
         {
             "frame_id": "gps",
-            "rate": 4.0,  # GNSS data update rate in Hz
-            "dynamic_model": "portable",  # Model for stationary/moving applications
-            "nav_rate": 1,  # Must be 1 Hz for HPG Ref devices
-            "enable_pps": True,  # Enable Pulse-Per-Second (PPS) if needed
-            "tmode3": 0,  # Set to Rover mode (Instead of fixed mode)
-            # RTK/NTRIP settings for RTK2Go
+            "dynamic_model": "automotive",  # better for a wheeled rover than "portable"
+            "enable_pps": True,             # keep if you wire/use PPS
+            "tmode3": 0,                    # 0 = rover mode
+            # RTK/NTRIP (keep only if you actually use a caster):
             "rtcm_caster_address": "3.143.243.81",
             "rtcm_caster_port": 2101,
-            "mount_point": "BOTHWA",  # Case-sensitive!
-            "username": "jakek927@gmail.com",  # Replace with your actual email
-            "password": "none",  # Required but ignored
-            "publish_rtcm": True,  # Ensure RTCM corrections are published
-        }
-    ],
+            "mount_point": "BOTHWA",
+            "username": "jakek927@gmail.com",
+            "password": "none",
+            "publish_rtcm": True,
+            },
+        ],
 )
 
 # Path to your navsat_transform config
 navsat_config_path = os.path.join(
     get_package_share_directory("autonomous_nav"), "config", "navsat_transform.yaml"
 )
+
 
 navsat_transform = Node(
     package="robot_localization",
