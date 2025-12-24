@@ -7,12 +7,15 @@ from typing import Optional
 import cv2  # pylint: disable=no-member
 import numpy as np
 import rclpy
+import tf_transformations
 from cv2 import aruco
 from cv_bridge import CvBridge
+from geometry_msgs.msg import TransformStamped
 from rclpy.node import Node
 from rclpy.time import Time
 from sensor_msgs.msg import CameraInfo, Image, PointCloud2, PointField
 from std_msgs.msg import Bool, Float32MultiArray, Header
+from tf2_ros import TransformBroadcaster
 
 
 # TODO: get the camera matrix and distortion coefficients from a subscription instead of hardcoding them
@@ -27,6 +30,7 @@ class aruco_detection_node(Node):
         self.dist_coeffs = np.zeros((4, 1))
         # get the marker length from the camera calibration
         self.marker_length = 0.0529
+        self.tf_broadcaster = TransformBroadcaster(self)
 
     # This function sets up the camera connection and returns the connection object
     def setup_camera(self) -> Optional[cv2.VideoCapture]:
@@ -36,8 +40,42 @@ class aruco_detection_node(Node):
             return None
         return cap
 
+    def publish_marker_tf(self, rvec: np.ndarray, tvec: np.ndarray, marker_id: int) -> None:
+        """
+        Publish TF: camera_link -> aruco_<id>
+        rvec, tvec come from OpenCV ArUco
+        """
+
+        # Convert Rodrigues rotation vector to rotation matrix
+        R, _ = cv2.Rodrigues(rvec)
+
+        # Build homogeneous transform
+        T = np.eye(4)
+        T[:3, :3] = R
+
+        # Convert rotation matrix to quaternion
+        quat = tf_transformations.quaternion_from_matrix(T)
+
+        # Create TransformStamped message
+        t = TransformStamped()
+        t.header.stamp = self.get_clock().now().to_msg()
+        t.header.frame_id = "camera_link"
+        t.child_frame_id = f"aruco_{marker_id}"
+
+        t.transform.translation.x = float(tvec[0])
+        t.transform.translation.y = float(tvec[1])
+        t.transform.translation.z = float(tvec[2])
+
+        t.transform.rotation.x = quat[0]
+        t.transform.rotation.y = quat[1]
+        t.transform.rotation.z = quat[2]
+        t.transform.rotation.w = quat[3]
+
+        # Publish TF
+        self.tf_broadcaster.sendTransform(t)
+
     # This function detects ArUco markers in the webcam feed and prints their IDs and positions
-    def aruco_detection(self):
+    def aruco_detection(self) -> None:
         # initialize a connection to the webcam and store that connection in the "cap" object
         cap = self.setup_camera()
         markerImage = np.zeros((200, 200), dtype=np.uint8)
@@ -101,7 +139,12 @@ class aruco_detection_node(Node):
         cv2.destroyAllWindows()
 
 
-def my_estimatePoseSingleMarkers(corners, marker_size, camera_matrix, dist_coeffs):
+def my_estimatePoseSingleMarkers(
+    corners: list[np.ndarray],
+    marker_size: float,
+    camera_matrix: np.ndarray,
+    dist_coeffs: np.ndarray,
+) -> tuple[list[np.ndarray], list[np.ndarray], list]:
     """
     This will estimate the rvec and tvec for each of the marker corners detected by:
        corners, ids, rejectedImgPoints = detector.detectMarkers(image)
