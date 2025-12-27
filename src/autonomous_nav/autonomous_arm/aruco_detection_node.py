@@ -1,4 +1,4 @@
-# this node takes in Aruco points relative to the camera and transforms them to the robots base frame
+# This node takes in Aruco points relative to the camera, transforms them to the robots base frame, and publishes them for use in the arm control node
 import math
 import struct
 import sys
