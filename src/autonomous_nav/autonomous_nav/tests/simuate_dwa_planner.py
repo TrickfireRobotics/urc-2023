@@ -45,11 +45,11 @@ def dwa_planner(mock_costmap: PyCostmap2D) -> DWAPlanner:
 def main() -> None:
     planner: DWAPlanner = dwa_planner(mock_costmap())
 
-    window: List[Tuple[float, float]] = planner.calculate_dynamic_window(planner.current_wheel_vel)
+    window: Tuple[float, float, float, float] = planner.calculate_dynamic_window((1.5, 1.0))
 
-    for velocity in window:
-        print(f"Velocity Sample: Left: {velocity[0]:.2f} m/s, Right: {velocity[1]:.2f} m/s")
-        print(velocity)
+    # for velocity in window:
+    print("(min_linear_vel, max_linear_vel, min_angular_vel, max_angular_vel)")
+    print(window)
 
     vel_command: Tuple[float, float] = planner.plan()
     print(
