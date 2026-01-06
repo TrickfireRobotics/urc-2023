@@ -3,6 +3,9 @@
 # Run ZED dependency setup first
 ./setup_zed_dependencies.sh
 
+# Run moveit dependency setup
+./setup_moveit_dependencies.sh
+
 source /opt/ros/$ROS_DISTRO/setup.bash
 
 # build zed components first

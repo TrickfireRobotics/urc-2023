@@ -1,0 +1,46 @@
+# Placeholder joint_limits.yaml for MoveIt 2 arm configuration
+# Defines velocity, acceleration, and position limits for joints
+# Replace with actual arm joint names and limits
+
+joint_limits:
+  # Example joints - replace with your arm's joint names (e.g., turntable, shoulder, elbow, wrist_left, wrist_right)
+  joint_1:  # e.g., arm_turntable_joint
+    has_velocity_limits: true
+    max_velocity: 1.0  # rad/s
+    has_acceleration_limits: true
+    max_acceleration: 0.5  # rad/s^2
+    has_position_limits: true
+    min_position: -3.14159  # -pi
+    max_position: 3.14159   # pi
+  joint_2:  # e.g., arm_shoulder_joint
+    has_velocity_limits: true
+    max_velocity: 1.5
+    has_acceleration_limits: true
+    max_acceleration: 0.8
+    has_position_limits: true
+    min_position: -1.57
+    max_position: 1.57
+  joint_3:  # e.g., arm_elbow_joint
+    has_velocity_limits: true
+    max_velocity: 2.0
+    has_acceleration_limits: true
+    max_acceleration: 1.0
+    has_position_limits: true
+    min_position: -2.0
+    max_position: 2.0
+  joint_4:  # e.g., arm_wrist_left_joint
+    has_velocity_limits: true
+    max_velocity: 3.0
+    has_acceleration_limits: true
+    max_acceleration: 1.5
+    has_position_limits: true
+    min_position: -1.0
+    max_position: 1.0
+  joint_5:  # e.g., arm_wrist_right_joint
+    has_velocity_limits: true
+    max_velocity: 3.0
+    has_acceleration_limits: true
+    max_acceleration: 1.5
+    has_position_limits: true
+    min_position: -1.0
+    max_position: 1.0
