@@ -41,8 +41,9 @@ class DecisionMakingNode(Node):
         self.local_x = 0.0
         self.local_y = 0.0
 
-        # Velocity tracking
-        self.current_wheel_vel = (0.0, 0.0)
+        # Velocity tracking - initialize velocity to 0.5 to get rover moving
+        self.current_wheel_vel = (0.5, 0.5)
+        # self.current_wheel_vel = (0.0, 0.0)
         self.last_left_vel = 0.0
         self.last_right_vel = 0.0
 
@@ -50,9 +51,9 @@ class DecisionMakingNode(Node):
         self.waypoint_list: List[Tuple[float, float]] = []
         self.waypoint_reached_threshold = 0.05  # meters
 
-        # Costmap with fake/no data.
+        # Costmap with no data.
         # self.costmap: Optional[PyCostmap2D] = None
-        self.occupancy_grid: PyCostmap2D = PyCostmap2D(OccupancyGrid())
+        self.occupancy_grid: OccupancyGrid = OccupancyGrid()
 
         # DWA Planner
         self.dwa_planner: DWAPlanner = DWAPlanner(
@@ -226,7 +227,7 @@ class DecisionMakingNode(Node):
         # Update DWA planner state
         self.get_logger().info("Updating states")
         self.dwa_planner.update_state(
-            costmap=self.occupancy_grid,
+            costmap=PyCostmap2D(self.occupancy_grid),
             current_position=(0.0, 0.0),
             current_theta=self.global_theta,
             current_velocity=self.current_wheel_vel,
