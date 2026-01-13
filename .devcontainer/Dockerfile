@@ -1,5 +1,7 @@
-# Base image: Ubuntu 20.04 with ROS2 Humble installed
+
+# Base image: Ubuntu 22.04 with ROS2 Humble installed
 FROM ros:humble
+
 # Install dependencies from apt
 RUN apt-get update && apt-get install -y \
   # To use git in the container
@@ -10,27 +12,27 @@ RUN apt-get update && apt-get install -y \
   ssh-client \
   ros-humble-rosbridge-server \
   ros-humble-nav2-simple-commander \
+  # TF quaternion utilities
+  ros-humble-tf-transformations \
   # Install usb utilities
-  usbutils \ 
+  usbutils \
   can-utils \
   iproute2 \
-  kmod \ 
+  kmod \
   # Used for cv_bridge
   python3-numpy \
   libboost-python-dev \
   # OpenCV
   libopencv-dev \
   python3-opencv \
-  # Clean out the apt lists after `apt-get update`
   && rm -rf /var/lib/apt/lists/*
 
-
-#Install moteus python library https://github.com/mjbots/moteus/tree/main/lib/python
+# Install moteus python library
 RUN pip3 install moteus
 
 RUN pip3 install pyusb
 
-# Install OpenCV for python
+# Install OpenCV for python (note: you already have python3-opencv via apt)
 RUN pip3 install opencv-python
 
 # Update pydocstyle to remove a deprecation warning when testing for PEP257
@@ -40,13 +42,9 @@ RUN pip install transform3d
 
 # Add a user so we can remote into this container with a non-root user
 RUN useradd trickfire \
-  # Bash will be its default shell
   --shell /bin/bash \
-  # Give it a directory in /home
   --create-home \
-  # Don't make a giant log file for login data, we don't care about it
   --no-log-init \
-  # Allow the user to access video cameras.
   -G video
 
 # Copy all the bash customizations over to the user.
