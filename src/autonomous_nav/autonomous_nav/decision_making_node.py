@@ -19,7 +19,9 @@ from nav_msgs.msg import OccupancyGrid, Odometry, Path
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import Float32, String
-from transforms3d.euler import quat2euler
+
+# from transforms3d.euler import quat2euler
+from tf_transformations import euler_from_quaternion
 
 from .dwa_planner import DWAPlanner
 
@@ -53,11 +55,12 @@ class DecisionMakingNode(Node):
 
         # Costmap with no data.
         # self.costmap: Optional[PyCostmap2D] = None
-        self.occupancy_grid: OccupancyGrid = OccupancyGrid()
+        # self.occupancy_grid: PyCostmap2D = PyCostmap2D(OccupancyGrid())
+        self.costmap: PyCostmap2D = PyCostmap2D(OccupancyGrid())
 
         # DWA Planner
         self.dwa_planner: DWAPlanner = DWAPlanner(
-            costmap=self.occupancy_grid,
+            costmap=self.costmap,
             robot_radius=0.3,
             current_velocity=self.current_wheel_vel,
             current_position=(0.0, 0.0),
@@ -104,24 +107,19 @@ class DecisionMakingNode(Node):
     # ===== CALLBACKS =====
 
     def odometry_callback(self, msg: Odometry) -> None:
-        """Update global pose from odometry."""
-        self.get_logger().info("Received odometry update")
         self.global_x = msg.pose.pose.position.x
         self.global_y = msg.pose.pose.position.y
 
-        # Extract yaw from quaternion
         orientation = msg.pose.pose.orientation
-        _, _, self.global_theta = quat2euler(
-            [orientation.w, orientation.x, orientation.y, orientation.z], "sxyz"
+
+        _, _, self.global_theta = euler_from_quaternion(
+            [orientation.x, orientation.y, orientation.z, orientation.w]
         )
 
-        # Extract wheel velocities from twist (if available)
-        # Or estimate from linear/angular velocity
         linear_vel = msg.twist.twist.linear.x
         angular_vel = msg.twist.twist.angular.z
 
-        # Convert to wheel velocities (inverse kinematics)
-        wheel_base = 0.5  # Match DWA planner
+        wheel_base = 0.5
         wheel_radius = 0.11
 
         left_linear = linear_vel - (angular_vel * wheel_base / 2.0)
@@ -129,9 +127,35 @@ class DecisionMakingNode(Node):
 
         self.current_wheel_vel = (left_linear / wheel_radius, right_linear / wheel_radius)
 
+    # def odometry_callback(self, msg: Odometry) -> None:
+    #     """Update global pose from odometry."""
+    #     self.get_logger().info("Received odometry update")
+    #     self.global_x = msg.pose.pose.position.x
+    #     self.global_y = msg.pose.pose.position.y
+
+    #     # Extract yaw from quaternion
+    #     orientation = msg.pose.pose.orientation
+    #     _, _, self.global_theta = quat2euler(
+    #         [orientation.w, orientation.x, orientation.y, orientation.z], "sxyz"
+    #     )
+
+    #     # Extract wheel velocities from twist (if available)
+    #     # Or estimate from linear/angular velocity
+    #     linear_vel = msg.twist.twist.linear.x
+    #     angular_vel = msg.twist.twist.angular.z
+
+    #     # Convert to wheel velocities (inverse kinematics)
+    #     wheel_base = 0.5  # Match DWA planner
+    #     wheel_radius = 0.11
+
+    #     left_linear = linear_vel - (angular_vel * wheel_base / 2.0)
+    #     right_linear = linear_vel + (angular_vel * wheel_base / 2.0)
+
+    #     self.current_wheel_vel = (left_linear / wheel_radius, right_linear / wheel_radius)
+
     def occupancy_grid_callback(self, msg: OccupancyGrid) -> None:
         """Update costmap and initialize planner if needed."""
-        self.occupancy_grid = msg
+        self.costmap = PyCostmap2D(msg)
         self.get_logger().info(
             f"Occupancygrid updated with {msg.info.width} x {msg.info.height} grid"
         )
@@ -143,9 +167,10 @@ class DecisionMakingNode(Node):
         self.waypoint_list.clear()
 
         # Take first 10 waypoints
-        for pose_stamped in msg.poses[:10]:
-            x = pose_stamped.pose.position.x
-            y = pose_stamped.pose.position.y
+        for i, pose_stamped in enumerate(msg.poses):
+            pose = pose_stamped.pose
+            x = pose_stamped.position.x
+            y = pose_stamped.position.y
             self.waypoint_list.append((x, y))
 
         self.get_logger().info(f"Received path with {len(self.waypoint_list)} waypoints")
@@ -163,13 +188,13 @@ class DecisionMakingNode(Node):
         self.get_logger().info("Updating decision making...")
 
         # Check if we have a valid costmap (non-empty)
-        if self.occupancy_grid.getSizeInCellsX() == 0 or self.occupancy_grid.getSizeInCellsY() == 0:
+        if self.costmap.getSizeInCellsX() == 0 or self.costmap.getSizeInCellsY() == 0:
             self.get_logger().info("No costmap to navigate through")
             # self.stop_rover()
             # return
 
             # Create a PyCostmap2D from OccupancyGrid
-            self.occupancy_grid = PyCostmap2D(self.occupancy_grid)
+            self.costmap = PyCostmap2D(self.costmap)
             # # Create fake costmap for testing
             # self.get_logger().info("Costmap not initialized or empty, creating fake costmap for testing")
             # fake_grid.info.resolution = 0.1
@@ -218,8 +243,8 @@ class DecisionMakingNode(Node):
             # Update to next waypoint
             current_goal_global = self.waypoint_list[0]
 
-        if self.occupancy_grid is not None:
-            self.local_x = self.occupancy_grid.getSizeInCellsX()
+        if self.costmap is not None:
+            self.local_x = self.costmap.getSizeInCellsX()
 
         # Transform goal from global (odom) to local (robot/costmap frame)
         goal_local = self.transform_global_to_local(current_goal_global)
@@ -227,7 +252,7 @@ class DecisionMakingNode(Node):
         # Update DWA planner state
         self.get_logger().info("Updating states")
         self.dwa_planner.update_state(
-            costmap=PyCostmap2D(self.occupancy_grid),
+            costmap=self.costmap,
             current_position=(0.0, 0.0),
             current_theta=self.global_theta,
             current_velocity=self.current_wheel_vel,
