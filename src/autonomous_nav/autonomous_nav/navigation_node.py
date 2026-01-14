@@ -194,6 +194,7 @@ class NavigationNode(Node):
     # ----------------------
     def updateNavigation(self) -> None:
         # If anchor not received, publish status but do not navigate
+        self.get_logger().info("Updating navigation...")
         if not self.anchor_received:
             self.publishStatus("No anchor received; Navigation Stopped.")
             return
