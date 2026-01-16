@@ -150,6 +150,9 @@ class VisionProcessingNode(Node):
             self.get_logger().warning("Camera intrinsics not received yet. Skipping frame.")
             return
 
+        #cv_image isn't defined so I will assume it is mislabled frame
+        cv_image = frame
+
         gray_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
 
 
