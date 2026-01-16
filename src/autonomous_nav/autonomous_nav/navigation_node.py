@@ -226,11 +226,12 @@ class NavigationNode(Node):
             # return
 
         # Compute distance to the waypoint
-        goal_x, goal_y = self.active_waypoint
-        self.get_logger().info(f"Goal X: {goal_x}, Goal Y: {goal_y}")
-        dist_to_goal = self.distance_2d(
-            self.current_position[0], self.current_position[1], goal_x, goal_y
-        )
+        if self.active_waypoint is not None:
+            goal_x, goal_y = self.active_waypoint
+            self.get_logger().info(f"Goal X: {goal_x}, Goal Y: {goal_y}")
+            dist_to_goal = self.distance_2d(
+                self.current_position[0], self.current_position[1], goal_x, goal_y
+            )
 
         pos_msg = Pose2D()
         pos_msg.x = self.current_position[0]
