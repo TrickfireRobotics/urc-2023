@@ -160,22 +160,9 @@ class DecisionMakingNode(Node):
 
         # Check if we have a valid costmap (non-empty)
         if self.costmap.getSizeInCellsX() == 0 or self.costmap.getSizeInCellsY() == 0:
-            self.get_logger().info("No costmap to navigate through")
-            # self.stop_rover()
-            # return
-
-            # Create a PyCostmap2D from OccupancyGrid
-            self.costmap = PyCostmap2D(self.costmap)
-            # # Create fake costmap for testing
-            # self.get_logger().info("Costmap not initialized or empty, creating fake costmap for testing")
-            # fake_grid.info.resolution = 0.1
-            # fake_grid = OccupancyGrid()
-            # fake_grid.info.width = 100
-            # fake_grid.info.height = 100
-            # fake_grid.info.origin.position.x = self.global_x - 5.0
-            # fake_grid.info.origin.position.y = self.global_y - 5.0
-            # fake_grid.data = [0] * (100 * 100)  # Initialize with free space
-            # self.costmap = PyCostmap2D(fake_grid)  # Actually assign the fake costmap
+            self.get_logger().info("No costmap received yet, waiting...")
+            self.stop_rover()
+            return
 
         # Check if we have waypoints
         if not self.waypoint_list:
