@@ -54,7 +54,12 @@ class VisionProcessingNode(Node):
         self.camera_info_sub = self.create_subscription(
             CameraInfo, "/zed/zed_node/rgb/camera_info", self.processCameraInfo, 10
         )
-        
+
+        # Publishers
+        self.object_detection_pub = self.create_publisher(
+            Image, "/object_detection_image", 10
+        )
+
         self.get_logger().info("vision_processing_node is up and running.")
 
 
@@ -124,9 +129,14 @@ class VisionProcessingNode(Node):
             )
 
         # Display result
+        #disp = cv2.resize(frame, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
+        #cv2.imshow("YOLO World Detection", disp)
+        #cv2.waitKey(1)
+
+        #publish results to view with rviz
         disp = cv2.resize(frame, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
-        cv2.imshow("YOLO World Detection", disp)
-        cv2.waitKey(1)
+        image_message = self.bridge.cv2_to_imgmsg(disp, "passthrough")
+        self.object_detection_pub.publish(image_message)
 
             
     # --------------------------------------------------------------------------
