@@ -93,15 +93,17 @@ class VisionProcessingNode(Node):
     # --------------------------------------------------------------------------
     #   YOLO World Object Detection
     # --------------------------------------------------------------------------
-    def yoloDetectionCallback(self, msg: Image) -> None:
+    def yoloDetectionCallback(self, msg: np.ndarray) -> None:
         """
         Runs YOLO World detection on the camera feed.
         """
-        try:
-            frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-        except Exception as e:
-            self.get_logger().error(f"Failed to convert image for YOLO World detection: {e}")
-            return
+        #we dont need to convert a ros2 Image to nparray with imgmsg_to_cv2 because this method accepts a np array from combined callback
+        #try:
+        #    frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        #except Exception as e:
+        #    self.get_logger().error(f"Failed to convert image for YOLO World detection: {e}")
+        #    return
+        frame = msg
 
         # Predict with YOLO World
         results = self.model(frame, conf=0.3)[0]  # Adjust confidence threshold if needed
