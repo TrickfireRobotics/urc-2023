@@ -246,7 +246,7 @@ class NavigationNode(Node):
             self.get_logger().info(
                 f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
             )
-            target_area = self.collect_radius(
+            target_area = self.collect_area(
                 grid, self.position_to_index(grid, lowest_cost_position), search_radius
             )
             lowest_cost_position = self.find_lowest_cost_node(target_area, grid)
@@ -299,7 +299,7 @@ class NavigationNode(Node):
         self.get_logger().info(f"adding position {new_pose[0]} x {new_pose[1]}")
         self.path.poses.append(pose)
 
-    def collect_radius(
+    def collect_area(
         self, grid: OccupancyGrid, current_index: int, radius: int
     ) -> list[Tuple[int, int]]:
         self.get_logger().info("collecting radius")
@@ -315,7 +315,7 @@ class NavigationNode(Node):
         for i in range(0, num_rows):
             for j in range(0, row_width):
                 index = int(starting_index + (i * row_width) + j)
-                if index < len(grid.data):
+                if index < len(grid.data) and index >= 0:
                     data = int(grid.data[index])
                     points_in_radius.append((data, index))
         return points_in_radius
