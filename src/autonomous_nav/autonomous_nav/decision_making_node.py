@@ -139,9 +139,9 @@ class DecisionMakingNode(Node):
         self.waypoint_list.clear()
 
         # Take first 10 waypoints
-        for pose_stamped in msg.poses:
-            x = pose_stamped.pose.position.x
-            y = pose_stamped.pose.position.y
+        for pose in msg.poses:
+            x = pose.pose.position.x
+            y = pose.pose.position.y
             self.waypoint_list.append((x, y))
 
         self.get_logger().info(f"Received path with {len(self.waypoint_list)} waypoints")

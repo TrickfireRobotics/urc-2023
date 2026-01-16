@@ -43,6 +43,7 @@ class Trajectory:
         max_linear_vel: float,
         robot_radius: float,
         costmap_frame_origin: Tuple[float, float],
+        robot_theta: float,
     ) -> bool:
         """
         Evaluate trajectory and compute its total cost.
@@ -52,7 +53,8 @@ class Trajectory:
         trajectories that get closer to the goal with a bias for getting closer to the next goal.
 
         Args:
-            costmap_frame_origin: Robot's global position (odom frame) where costmap is centered
+            costmap_frame_origin: Robot's global position (x, y) in odom frame
+            robot_theta: Robot's heading in global frame (radians)
         """
         if not self.points:
             return False
@@ -67,10 +69,20 @@ class Trajectory:
         obstacle_cost = 0.0
         min_clearance = float("inf")
 
+        # Precompute rotation for local->global transform
+        cos_theta = math.cos(robot_theta)
+        sin_theta = math.sin(robot_theta)
+        robot_global_x, robot_global_y = costmap_frame_origin
+
         # Check each point in trajectory for collision
-        for x, y, _ in self.points:
-            map_x = (x - origin_x) / resolution
-            map_y = (y - origin_y) / resolution
+        for local_x, local_y, _ in self.points:
+            # Transform from local (robot) frame to global (costmap) frame
+            global_x = robot_global_x + local_x * cos_theta - local_y * sin_theta
+            global_y = robot_global_y + local_x * sin_theta + local_y * cos_theta
+
+            # Convert global position to costmap cell coordinates
+            map_x = (global_x - origin_x) / resolution
+            map_y = (global_y - origin_y) / resolution
 
             # Check bounds
             if not (0 <= map_x < size_x and 0 <= map_y < size_y):
@@ -81,8 +93,8 @@ class Trajectory:
             num_angles = 8  # Check 8 points around rover circumference
             for angle_idx in range(num_angles):
                 angle = 2 * math.pi * angle_idx / num_angles
-                check_x = x + robot_radius * math.cos(angle)
-                check_y = y + robot_radius * math.sin(angle)
+                check_x = global_x + robot_radius * math.cos(angle)
+                check_y = global_y + robot_radius * math.sin(angle)
 
                 # Transform to map coordinates
                 check_map_x = int((check_x - origin_x) / resolution)
@@ -257,6 +269,7 @@ class DWAPlanner:
                 self.max_linear_vel,
                 self.robot_radius,
                 costmap_frame_origin=(self.global_pose[0], self.global_pose[1]),
+                robot_theta=self.global_pose[2],
             ):
                 valid_trajectories.append(trajectory)
 
