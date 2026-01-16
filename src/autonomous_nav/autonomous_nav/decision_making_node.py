@@ -19,8 +19,6 @@ from nav_msgs.msg import OccupancyGrid, Odometry, Path
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import Float32, String
-
-# from transforms3d.euler import quat2euler
 from tf_transformations import euler_from_quaternion
 
 from .dwa_planner import DWAPlanner
@@ -65,7 +63,7 @@ class DecisionMakingNode(Node):
             current_velocity=self.current_wheel_vel,
             current_position=(0.0, 0.0),
             time_delta=0.1,
-            goal=self.waypoint_list[0],
+            goal=(0, 0),
             theta=self.global_theta,
         )
 
@@ -127,32 +125,6 @@ class DecisionMakingNode(Node):
 
         self.current_wheel_vel = (left_linear / wheel_radius, right_linear / wheel_radius)
 
-    # def odometry_callback(self, msg: Odometry) -> None:
-    #     """Update global pose from odometry."""
-    #     self.get_logger().info("Received odometry update")
-    #     self.global_x = msg.pose.pose.position.x
-    #     self.global_y = msg.pose.pose.position.y
-
-    #     # Extract yaw from quaternion
-    #     orientation = msg.pose.pose.orientation
-    #     _, _, self.global_theta = quat2euler(
-    #         [orientation.w, orientation.x, orientation.y, orientation.z], "sxyz"
-    #     )
-
-    #     # Extract wheel velocities from twist (if available)
-    #     # Or estimate from linear/angular velocity
-    #     linear_vel = msg.twist.twist.linear.x
-    #     angular_vel = msg.twist.twist.angular.z
-
-    #     # Convert to wheel velocities (inverse kinematics)
-    #     wheel_base = 0.5  # Match DWA planner
-    #     wheel_radius = 0.11
-
-    #     left_linear = linear_vel - (angular_vel * wheel_base / 2.0)
-    #     right_linear = linear_vel + (angular_vel * wheel_base / 2.0)
-
-    #     self.current_wheel_vel = (left_linear / wheel_radius, right_linear / wheel_radius)
-
     def occupancy_grid_callback(self, msg: OccupancyGrid) -> None:
         """Update costmap and initialize planner if needed."""
         self.costmap = PyCostmap2D(msg)
@@ -213,7 +185,7 @@ class DecisionMakingNode(Node):
 
         # Get current waypoint
         if len(self.waypoint_list) < 1:
-            self.get_logger().info("There are no waypoints to navigate to.")
+            self.get_logger().info("No waypoints to navigate to.")
             self.stop_rover()
             return
         current_goal_global = self.waypoint_list[0]
