@@ -1,5 +1,6 @@
 import math
 import sys
+import traceback
 from queue import Queue
 from typing import List, Optional, Tuple
 
@@ -407,7 +408,7 @@ def main(args: list[str] | None = None) -> None:
     try:
         rclpy.spin(node)
     except Exception as e:
-        node.get_logger().error(f"Exception during spin: {e}")
+        node.get_logger().error(f"Exception during spin: {traceback.format_exc()}")
     # except ExternalShutdownException:
     # node.get_logger().info(colorStr("External shutdown request received", ColorCodes.BLUE_OK))
     finally:
