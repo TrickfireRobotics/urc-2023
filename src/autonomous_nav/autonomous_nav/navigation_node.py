@@ -407,10 +407,15 @@ def main(args: list[str] | None = None) -> None:
     node = NavigationNode()
     try:
         rclpy.spin(node)
-    except Exception as e:
-        node.get_logger().info(f"Exception during spin: {traceback.format_exc()}")
-    # except ExternalShutdownException:
-    # node.get_logger().info(colorStr("External shutdown request received", ColorCodes.BLUE_OK))
+    except BaseException as e:
+        import traceback
+
+        error_msg = f"Exception during spin: {traceback.format_exc()}"
+        print(error_msg)  # Print to stdout for visibility
+        try:
+            node.get_logger().error(error_msg)
+        except:
+            print("Failed to log error")
     finally:
         node.destroy_node()
         rclpy.shutdown()
