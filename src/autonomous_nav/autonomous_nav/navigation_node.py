@@ -30,7 +30,7 @@ class NavigationNode(Node):
 
     def __init__(self) -> None:
         super().__init__("navigation_node")
-        self.get_logger().info(f"Navigation Node has been started successfully...")
+        # self.get_logger().info(f"Navigation Node has been started successfully...")
 
         # ---- Configuration / Parameters ----
         self.reached_threshold = 1.0  # meters
@@ -56,7 +56,7 @@ class NavigationNode(Node):
         self.end_goal_waypoint: Tuple[float, float] = (2, 2)
         self.path: Path = Path()
         self.global_costmap: Optional[OccupancyGrid] = None
-        self.get_logger().info(f"Navigation Node has initialized first arguments")
+        # self.get_logger().info(f"Navigation Node has initialized first arguments")
         # ---- Subscribers ----
         # latitude, longitude, altitude
         self.global_costmap_subscription = self.create_subscription(
@@ -104,13 +104,13 @@ class NavigationNode(Node):
             if len(msg.data) >= 3:
                 self.ref_alt = msg.data[2]
             self.anchor_received = True
-            self.get_logger().info(
+            ''' self.get_logger().info(
                 """colorStr(
                     f"Anchor received. ref_lat={self.ref_lat:.6f}, "
                     f"ref_lon={self.ref_lon:.6f}, ref_alt={self.ref_alt:.2f}",
                     ColorCodes.BLUE_OK,
                 )"""
-            )
+            ) '''
 
     def gpsCallback(self, msg: NavSatFix) -> None:
         if not self.anchor_received:
@@ -125,13 +125,13 @@ class NavigationNode(Node):
             self.current_lat = msg.latitude
             self.current_lon = msg.longitude
             self.current_alt = msg.altitude
-        self.get_logger().info(
+        '''self.get_logger().info(
             """colorStr(
                 f"current position received. current_lat={self.current_lat:.6f}, "
                 f"current_lon={self.current_lon:.6f}, current_alt={self.current_alt:.2f}",
                 ColorCodes.BLUE_OK,
             )"""
-        )
+        )'''
 
     def determine_global_yaw(self) -> None:
         x = math.cos(math.radians(self.current_lat)) * math.sin(
@@ -165,12 +165,12 @@ class NavigationNode(Node):
         # TODO these two variables track the same thing, fix it
         self.active_waypoint = (x, y)
         self.end_goal_waypoint = (x, y)
-        self.get_logger().info(
-            """colorStr(
-                f"New lat/lon goal received: lat={lat:.6f}, lon={lon:.6f} => (x={x:.2f}, y={y:.2f})",
-                ColorCodes.BLUE_OK,
-            )"""
-        )
+        # self.get_logger().info(
+        #   colorStr(
+        #       f"New lat/lon goal received: lat={lat:.6f}, lon={lon:.6f} => (x={x:.2f}, y={y:.2f})",
+        #       ColorCodes.BLUE_OK,
+        #   )
+        # )
 
     def odomCallback(self, msg: Odometry) -> None:
         """
@@ -184,11 +184,11 @@ class NavigationNode(Node):
         self.current_yaw = self.quaternion_to_yaw(q.x, q.y, q.z, q.w)
 
     def costmap_callback(self, msg: OccupancyGrid) -> None:
-        self.get_logger().info(f"Received costmap: {msg.info.width} x {msg.info.height}")
+        # self.get_logger().info(f"Received costmap: {msg.info.width} x {msg.info.height}")
         self.global_costmap = msg
-        self.get_logger().info(
-            f"occupancy grid has an origin of {self.global_costmap.info.origin.position.x},{self.global_costmap.info.origin.position.y}"
-        )
+        # self.get_logger().info(
+        # f"occupancy grid has an origin of {self.global_costmap.info.origin.position.x},{self.global_costmap.info.origin.position.y}"
+        # )
         # check first 10 cells
         print(msg.data[:10])
 
@@ -197,15 +197,13 @@ class NavigationNode(Node):
     # ----------------------
     def updateNavigation(self) -> None:
         # If anchor not received, publish status but do not navigate
-        if not self.anchor_received:
-            self.get_logger().info("anchor not received, creating fake navigation data for testing")
-            # self.publishStatus("No anchor received; Navigation Stopped.")
-            # return
+        # if not self.anchor_received:
+        # self.get_logger().info("anchor not received, creating fake navigation data for testing")
+        # self.publishStatus("No anchor received; Navigation Stopped.")
+        # return
 
         # If no active waypoint
         if self.active_waypoint is None:
-            # Plan a set of waypoints using a queue
-            self.get_logger().info("No active waypoint, setting a default one for testing")
             self.active_waypoint = (2, 2)
             self.end_goal_waypoint = (2, 2)
             # self.publishStatus("No waypoint provided; Navigation Stopped.")
@@ -244,9 +242,9 @@ class NavigationNode(Node):
             self.end_goal_waypoint[1],
         )
         while distance_to_goal > 2:
-            self.get_logger().info(
-                f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
-            )
+            # self.get_logger().info(
+            # f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
+            # )
             target_area = self.collect_area(
                 grid, self.position_to_index(grid, lowest_cost_position), search_radius
             )
@@ -297,13 +295,13 @@ class NavigationNode(Node):
         pose.pose.position.x = new_pose[0]
         pose.pose.position.y = new_pose[1]
         pose.pose.orientation.w = 1.0
-        self.get_logger().info(f"adding position {new_pose[0]} x {new_pose[1]}")
+        # self.get_logger().info(f"adding position {new_pose[0]} x {new_pose[1]}")
         self.path.poses.append(pose)
 
     def collect_area(
         self, grid: OccupancyGrid, current_index: int, radius: int
     ) -> list[Tuple[int, int]]:
-        self.get_logger().info("collecting radius")
+        # self.get_logger().info("collecting radius")
         points_in_radius: list[Tuple[int, int]] = []
         row_width = grid.info.width
         num_rows = int(radius / grid.info.resolution)
