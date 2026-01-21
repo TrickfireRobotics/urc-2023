@@ -25,7 +25,6 @@ class NavigationNode(Node):
         - Subscribes to /goal_latlon (NavSatFix) for a new lat/lon waypoint.
         - Subscribes to /odometry/filtered (Odometry) for current pose.
         - Publishes /navigation_status (String) and /navigation_feedback (Pose2D).
-
     """
 
     def __init__(self) -> None:
