@@ -22,10 +22,6 @@ setup(
     license="Apache License 2.0",
     tests_require=["pytest"],
     entry_points={
-        "console_scripts": [
-            # Node entry points
-            "science_hardware_node = science_system.science_hardware_node:main",
-            "science_mission_node = science_system.science_mission_node:main",
-        ],
+        "console_scripts": ["science_system = science_system.life_detection:main"],
     },
 )

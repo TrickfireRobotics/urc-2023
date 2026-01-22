@@ -24,6 +24,8 @@ heartbeat_node = Node(package="heartbeat", executable="heartbeat", name="heartbe
 
 camera_node = Node(package="camera", executable="roscamera", name="camera_node")
 
+science_node = Node(package="science_system", executable="science_system", name="science_node")
+
 # This is the example node. It will show ROS timers, subscribers, and publishers
 # To include it in the startup, add it to the array in the generate_launch_description() method
 example_node = Node(package="example_node", executable="myExampleNode", name="my_example_node")
@@ -47,6 +49,7 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             arm_node,
             heartbeat_node,
             camera_node,
+            science_node,
             launch_include,
         ]
     )
