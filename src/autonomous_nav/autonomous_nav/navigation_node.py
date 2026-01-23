@@ -272,7 +272,7 @@ class NavigationNode(Node):
         self, target_area: list[Tuple[int, int]], grid: OccupancyGrid
     ) -> Tuple[float, float]:
         self.get_logger().info("Entered find_lowest_cost_node")
-        print(len(target_area))
+        self.get_logger().info(f"target are has {len(target_area)} points")
         minimum_cost = 100.0
         minimum_position: Tuple[float, float] = (
             self.current_position
