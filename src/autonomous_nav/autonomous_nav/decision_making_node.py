@@ -222,7 +222,8 @@ class DecisionMakingNode(Node):
         # debugging statements
         left_vel: Float32 = 1.0
         right_vel: Float32 = 1.0
-        self.get_logger().info(self.dwa_planner.plan())
+        velocities: Tuple[float, float] = self.dwa_planner.plan()
+        self.get_logger().info(velocities)
 
         self.get_logger().info("Getting wheel velocities")
         # left_vel, right_vel = self.dwa_planner.plan()
