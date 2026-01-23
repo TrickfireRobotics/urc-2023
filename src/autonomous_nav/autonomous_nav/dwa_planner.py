@@ -154,9 +154,6 @@ class Trajectory:
         return angle
 
 
-"""" Might need major changes. Implementation is going to use rolling window costmap 2D. """
-
-
 class DWAPlanner:
     def __init__(
         self,
