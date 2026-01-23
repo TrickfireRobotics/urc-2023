@@ -219,8 +219,14 @@ class DecisionMakingNode(Node):
         )
 
         # Plan and execute
+
+        # debugging statements
+        left_vel: Float32 = 1.0
+        right_vel: Float32 = 1.0
+        self.get_logger().info(self.dwa_planner.plan())
+
         self.get_logger().info("Getting wheel velocities")
-        left_vel, right_vel = self.dwa_planner.plan()
+        # left_vel, right_vel = self.dwa_planner.plan()
         self.get_logger().info(f"Left Vel: {left_vel:.2f}, Right Vel: {right_vel:.2f}")
 
         # Store for next cycle

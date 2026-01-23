@@ -1,9 +1,11 @@
 import math
 import sys
-from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
+
+# from pathlib import Path
+from nav_msgs.msg import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
