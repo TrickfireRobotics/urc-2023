@@ -22,6 +22,10 @@ import os
 def pre_train_model():
     parent_dir = os.path.dirname(os.getcwd())
     print("Parent Path: " + parent_dir)
+    
+    #code to do cuda and fallback on cpu
+    #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    #tensor = tensor.to(device)   
 
     print("Starting cuda check")
     # Check if GPU is available
@@ -42,6 +46,8 @@ def pre_train_model():
 
     #load local model
     model = YOLO(file_path)  # or select yolov8m/l-world.pt
+    #load model onto gpu
+    model.to('cuda')
     print("Printing model info:")
     model.info()
     
