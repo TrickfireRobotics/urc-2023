@@ -294,7 +294,10 @@ class NavigationNode(Node):
                 self.get_logger().info(f"backtracking")
                 self.path.poses.pop()
                 # make the new lowest position the item at the top of the stack
-                lowest_cost_position = self.path.poses[-1]
+                lowest_cost_position = (
+                    self.path.poses[-1].pose.position.x,
+                    self.path.poses[-1].pose.position.y,
+                )
                 # continue loop to avoid find lowest cost node
                 continue
 
