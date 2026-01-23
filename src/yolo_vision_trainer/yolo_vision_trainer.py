@@ -14,12 +14,19 @@ pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu12
 
 since we have it installed the command is 
 pip3 install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cu126
+
+last cuda version: (2.10.0+cu126)
+
+current state: we get the following error on line 62
+torch.AcceleratorError: CUDA error: no kernel image is available for execution on the device
+Search for `cudaErrorNoKernelImageForDevice' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.
 '''
 from ultralytics import YOLO
 import torch
 import os
 
 def pre_train_model():
+    print("Torch version: torch.__version__")
     parent_dir = os.path.dirname(os.getcwd())
     print("Parent Path: " + parent_dir)
     
