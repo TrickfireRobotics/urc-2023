@@ -54,11 +54,35 @@ sensor_processing_node = Node(
 costmap_config = os.path.join(
     get_package_share_directory("autonomous_nav"), "config", "params.yaml"
 )
+nav2_params = os.path.join(
+    get_package_share_directory("autonomous_nav"), "config", "nav2_params.yaml"
+)
+controller_server_node = Node(
+    package="nav2_controller",
+    executable="controller_server",
+    name="controller_server",
+    output="screen",
+    parameters=[nav2_params],
+)
 global_costmap_node = Node(
     package="nav2_costmap_2d",
     executable="nav2_costmap_2d",
     name="global_costmap",
     parameters=[costmap_config],
+)
+
+# Nav2 lifecycle manager - manages controller_server lifecycle states
+lifecycle_manager_node = Node(
+    package="nav2_lifecycle_manager",
+    executable="lifecycle_manager",
+    name="lifecycle_manager_navigation",
+    output="screen",
+    parameters=[
+        {
+            "autostart": True,
+            "node_names": ["controller_server"],
+        }
+    ],
 )
 
 # Include the ZED camera launch file from zed_wrapper
@@ -153,5 +177,7 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             ekf_node,
             static_tf,
             global_costmap_node,
+            controller_server_node,
+            lifecycle_manager_node,
         ]
     )
