@@ -3,9 +3,9 @@ import os
 import launch
 from ament_index_python import get_package_share_directory
 from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 can_moteus_node = Node(package="can_moteus", executable="can_moteus", name="can_moteus_node")
 
@@ -51,6 +51,39 @@ navigation_node = Node(
 sensor_processing_node = Node(
     package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
 )
+costmap_config = os.path.join(
+    get_package_share_directory("autonomous_nav"), "config", "params.yaml"
+)
+nav2_params = os.path.join(
+    get_package_share_directory("autonomous_nav"), "config", "nav2_params.yaml"
+)
+controller_server_node = Node(
+    package="nav2_controller",
+    executable="controller_server",
+    name="controller_server",
+    output="screen",
+    parameters=[nav2_params],
+)
+global_costmap_node = Node(
+    package="nav2_costmap_2d",
+    executable="nav2_costmap_2d",
+    name="global_costmap",
+    parameters=[costmap_config],
+)
+
+# Nav2 lifecycle manager - manages controller_server lifecycle states
+lifecycle_manager_node = Node(
+    package="nav2_lifecycle_manager",
+    executable="lifecycle_manager",
+    name="lifecycle_manager_navigation",
+    output="screen",
+    parameters=[
+        {
+            "autostart": True,
+            "node_names": ["controller_server"],
+        }
+    ],
+)
 
 # Include the ZED camera launch file from zed_wrapper
 zed_launch = IncludeLaunchDescription(
@@ -62,7 +95,7 @@ zed_launch = IncludeLaunchDescription(
 
 ublox_config_path = os.path.join(
     get_package_share_directory("autonomous_nav"), "config", "ublox.yaml"
-    )
+)
 gps_node = Node(
     package="ublox_gps",
     executable="ublox_gps_node",
@@ -73,8 +106,8 @@ gps_node = Node(
         {
             "frame_id": "gps",
             "dynamic_model": "automotive",  # better for a wheeled rover than "portable"
-            "enable_pps": True,             # keep if you wire/use PPS
-            "tmode3": 0,                    # 0 = rover mode
+            "enable_pps": True,  # keep if you wire/use PPS
+            "tmode3": 0,  # 0 = rover mode
             # RTK/NTRIP (keep only if you actually use a caster):
             "rtcm_caster_address": "3.143.243.81",
             "rtcm_caster_port": 2101,
@@ -82,8 +115,8 @@ gps_node = Node(
             "username": "jakek927@gmail.com",
             "password": "none",
             "publish_rtcm": True,
-            },
-        ],
+        },
+    ],
 )
 
 # Path to your navsat_transform config
@@ -145,5 +178,8 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             navsat_transform,
             ekf_node,
             static_tf,
+            global_costmap_node,
+            controller_server_node,
+            lifecycle_manager_node,
         ]
     )

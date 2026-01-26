@@ -3,11 +3,11 @@ import sys
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSHistoryPolicy
+from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float64MultiArray
 
-from lib.color_codes import ColorCodes, colorStr
+# from lib.color_codes import ColorCodes, colorStr
 
 
 class GpsAnchorNode(Node):
@@ -61,12 +61,16 @@ class GpsAnchorNode(Node):
             self.anchor_alt = msg.altitude
             self.anchor_set = True
 
+            # self.get_logger().info(
+            #     colorStr(
+            #         f"Anchor lat/lon set to: {self.anchor_lat:.6f}, {self.anchor_lon:.6f} "
+            #         f"(alt: {self.anchor_alt:.2f}) after {time_passed:.1f}s",
+            #         ColorCodes.GREEN_OK,
+            #     )
+            # )
             self.get_logger().info(
-                colorStr(
-                    f"Anchor lat/lon set to: {self.anchor_lat:.6f}, {self.anchor_lon:.6f} "
-                    f"(alt: {self.anchor_alt:.2f}) after {time_passed:.1f}s",
-                    ColorCodes.GREEN_OK,
-                )
+                f"Anchor lat/lon set to: {self.anchor_lat:.6f}, {self.anchor_lon:.6f}"
+                f"(alt: {self.anchor_alt:.2f}) after {time_passed:.1f}s"
             )
 
             # Publish anchor
@@ -76,9 +80,10 @@ class GpsAnchorNode(Node):
 
             # Optionally stop subscribing if we only need the first fix
             self.destroy_subscription(self.gps_sub)
-            self.get_logger().info(
-                colorStr("Stopped GPS subscription after setting anchor.", ColorCodes.BLUE_OK)
-            )
+            # self.get_logger().info(
+            #     colorStr("Stopped GPS subscription after setting anchor.", ColorCodes.BLUE_OK)
+            # )
+            self.get_logger().info("Stopped GPS subscription after setting anchor.")
 
 
 def main(args: list[str] | None = None) -> None:
@@ -89,7 +94,8 @@ def main(args: list[str] | None = None) -> None:
     except KeyboardInterrupt:
         pass
     except ExternalShutdownException:
-        node.get_logger().info(colorStr("Shutting down gps anchor node", ColorCodes.BLUE_OK))
+        # node.get_logger().info(colorStr("Shutting down gps anchor node", ColorCodes.BLUE_OK))
+        node.get_logger().info("Shutting down gps anchor node")
     finally:
         # DO NOT call sys.exit(0)!
         # Let the node remain or gracefully exit with the rest of the launch.

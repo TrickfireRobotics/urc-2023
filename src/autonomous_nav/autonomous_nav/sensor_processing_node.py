@@ -29,7 +29,6 @@ class SensorProcessingNode(Node):
 
     def __init__(self) -> None:
         super().__init__("sensor_processing_node")
-
         self.get_logger().info("Initializing sensor_processing_node...")
 
         self.bridge = CvBridge()
@@ -58,15 +57,13 @@ class SensorProcessingNode(Node):
 
         # ----------------------------------------------------------------------
         # Publishers
-        self.filtered_cloud_pub = self.create_publisher(
-            PointCloud2, "/filtered_point_cloud", 10
-        )
-        
+        self.filtered_cloud_pub = self.create_publisher(PointCloud2, "/filtered_point_cloud", 10)
+
         self.get_logger().info("sensor_processing_node is up and running.")
         self.get_logger().info("Publishing filtered point clouds to /filtered_point_cloud")
-        self.get_logger().info("Start octomap_server with: ros2 run octomap_server octomap_server_node --ros-args -r cloud_in:=/filtered_point_cloud -p resolution:=0.05")
-
-
+        self.get_logger().info(
+            "Start octomap_server with: ros2 run octomap_server octomap_server_node --ros-args -r cloud_in:=/filtered_point_cloud -p resolution:=0.05"
+        )
 
     # --------------------------------------------------------------------------
     #   processCameraInfo
@@ -101,7 +98,7 @@ class SensorProcessingNode(Node):
             confidence = float(confidence)
 
             if confidence < 0.3:  # Adjust confidence threshold if needed
-                 continue
+                continue
 
             # Pick color
             color = (255, 255, 255) if label.lower() == "bottle" else (0, 165, 255)
@@ -127,7 +124,7 @@ class SensorProcessingNode(Node):
             self.cloud_frame_count += 1
             if self.cloud_frame_count % 20 != 0:
                 return
-            #self.get_logger().info(f"Processing point cloud frame {self.cloud_frame_count}")
+            # self.get_logger().info(f"Processing point cloud frame {self.cloud_frame_count}")
             points = self.extract_all_points(msg)
 
             # if no points were extracted, log a warning
@@ -144,7 +141,7 @@ class SensorProcessingNode(Node):
             valid_points = points[combined_mask]
 
             if len(valid_points) > 0:
-               # self.get_logger().info(f"Publishing {len(valid_points)} valid points...")
+                # self.get_logger().info(f"Publishing {len(valid_points)} valid points...")
                 self.publish_filtered_cloud(valid_points, msg.header)
             else:
                 self.get_logger().warning("No valid points found after filtering")
@@ -168,11 +165,12 @@ class SensorProcessingNode(Node):
             if x_offset is None or y_offset is None or z_offset is None:
                 self.get_logger().warning("PointCloud2 does not contain x, y, z fields")
                 return np.array([])
-            
+
             data = cloud_msg.data
             total_points = cloud_msg.width * cloud_msg.height
             points = np.full((total_points, 3), np.nan, dtype=np.float32)
 
+            # self.get_logger().info(f"Extracting {total_points} points from PointCloud2")
             # self.get_logger().info(f"Extracting {total_points} points from PointCloud2")
 
             point_step = cloud_msg.point_step
@@ -205,6 +203,7 @@ class SensorProcessingNode(Node):
                         self.get_logger().error(f"Struct error at point index {point_index}: {e}")
                         continue
             # self.get_logger().info(f"Extracted {valid_count} valid points out of {total_points}")
+            # self.get_logger().info(f"Extracted {valid_count} valid points out of {total_points}")
             return points
         except Exception as e:
             self.get_logger().error(f"Error extracting points: {e}")
@@ -229,11 +228,11 @@ class SensorProcessingNode(Node):
             cloud_msg.row_step = cloud_msg.point_step * cloud_msg.width
 
             cloud_msg.data = points.astype(np.float32).tobytes()
-
+            # self.get_logger().error(f"pushing pee")
             self.filtered_cloud_pub.publish(cloud_msg)
         except Exception as e:
             self.get_logger().error(f"Failed to publish filtered cloud: {e}")
-            
+
     # --------------------------------------------------------------------------
     #   ArUco Marker Detection
     # --------------------------------------------------------------------------

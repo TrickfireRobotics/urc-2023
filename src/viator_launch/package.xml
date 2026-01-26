@@ -13,6 +13,11 @@
   <exec_depend>arm</exec_depend>
   <exec_depend>camera</exec_depend>
   <exec_depend>example_node</exec_depend>
+
+  <!-- Nav2 dependencies -->
+  <exec_depend>nav2_lifecycle_manager</exec_depend>
+  <exec_depend>nav2_controller</exec_depend>
+  <exec_depend>nav2_costmap_2d</exec_depend>
   
 
   <test_depend>ament_copyright</test_depend>
