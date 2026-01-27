@@ -96,7 +96,8 @@ def main(args: list[str] | None = None) -> None:
         pass
     except ExternalShutdownException:
         # This is done when we ctrl-c the progam to shut it down
-        node.get_logger().info(colorStr("Shutting down can_moteus", ColorCodes.BLUE_OK))
+        # node.get_logger().info(colorStr("Shutting down can_moteus", ColorCodes.BLUE_OK))
+        node.get_logger().info("Shutting down can_moteus")
         if node.thread_manager is not None:
             node.thread_manager.terminateAllThreads()
         node.destroy_node()

@@ -32,7 +32,12 @@
   <exec_depend>zed_wrapper</exec_depend>
   <exec_depend>zed_msgs</exec_depend>
 
-  <!-- Voxel map dependencies-->
+  <!-- Nav2 dependencies -->
+  <exec_depend>nav2_msgs</exec_depend>                                                                                                                                                                    
+  <exec_depend>nav2_controller</exec_depend>                                                                                                                                                              
+  <exec_depend>nav2_costmap_2d</exec_depend>                                                                                                                                                              
+  <exec_depend>nav2_simple_commander</exec_depend>                                                                                                                                                        
+  <exec_depend>dwb_core</exec_depend>              
 
 
   <!-- Localization -->
