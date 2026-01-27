@@ -51,6 +51,9 @@ navigation_node = Node(
 sensor_processing_node = Node(
     package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
 )
+stuck_detection_node = Node(
+    package="autonomous_nav", executable="stuck_detection_node", name="stuck_detection_node"
+)
 costmap_config = os.path.join(
     get_package_share_directory("autonomous_nav"), "config", "params.yaml"
 )
@@ -172,6 +175,7 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             gps_anchor_node,
             navigation_node,
             sensor_processing_node,
+            stuck_detection_node,
             launch_include,
             gps_node,
             zed_launch,
