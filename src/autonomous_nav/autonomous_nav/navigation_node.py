@@ -325,7 +325,12 @@ class NavigationNode(Node):
         minimum_cost = sys.float_info.max
         for item in target_area:
             item_cost = self.distance_between_indicies(grid, item[1], self.end_goal_index)
-            if item_cost < minimum_cost and item_cost != 100 and item_cost != -1:
+            if (
+                item_cost < minimum_cost
+                and item_cost != 100
+                and item_cost != -1
+                and item_cost != 50
+            ):
                 minimum_cost = item_cost
                 minimum_index = item[1]
 
