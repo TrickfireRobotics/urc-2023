@@ -1,7 +1,7 @@
 import math
 import sys
 from pathlib import Path as filePath
-from typing import Tuple
+from typing import Generator, Tuple
 
 import numpy as np
 import pytest
@@ -10,7 +10,7 @@ from nav_msgs.msg import Path
 
 
 @pytest.fixture(scope="session", autouse=True)
-def ros2_init_shutdown():
+def ros2_init_shutdown() -> Generator:
     rclpy.init()
     yield
     rclpy.shutdown()
