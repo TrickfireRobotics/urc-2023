@@ -311,9 +311,9 @@ class NavigationNode(Node):
                 self.get_logger().info(
                     f"current lowest cost position is {lowest_cost_position[0]},{lowest_cost_position[1]}"
                 )
-                publish_count = publish_count + 1
                 self.get_logger().info(f"current path length is {publish_count}")
                 self.append_path(lowest_cost_position)
+            publish_count = publish_count + 1
             distance_to_goal = self.distance_2d(
                 lowest_cost_position[0],
                 lowest_cost_position[1],
