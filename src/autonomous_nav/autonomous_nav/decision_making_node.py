@@ -209,8 +209,14 @@ class DecisionMakingNode(Node):
         left_clamped = max(-1.0, min(1.0, left_normalized))
         right_clamped = max(-1.0, min(1.0, right_normalized))
 
-        self.left_drive_pub.publish(Float32(data=left_clamped))
-        self.right_drive_pub.publish(Float32(data=right_clamped))
+        left_vel: Float32 = Float32(data=left_clamped)
+        right_vel: Float32 = Float32(data=right_clamped)
+        self.get_logger().info(f"Left Vel: {left_vel}, Right Vel: {right_vel}")
+
+        self.left_drive_pub.publish(left_vel)
+        # self.left_drive_pub.publish(Float32(data=left_clamped))
+        self.right_drive_pub.publish(right_vel)
+        # self.right_drive_pub.publish(Float32(data=right_clamped))
 
     def path_callback(self, msg: Path) -> None:
         """Receive new path and forward to Nav2 controller."""
