@@ -11,6 +11,7 @@ Functionality:
 from __future__ import annotations
 
 import math
+import time
 from typing import List, Tuple
 
 import rclpy
@@ -73,6 +74,14 @@ class DecisionMakingNode(Node):
         self.goal_handle: ClientGoalHandle[FollowPath] = None
         self.is_navigating = False
         self.navigation_complete = False
+        self.cancel_requested = False
+
+        # Stuck detection
+        self.nav_start_time: float = 0.0
+        self.last_distance_to_goal: float = float("inf")
+        self.last_progress_time: float = 0.0
+        self.stuck_timeout: float = 10.0  # seconds without progress before considered stuck
+        self.progress_threshold: float = 0.1  # meters of movement to count as progress
 
         # Robot physical parameters - rough estimates from rover
         self.wheel_base = 0.5
@@ -204,31 +213,33 @@ class DecisionMakingNode(Node):
         self.right_drive_pub.publish(Float32(data=right_clamped))
 
     def path_callback(self, msg: Path) -> None:
-        """Send path to Nav2 controller."""
+        """Receive new path and forward to Nav2 controller."""
         self.get_logger().info(f"Received path with {len(msg.poses)} poses")
 
         if len(msg.poses) == 0:
             self.get_logger().warn("Received empty path")
             return
 
-        # Store the path
         self.waypoint_path = msg
+        self.navigation_complete = False
+        self.send_path_to_nav2(msg)
 
-        # Wait for action server
+    def send_path_to_nav2(self, path: Path) -> None:
+        """Send a path to the Nav2 FollowPath action server."""
         if not self.follow_path_client.wait_for_server(timeout_sec=1.0):
             self.get_logger().warn("FollowPath action server not available")
             return
 
         # Cancel any existing goal
         if self.goal_handle is not None and self.is_navigating:
-            self.get_logger().info("Canceling previous goal")
+            self.get_logger().info("Canceling previous goal before resend")
             self.goal_handle.cancel_goal_async()
 
-        # Send goal to Nav2 controller
         goal = FollowPath.Goal()
-        goal.path = msg
+        goal.path = path
 
         self.get_logger().info("Sending path to Nav2 controller")
+        self.cancel_requested = False
         send_goal_future = self.follow_path_client.send_goal_async(
             goal, feedback_callback=self.feedback_callback
         )
@@ -253,6 +264,13 @@ class DecisionMakingNode(Node):
         self.get_logger().info("FollowPath goal accepted by Nav2")
         self.is_navigating = True
         self.navigation_complete = False
+        self.cancel_requested = False
+
+        # Initialize stuck detection
+        now = time.monotonic()
+        self.nav_start_time = now
+        self.last_progress_time = now
+        self.last_distance_to_goal = float("inf")
 
         # Get notified when navigation completes
         result_future = self.goal_handle.get_result_async()
@@ -277,6 +295,7 @@ class DecisionMakingNode(Node):
 
         self.is_navigating = False
         self.navigation_complete = True
+        self.cancel_requested = False
 
         if status == GoalStatus.STATUS_SUCCEEDED:
             self.get_logger().info("Navigation completed successfully!")
@@ -290,125 +309,63 @@ class DecisionMakingNode(Node):
 
     # ===== MAIN LOGIC =====
 
-    # def update_decision(self) -> None:
-    #     """Main control loop - runs at 2 Hz."""
-
-    #     self.get_logger().info("Updating decision making...")
-
-    #     # Check if we have a valid costmap (non-empty)
-    #     if self.costmap.getSizeInCellsX() == 0 or self.costmap.getSizeInCellsY() == 0:
-    #         self.get_logger().info("No costmap received yet, waiting...")
-    #         self.stop_rover()
-    #         return
-
-    #     # Check if we have waypoints
-    #     if not self.waypoint_list:
-    #         self.stop_rover()
-    #         return
-
-    #     # Get current waypoint
-    #     if len(self.waypoint_list) < 1:
-    #         self.get_logger().info("No waypoints to navigate to.")
-    #         self.stop_rover()
-    #         return
-    #     current_goal_global = self.waypoint_list[0]
-
-    #     current_goal_global = (
-    #         current_goal_global[0],
-    #         current_goal_global[1],
-    #     )
-
-    #     self.get_logger().info(
-    #         f"Navigating to waypoint ({current_goal_global[0]}, {current_goal_global[1]})"
-    #     )
-
-    #     # Check if reached current waypoint
-    #     distance_to_goal = math.sqrt(
-    #         (current_goal_global[0] - self.global_x) ** 2
-    #         + (current_goal_global[1] - self.global_y) ** 2
-    #     )
-
-    #     if distance_to_goal < self.waypoint_reached_threshold:
-    #         self.waypoint_list.pop(0)
-    #         self.get_logger().info(f"Reached waypoint!")
-    #         if not self.waypoint_list:
-    #             self.stop_rover()
-    #             return
-
-    #         # Update to next waypoint
-    #         current_goal_global = self.waypoint_list[0]
-
-    #     if self.costmap is not None:
-    #         self.local_x = self.costmap.getSizeInCellsX()
-
-    #     # Transform goal from global (odom) to local (robot/costmap frame)
-    #     goal_local = self.transform_global_to_local(current_goal_global)
-
-    #     # Update DWA planner state
-    #     self.get_logger().info("Updating states")
-    #     self.dwa_planner.update_state(
-    #         costmap=self.costmap,
-    #         current_position=(0.0, 0.0),
-    #         current_theta=self.global_theta,
-    #         current_velocity=self.current_wheel_vel,
-    #         goal=goal_local,
-    #         global_pose=(self.global_x, self.global_y, self.global_theta),
-    #     )
-
-    #     # Plan and execute
-
-    #     # debugging statements
-    #     left_vel: Float32 = 1.0
-    #     right_vel: Float32 = 1.0
-    #     velocities: Tuple[float, float] = self.dwa_planner.plan()
-    #     self.get_logger().info(f" Velocities: {velocities}")
-
-    #     self.get_logger().info("Getting wheel velocities")
-    #     # left_vel, right_vel = self.dwa_planner.plan()
-    #     self.get_logger().info(f"Left Vel: {left_vel:.2f}, Right Vel: {right_vel:.2f}")
-
-    #     # Store for next cycle
-    #     self.last_left_vel = left_vel
-    #     self.last_right_vel = right_vel
-
-    #     self.publish_drive_commands(left_vel, right_vel)
-
     def update_decision(self) -> None:
         """Main control loop - monitors Nav2 status at 2 Hz."""
 
-        # Check if Nav2 is actively navigating
+        # Not navigating
         if not self.is_navigating:
             if not self.waypoint_path.poses:
                 # No path and not navigating - nothing to do
                 return
-            else:
-                # Have a path but not navigating - might need to resend
-                self.get_logger().debug("Have path but not navigating")
+
+            # Have a path but not navigating - attempt to resend
+            if not self.navigation_complete:
+                self.get_logger().info("Have path but not navigating - resending to Nav2")
+                self.send_path_to_nav2(self.waypoint_path)
             return
 
-        # Log current status while navigating
-        if len(self.waypoint_path.poses) > 0:
-            final_pose = self.waypoint_path.poses[-1].pose.position
-            distance_to_goal = math.sqrt(
-                (final_pose.x - self.global_x) ** 2 + (final_pose.y - self.global_y) ** 2
+        # ===== Currently navigating =====
+
+        if not self.waypoint_path.poses:
+            return
+
+        # Calculate distance to final goal
+        final_pose = self.waypoint_path.poses[-1].pose.position
+        distance_to_goal = math.sqrt(
+            (final_pose.x - self.global_x) ** 2 + (final_pose.y - self.global_y) ** 2
+        )
+        self.get_logger().info(f"Navigating - Distance to final goal: {distance_to_goal:.2f}m")
+
+        # Manual goal check (backup to Nav2's internal check)
+        if distance_to_goal < self.waypoint_reached_threshold:
+            self.get_logger().info("Reached final waypoint!")
+            self._cancel_goal()
+            return
+
+        # Stuck detection - check if we've made progress recently
+        now = time.monotonic()
+        if (self.last_distance_to_goal - distance_to_goal) > self.progress_threshold:
+            # Made meaningful progress, reset timer
+            self.last_progress_time = now
+            self.last_distance_to_goal = distance_to_goal
+        elif (now - self.last_progress_time) > self.stuck_timeout:
+            self.get_logger().warn(
+                f"Stuck detected: no progress for {self.stuck_timeout:.1f}s. "
+                f"Distance to goal: {distance_to_goal:.2f}m. Canceling navigation."
             )
-            self.get_logger().info(f"Navigating - Distance to final goal: {distance_to_goal:.2f}m")
-
-            # Manual goal check (backup to Nav2's internal check)
-            if distance_to_goal < self.waypoint_reached_threshold:
-                self.get_logger().info("Reached final waypoint!")
-                if self.goal_handle is not None:
-                    self.goal_handle.cancel_goal_async()
-
-        # If not navigating, then stop rover
-
-        # Handle not navigating but has path
-        if not self.is_navigating and self.waypoint_path.poses:
-            self.get_logger().info("Rover not navigating, but has Path")
-
-        # Handle timeout/stuck detection
+            self._cancel_goal()
+            return
 
     # ===== HELPER FUNCTIONS =====
+
+    def _cancel_goal(self) -> None:
+        """Cancel the current Nav2 goal if not already canceled."""
+        if self.cancel_requested:
+            return
+        if self.goal_handle is not None:
+            self.get_logger().info("Canceling Nav2 goal")
+            self.cancel_requested = True
+            self.goal_handle.cancel_goal_async()
 
     def transform_global_to_local(self, global_point: Tuple[float, float]) -> Tuple[float, float]:
         """
