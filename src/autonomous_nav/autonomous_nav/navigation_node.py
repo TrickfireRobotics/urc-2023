@@ -247,6 +247,8 @@ class NavigationNode(Node):
         elif self.global_costmap != None and len(self.path.poses) == 0:
             self.get_logger().warn("Running test")
             self.planPath(self.global_costmap)
+            self.get_logger().info(f"plotted to goal successfully")
+            self.path_pub.publish(self.path)
             self.get_logger().info(f"total indices queried: {self.index_count}")
             return
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
@@ -276,6 +278,7 @@ class NavigationNode(Node):
         """
         This algorithm looks at the global occupancy grid in order to plan a path through it for the rover using an A* style search algorithm.
         """
+        publish_count = 0
         lowest_cost_position = self.current_position
         previous_position = lowest_cost_position
         distance_to_goal = self.distance_2d(
@@ -292,7 +295,8 @@ class NavigationNode(Node):
                 # we have found no suitable indicies
                 # pop the current position from the path
                 self.get_logger().info(f"backtracking")
-                self.path.poses.pop()
+                if len(self.path.poses) != 0:
+                    self.path.poses.pop()
                 # make the new lowest position the item at the top of the stack
                 lowest_cost_position = (
                     self.path.poses[-1].pose.position.x,
@@ -303,22 +307,31 @@ class NavigationNode(Node):
 
             lowest_cost_node = self.find_lowest_cost_node(target_area, grid)
             lowest_cost_position = self.index_to_position(grid, lowest_cost_node)
-            self.append_path(lowest_cost_position)
+            if publish_count % 10 == 0:
+                self.get_logger().info(
+                    f"current lowest cost position is {lowest_cost_position[0]},{lowest_cost_position[1]}"
+                )
+                self.get_logger().info(f"current path length is {publish_count}")
+                self.append_path(lowest_cost_position)
+            publish_count = publish_count + 1
             distance_to_goal = self.distance_2d(
                 lowest_cost_position[0],
                 lowest_cost_position[1],
                 self.end_goal_waypoint[0],
                 self.end_goal_waypoint[1],
             )
-        self.get_logger().info(f"plotted to goal successfully")
-        self.path_pub.publish(self.path)
 
     def find_lowest_cost_node(self, target_area: list[Tuple[int, int]], grid: OccupancyGrid) -> int:
         self.get_logger().info(f"target area is this large: {len(target_area)}")
         minimum_cost = sys.float_info.max
         for item in target_area:
             item_cost = self.distance_between_indicies(grid, item[1], self.end_goal_index)
-            if item_cost < minimum_cost and item_cost != 100 and item_cost != -1:
+            if (
+                item_cost < minimum_cost
+                and item_cost != 100
+                and item_cost != -1
+                and item_cost != 50
+            ):
                 minimum_cost = item_cost
                 minimum_index = item[1]
 
