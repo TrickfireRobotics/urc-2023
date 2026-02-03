@@ -46,14 +46,14 @@ class NavigationNode(Node):
         self.start_alt = 0.0
 
         # ---- Internal State ----
-        self.active_waypoint: Optional[Tuple[float, float]] = (3, 0)
+        self.active_waypoint: Optional[Tuple[float, float]] = (0, 0)
         self.current_position = (0.0, 0.0)  # x, y
         self.current_yaw = 0.0
         self.current_global_yaw = 0.0
         self.current_lat = 0
         self.current_lon = 0.0
         self.current_alt = 0.0
-        self.end_goal_waypoint: Tuple[float, float] = (3, 0)
+        self.end_goal_waypoint: Tuple[float, float] = (0, 0)
         self.path: Path = Path()
         self.global_costmap: Optional[OccupancyGrid] = None
         self.end_goal_index: int = 0
@@ -115,6 +115,7 @@ class NavigationNode(Node):
                 )"""
             )
 
+    # gets the current gps position from the gps module and determines the global yaw based on the anchor position
     def gpsCallback(self, msg: NavSatFix) -> None:
         if not self.anchor_received:
             return
@@ -137,20 +138,17 @@ class NavigationNode(Node):
         )
 
     def determine_global_yaw(self) -> None:
-        x = math.cos(math.radians(self.current_lat)) * math.sin(
-            math.radians(self.current_lon) - math.radians(self.ref_lon)
-        )
-        y = math.cos(math.radians(self.ref_lat)) * math.sin(
-            math.radians(self.current_lat)
-        ) - math.sin(math.radians(self.ref_lat)) * math.cos(
-            math.radians(self.current_lat)
-        ) * math.cos(
-            math.radians(self.current_lon) - math.radians(self.ref_lon)
-        )
-        result = math.atan2(x, y)
-        result = result * (math.pi / 180)
-        result = (result + 360) % 360
-        self.current_global_yaw = result
+        # Compute bearing from reference point to current GPS position (radians)
+        # Formula: bearing = atan2(sin(dLon)*cos(lat2), cos(lat1)*sin(lat2) - sin(lat1)*cos(lat2)*cos(dLon))
+        lat1 = math.radians(self.ref_lat)
+        lat2 = math.radians(self.current_lat)
+        dlon = math.radians(self.current_lon - self.ref_lon)
+        x = math.sin(dlon) * math.cos(lat2)
+        y = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(dlon)
+        bearing = math.atan2(x, y)
+        # Normalize to [-pi, pi]
+        bearing = self.normalize_angle(bearing)
+        self.current_global_yaw = bearing
 
     def processLatLonGoal(self, msg: NavSatFix) -> None:
         """
@@ -208,6 +206,16 @@ class NavigationNode(Node):
             self.get_logger().info("anchor not received, creating fake navigation data for testing")
             # self.publishStatus("No anchor received; Navigation Stopped.")
             # return
+        # If we have a GPS fix and an anchor, derive the current local x,y from lat/lon
+        if self.anchor_received and self.current_lat != 0 and self.current_lon != 0:
+            try:
+                gx, gy = self.convertLatLonToXY(self.current_lat, self.current_lon)
+                self.current_position = (gx, gy)
+                # prefer GPS-derived yaw if available
+                if hasattr(self, "current_global_yaw") and self.current_global_yaw is not None:
+                    self.current_yaw = self.current_global_yaw
+            except Exception:
+                self.get_logger().warn("Failed to convert GPS to local XY; continuing with odom")
         # If no active waypoint
         if self.active_waypoint is None:
             # Plan a set of waypoints using a queue
