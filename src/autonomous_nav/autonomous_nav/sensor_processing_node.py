@@ -1,6 +1,7 @@
 import math
 import struct
 import sys
+import traceback
 from typing import Optional
 
 import cv2  # pylint: disable=no-member
@@ -240,8 +241,13 @@ class SensorProcessingNode(Node):
         """
         Basic ArUco marker detection.
         """
-        if self.camera_matrix is None or self.dist_coeffs is None:
-            self.get_logger().warning("Camera intrinsics not received yet. Skipping frame.")
+        if self.camera_matrix is None:
+            self.get_logger().warning("Camera matrix not received yet. Skipping frame.")
+            traceback.print_stack()
+            return
+        if self.dist_coeffs is None:
+            self.get_logger().warning("Distortion coefficients not received yet. Skipping frame.")
+            traceback.print_stack()
             return
 
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
