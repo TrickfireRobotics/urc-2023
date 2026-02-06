@@ -215,7 +215,7 @@ class DecisionMakingNode(Node):
         self.waypoint_path = msg
 
         # Wait for action server
-        if not self.follow_path_client.wait_for_server(timeout_sec=1.0):
+        if not self.follow_path_client.wait_for_server(timeout_sec=10.0):
             self.get_logger().warn("FollowPath action server not available")
             return
 
