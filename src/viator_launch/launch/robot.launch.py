@@ -51,9 +51,6 @@ navigation_node = Node(
 sensor_processing_node = Node(
     package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
 )
-costmap_config = os.path.join(
-    get_package_share_directory("autonomous_nav"), "config", "params.yaml"
-)
 nav2_params = os.path.join(
     get_package_share_directory("autonomous_nav"), "config", "nav2_params.yaml"
 )
@@ -68,7 +65,14 @@ global_costmap_node = Node(
     package="nav2_costmap_2d",
     executable="nav2_costmap_2d",
     name="global_costmap",
-    parameters=[costmap_config],
+    parameters=[nav2_params],
+)
+local_costmap_node = Node(
+    package="nav2_costmap_2d",
+    executable="nav2_costmap_2d",
+    name="local_costmap",
+    output="screen",
+    parameters=[nav2_params],
 )
 
 # Nav2 lifecycle manager - manages controller_server lifecycle states
@@ -80,7 +84,7 @@ lifecycle_manager_node = Node(
     parameters=[
         {
             "autostart": True,
-            "node_names": ["controller_server"],
+            "node_names": ["controller_server", "local_costmap", "global_costmap"],
         }
     ],
 )
