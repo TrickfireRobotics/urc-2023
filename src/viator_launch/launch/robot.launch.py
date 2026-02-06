@@ -69,7 +69,7 @@ global_costmap_node = Node(
 )
 local_costmap_node = Node(
     package="nav2_costmap_2d",
-    executable="nav2_costmap_2d",
+    executable="costmap_2d_node",
     name="local_costmap",
     output="screen",
     parameters=[nav2_params],
@@ -84,7 +84,7 @@ lifecycle_manager_node = Node(
     parameters=[
         {
             "autostart": True,
-            "node_names": ["controller_server", "local_costmap", "global_costmap"],
+            "node_names": ["controller_server", "local_costmap"],
         }
     ],
 )
