@@ -4,14 +4,14 @@ configs.
 """
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 
-@dataclass(frozen=True)
-class MoteusMotorConfig:
+@dataclass(frozen=True, kw_only=True)
+class MotorConfig:
     """
-    A dataclass that contains config values relating to moteus motors connected via the can bus.
+    A dataclass that contains config values relating to motors connected via the can bus.
     """
 
     can_id: int
@@ -19,29 +19,84 @@ class MoteusMotorConfig:
     The can id of the motor.
     """
 
-    config: dict[str, float | int]
+    motor_type: str = field(default="oh no", init=False)
     """
-    The config of the motor. See:
-    https://github.com/mjbots/moteus/blob/main/docs/reference.md#c-configurable-values
+    The type of the motor.
+    """
+
+    config: dict[str, float | int] | None = None
+    """
+    The config of the motor. 
+    
+    # Moteus
+
+    See: https://github.com/mjbots/moteus/blob/main/docs/reference.md#c-configurable-values
 
     The `id.id` will be ignored.
+
+    # RMD
+
+    RMD settings can be completely controled by run settings
     """
 
     def getCanTopicName(self) -> str:
         """
         Gets the motor's topic name for data sourced from can.
 
-        Returns the following format: `moteusmotor_<can_id>_from_can`
+        Returns the following format: `<type>motor_<can_id>_from_can`
         """
-        return f"moteusmotor_{self.can_id}_from_can"
+        return f"this_is_wrong_if_youre_seeing_this_{self.can_id}_from_can"
 
     def getInterfaceTopicName(self) -> str:
         """
         Gets the motor's topic name for data sourced from robot interface.
 
-        Returns the following format: `moteusmotor_<can_id>_from_interface`
+        Returns the following format: `<type>motor_<can_id>_from_interface`
         """
+        return f"this_is_wrong_if_youre_seeing_this_{self.can_id}_from_interface"
+
+
+@dataclass(frozen=True, kw_only=True)
+class MoteusMotorConfig(MotorConfig):
+    """
+    A dataclass that contains config values relating to moteus motors connected via the can bus.
+    """
+
+    # Set the value of motor_type
+    def __post_init__(self) -> None:
+        # Can't use simple assignment since class is frozen
+        object.__setattr__(self, "motor_type", "moteus")
+
+    def getCanTopicName(self) -> str:
+        return f"moteusmotor_{self.can_id}_from_can"
+
+    def getInterfaceTopicName(self) -> str:
         return f"moteusmotor_{self.can_id}_from_interface"
+
+
+@dataclass(frozen=True)
+class RMDx8MotorConfig(MotorConfig):
+    """
+    A data class that contains config values relating to rmdx8 motors.
+    """
+
+    # Set the value of motor_type
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "motor_type", "rmdx8")
+
+    def getCanTopicName(self) -> str:
+        """
+        Gets the motor's topic name for data sourced from can.
+        Returns the following format: 'rmdx8motor_<can_id>_from_can'
+        """
+        return f"rmdx8motor_{self.can_id}_from_can"
+
+    def getInterfaceTopicName(self) -> str:
+        """
+        Gets the motor's topic name for data sourced from robot interface.
+        Returns the following format: 'rmdx8motor_<can_id>_from_interface'
+        """
+        return f"rmdx8motor_{self.can_id}_from_interface"
 
 
 class MotorConfigs:
@@ -49,91 +104,18 @@ class MotorConfigs:
     A constants class that contains motor constants.
     """
 
-    # Drivebase
-    REAR_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(
-        can_id=20,
-        config={
-            "servo.pwm_rate_hz": 50000,
-            "servo.pid_position.kp": 20.0,
-            "servo.pid_position.ki": 0.0,
-            "servo.pid_position.kd": 0.0,
-            "servo.default_timeout_s": 0.5,
-            "servo.max_current_A": 10.0,
-            "servo.max_velocity": 100.0,
-            "servopos.position_min": math.nan,
-            "servopos.position_max": math.nan,
-        },
-    )
-    MID_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(
-        can_id=21,
-        config={
-            "servo.pwm_rate_hz": 50000,
-            "servo.pid_position.kp": 20.0,
-            "servo.pid_position.ki": 0.0,
-            "servo.pid_position.kd": 0.0,
-            "servo.default_timeout_s": 0.5,
-            "servo.max_current_A": 10.0,
-            "servo.max_velocity": 100.0,
-            "servopos.position_min": math.nan,
-            "servopos.position_max": math.nan,
-        },
-    )
-    FRONT_RIGHT_DRIVE_MOTOR = MoteusMotorConfig(
-        can_id=22,
-        config={
-            "servo.pid_position.kp": 20.0,
-            "servo.pid_position.ki": 0.0,
-            "servo.pid_position.kd": 0.0,
-            "servo.default_timeout_s": 0.5,
-            "servo.max_current_A": 10.0,
-            "servo.max_velocity": 100.0,
-            "servopos.position_min": math.nan,
-            "servopos.position_max": math.nan,
-        },
+    TEST_RMD = RMDx8MotorConfig(
+        can_id=1,
     )
 
-    REAR_LEFT_DRIVE_MOTOR = MoteusMotorConfig(
-        can_id=23,
-        config={
-            "servo.pwm_rate_hz": 50000,
-            "servo.pid_position.kp": 20.0,
-            "servo.pid_position.ki": 0.0,
-            "servo.pid_position.kd": 0.0,
-            "servo.default_timeout_s": 0.5,
-            "servo.max_current_A": 10.0,
-            "servo.max_velocity": 100.0,
-            "servopos.position_min": math.nan,
-            "servopos.position_max": math.nan,
-        },
-    )
-    MID_LEFT_DRIVE_MOTOR = MoteusMotorConfig(
-        can_id=24,
-        config={
-            "servo.pwm_rate_hz": 50000,
-            "servo.pid_position.kp": 20.0,
-            "servo.pid_position.ki": 0.0,
-            "servo.pid_position.kd": 0.0,
-            "servo.default_timeout_s": 0.5,
-            "servo.max_current_A": 10.0,
-            "servo.max_velocity": 100.0,
-            "servopos.position_min": math.nan,
-            "servopos.position_max": math.nan,
-        },
-    )
-    FRONT_LEFT_DRIVE_MOTOR = MoteusMotorConfig(
-        can_id=25,
-        config={
-            "servo.pwm_rate_hz": 50000,
-            "servo.pid_position.kp": 20.0,
-            "servo.pid_position.ki": 0.0,
-            "servo.pid_position.kd": 0.0,
-            "servo.default_timeout_s": 0.5,
-            "servo.max_current_A": 10.0,
-            "servo.max_velocity": 100.0,
-            "servopos.position_min": math.nan,
-            "servopos.position_max": math.nan,
-        },
-    )
+    # Drivebase
+    REAR_RIGHT_DRIVE_MOTOR = RMDx8MotorConfig(can_id=25)
+    MID_RIGHT_DRIVE_MOTOR = RMDx8MotorConfig(can_id=23)
+    FRONT_RIGHT_DRIVE_MOTOR = RMDx8MotorConfig(can_id=21)
+
+    REAR_LEFT_DRIVE_MOTOR = RMDx8MotorConfig(can_id=26)
+    MID_LEFT_DRIVE_MOTOR = RMDx8MotorConfig(can_id=24)
+    FRONT_LEFT_DRIVE_MOTOR = RMDx8MotorConfig(can_id=22)
 
     # Arm
     ARM_SHOULDER_MOTOR = MoteusMotorConfig(
@@ -180,7 +162,7 @@ class MotorConfigs:
         raise AttributeError("Trying to set attribute on a frozen instance")
 
     @classmethod
-    def getAllMotors(cls) -> list[MoteusMotorConfig]:
+    def getAllMotors(cls) -> list[MotorConfig]:
         """
         Returns a list of every motor in this constants class.
         """
