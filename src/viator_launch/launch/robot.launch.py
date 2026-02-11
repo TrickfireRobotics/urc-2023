@@ -186,7 +186,6 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             ekf_node,
             static_tf,
             global_costmap_node,
-            local_costmap_node,
             controller_server_node,
             lifecycle_manager_node,
         ]
