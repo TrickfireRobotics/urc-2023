@@ -61,6 +61,7 @@ controller_server_node = Node(
     name="controller_server",
     output="screen",
     parameters=[nav2_params],
+    arguments=["--ros-args", "--log-level", "debug"],
 )
 global_costmap_node = Node(
     package="nav2_costmap_2d",
