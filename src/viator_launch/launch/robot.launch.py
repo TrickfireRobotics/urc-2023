@@ -2,7 +2,7 @@ import os
 
 import launch
 from ament_index_python import get_package_share_directory
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import LifecycleNode, Node
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
@@ -61,8 +61,6 @@ controller_server_node = Node(
     name="controller_server",
     output="screen",
     parameters=[nav2_params],
-    remappings=[],
-    prefix=["bash -c 'sleep 5 && ' "],  # Wait 5 seconds for tf frames to be available
 )
 global_costmap_node = Node(
     package="nav2_costmap_2d",
@@ -79,11 +77,10 @@ lifecycle_manager_node = Node(
     output="screen",
     parameters=[
         {
-            "autostart": False,  # Changed to False so we can start after tf frames are available
+            "autostart": True,
             "node_names": ["controller_server"],
         }
     ],
-    prefix=["bash -c 'sleep 6 && ' "],  # Wait 6 seconds to ensure controller_server is ready
 )
 
 # Include the ZED camera launch file from zed_wrapper
@@ -181,7 +178,9 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             launch_include,
             gps_node,
             zed_launch,
-            controller_server_node,
-            lifecycle_manager_node,
+            # Start lifecycle manager first with minimal delay
+            TimerAction(period=1.0, actions=[lifecycle_manager_node]),
+            # Then start controller_server after delay to allow tf frames to be published
+            TimerAction(period=5.0, actions=[controller_server_node]),
         ]
     )
