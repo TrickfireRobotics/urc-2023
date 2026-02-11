@@ -147,9 +147,15 @@ ekf_node = Node(
     output="screen",
     parameters=[config_file_path],
 )
+static_zed_base_tf = Node(
+    package="tf2_ros",
+    executable="static_transform_publisher",
+    name="base_link_tf_broadcaster",
+    arguments=["0", "0", "0", "0", "0", "0", "1", "zed_camera_link", "base_link"],
+)
 
 
-static_tf = Node(
+static_zed_gps_tf = Node(
     package="tf2_ros",
     executable="static_transform_publisher",
     name="gps_tf_broadcaster",
@@ -167,7 +173,8 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             arm_node,
             navsat_transform,
             ekf_node,
-            static_tf,
+            static_zed_gps_tf,
+            static_zed_base_tf,
             global_costmap_node,
             heartbeat_node,
             camera_node,
