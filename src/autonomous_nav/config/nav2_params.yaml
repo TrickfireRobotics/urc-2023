@@ -77,7 +77,7 @@ controller_server:
             enabled: true
             observation_sources: filtered_cloud
             filtered_cloud:
-              topic: /filtered_point_cloud
+              topic: /fitered_point_cloud
               sensor_frame: zed_left_camera_frame
               data_type: "PointCloud2"
               marking: true
