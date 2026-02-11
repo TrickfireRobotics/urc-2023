@@ -70,7 +70,7 @@ global_costmap_node = Node(
 )
 local_costmap_node = LifecycleNode(
     package="nav2_costmap_2d",
-    executable="costmap_2d",
+    executable="nav2_costmap_2d",
     name="local_costmap",
     namespace="local_costmap",
     output="screen",
