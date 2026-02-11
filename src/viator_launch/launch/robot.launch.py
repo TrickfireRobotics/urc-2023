@@ -68,14 +68,14 @@ global_costmap_node = Node(
     name="global_costmap",
     parameters=[nav2_params],
 )
-local_costmap_node = LifecycleNode(
+"""local_costmap_node = LifecycleNode(
     package="nav2_costmap_2d",
     executable="nav2_costmap_2d",
     name="local_costmap",
     namespace="local_costmap",
     output="screen",
     parameters=[nav2_params],
-)
+)"""
 
 # Nav2 lifecycle manager - manages controller_server lifecycle states
 lifecycle_manager_node = Node(
@@ -86,7 +86,7 @@ lifecycle_manager_node = Node(
     parameters=[
         {
             "autostart": True,
-            "node_names": ["local_costmap", "controller_server"],
+            "node_names": ["controller_server"],
         }
     ],
 )
