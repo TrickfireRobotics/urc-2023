@@ -4,7 +4,7 @@ import launch
 from ament_index_python import get_package_share_directory
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import Node
+from launch_ros.actions import LifecycleNode, Node
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 
 can_moteus_node = Node(package="can_moteus", executable="can_moteus", name="can_moteus_node")
@@ -68,10 +68,11 @@ global_costmap_node = Node(
     name="global_costmap",
     parameters=[nav2_params],
 )
-local_costmap_node = Node(
+local_costmap_node = LifecycleNode(
     package="nav2_costmap_2d",
-    executable="nav2_costmap_2d",
+    executable="costmap_2d",
     name="local_costmap",
+    namespace="local_costmap",
     output="screen",
     parameters=[nav2_params],
 )

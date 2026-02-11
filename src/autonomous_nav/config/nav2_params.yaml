@@ -1,8 +1,6 @@
 controller_server:
   ros__parameters:
     controller_frequency: 10.0
-    local_costmap_topic: local_costmap/costmap_raw
-    footprint_topic: local_costmap/published_footprint
     controller_plugins: ["FollowPath"]
 
     FollowPath:
