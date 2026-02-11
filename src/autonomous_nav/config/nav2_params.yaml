@@ -65,7 +65,8 @@ controller_server:
           update_frequency: 5.0
           publish_frequency: 2.0
           global_frame: odom
-          robot_base_frame: base_link
+          robot_base_frame: zed_camera_link
+          transform_tolerance: 0.1
           rolling_window: true
           width: 3
           height: 3
