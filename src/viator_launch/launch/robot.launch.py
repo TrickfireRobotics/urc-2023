@@ -85,7 +85,7 @@ lifecycle_manager_node = Node(
     parameters=[
         {
             "autostart": True,
-            "node_names": ["controller_server", "local_costmap"],
+            "node_names": ["local_costmap", "controller_server"],
         }
     ],
 )
