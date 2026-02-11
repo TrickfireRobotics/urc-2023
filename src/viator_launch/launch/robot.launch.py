@@ -61,6 +61,8 @@ controller_server_node = Node(
     name="controller_server",
     output="screen",
     parameters=[nav2_params],
+    remappings=[],
+    prefix=["bash -c 'sleep 5 && ' "],  # Wait 5 seconds for tf frames to be available
 )
 global_costmap_node = Node(
     package="nav2_costmap_2d",
@@ -77,10 +79,11 @@ lifecycle_manager_node = Node(
     output="screen",
     parameters=[
         {
-            "autostart": True,
+            "autostart": False,  # Changed to False so we can start after tf frames are available
             "node_names": ["controller_server"],
         }
     ],
+    prefix=["bash -c 'sleep 6 && ' "],  # Wait 6 seconds to ensure controller_server is ready
 )
 
 # Include the ZED camera launch file from zed_wrapper
