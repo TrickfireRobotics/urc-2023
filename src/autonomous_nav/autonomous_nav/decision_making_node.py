@@ -441,31 +441,39 @@ class DecisionMakingNode(Node):
         return (local_x, local_y)
 
     def wait_until_active(self, timeout_sec: float = 30.0) -> bool:
-
         if not self.client.wait_for_service(timeout_sec=timeout_sec):
             self.get_logger().error("controller_server get_state service not available")
             return False
-        self.get_logger().info("dummy stop 1")
+
         start_time = time.time()
+
         while rclpy.ok():
             request = GetState.Request()
-            self.get_logger().info("dummy stop 2")
             future = self.client.call_async(request)
-            self.get_logger().info("dummy stop 3")
-            rclpy.spin_until_future_complete(self, future)
-            self.get_logger().info("dummy stop 4")
+
+            # DO NOT spin here
+            while not future.done():
+                if time.time() - start_time > timeout_sec:
+                    self.get_logger().error(
+                        "Timed out waiting for controller_server to become active"
+                    )
+                    return False
+                time.sleep(0.05)
+
+            if future.result() is None:
+                self.get_logger().warn("get_state call failed, retrying")
+                time.sleep(0.2)
+                continue
+
             state = future.result().current_state.label
             self.get_logger().info(f"controller_server state: {state}")
 
             if state == "active":
                 return True
 
-            if time.time() - start_time > timeout_sec:
-                self.get_logger().error("Timed out waiting for controller_server to become active")
-                return False
-
             time.sleep(0.2)
-        self.get_logger().error("ROS shutdown while waiting for controller_server to become active")
+
+        self.get_logger().error("ROS shutdown while waiting for controller_server")
         return False
 
     def transform_path_to_list(self) -> List[Tuple[float, float]]:
