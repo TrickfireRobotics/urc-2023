@@ -11,11 +11,13 @@ Functionality:
 from __future__ import annotations
 
 import math
+import time
 from typing import List, Tuple
 
 import rclpy
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import Twist
+from lifecycle_msgs.srv import GetState
 from nav2_msgs.action import FollowPath
 from nav2_simple_commander.costmap_2d import PyCostmap2D
 
@@ -73,6 +75,7 @@ class DecisionMakingNode(Node):
         self.goal_handle: ClientGoalHandle[FollowPath] = None
         self.is_navigating = False
         self.navigation_complete = False
+        self.client = self.create_client(GetState, "/controller_server/get_state")
 
         # Robot physical parameters - rough estimates from rover
         self.wheel_base = 0.5
@@ -229,6 +232,11 @@ class DecisionMakingNode(Node):
         goal.path = msg
 
         self.get_logger().info("Sending path to Nav2 controller")
+        # before doing this, check if we have a
+        wait_until_active_result = self.wait_until_active(timeout_sec=30.0)
+        if not wait_until_active_result:
+            self.get_logger().error("Controller server not active, cannot send goal")
+            return
         send_goal_future = self.follow_path_client.send_goal_async(
             goal, feedback_callback=self.feedback_callback
         )
@@ -430,6 +438,31 @@ class DecisionMakingNode(Node):
         local_y = dx_global * sin_theta + dy_global * cos_theta
 
         return (local_x, local_y)
+
+    def wait_until_active(self, timeout_sec: float = 30.0) -> bool:
+        if not self.client.wait_for_service(timeout_sec=timeout_sec):
+            self.get_logger().error("controller_server get_state service not available")
+            return False
+
+        start_time = time.time()
+        while rclpy.ok():
+            request = GetState.Request()
+            future = self.client.call_async(request)
+            rclpy.spin_until_future_complete(self, future)
+
+            state = future.result().current_state.label
+            self.get_logger().info(f"controller_server state: {state}")
+
+            if state == "active":
+                return True
+
+            if time.time() - start_time > timeout_sec:
+                self.get_logger().error("Timed out waiting for controller_server to become active")
+                return False
+
+            time.sleep(0.2)
+        self.get_logger().error("ROS shutdown while waiting for controller_server to become active")
+        return False
 
     def transform_path_to_list(self) -> List[Tuple[float, float]]:
         """Convert Path message to waypoint queue."""
