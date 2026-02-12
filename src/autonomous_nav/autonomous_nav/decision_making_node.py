@@ -231,12 +231,13 @@ class DecisionMakingNode(Node):
         goal = FollowPath.Goal()
         goal.path = msg
 
-        self.get_logger().info("Sending path to Nav2 controller")
+        self.get_logger().info("checking path to Nav2 controller")
         # before doing this, check if we have a
         wait_until_active_result = self.wait_until_active(timeout_sec=30.0)
         if not wait_until_active_result:
             self.get_logger().error("Controller server not active, cannot send goal")
             return
+        self.get_logger().info("Sending path to Nav2 controller")
         send_goal_future = self.follow_path_client.send_goal_async(
             goal, feedback_callback=self.feedback_callback
         )
