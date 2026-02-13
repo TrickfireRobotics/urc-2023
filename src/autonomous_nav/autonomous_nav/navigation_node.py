@@ -34,6 +34,7 @@ class NavigationNode(Node):
 
         # ---- Configuration / Parameters ----
         self.reached_threshold = 0.05  # meters
+        self.search_threshold = 1.0  # meters
         self.earth_radius = 6371000.0  # Approx Earth radius in meters
 
         # ---- Anchor State (from /anchor_position) ----
@@ -57,6 +58,7 @@ class NavigationNode(Node):
         self.path: Path = Path()
         self.global_costmap: Optional[OccupancyGrid] = None
         self.end_goal_index: int = 0
+        self.searcher_activated = False
         self.get_logger().info(f"Navigation Node has initialized first arguments")
         self.index_count: int = 0
         # ---- Subscribers ----
@@ -83,6 +85,12 @@ class NavigationNode(Node):
         self.feedback_pub = self.create_publisher(Pose2D, "/navigation_feedback", 10)
         self.path_pub = self.create_publisher(Path, "/path", 10)
         self.pos_pub = self.create_publisher(Pose2D, "/pos", 10)
+        self.searcher_pub = self.create_publisher(String, "/searcher_activation", 10)
+        self.searcher_goal_pub = self.create_publisher(Pose2D, "/searcher_goal", 10)
+        # ---- Subscribers ----
+        self.searcher_status_sub = self.create_subscription(
+            String, "/searcher_status", self.searcher_status_callback, 10
+        )
         # ---- Timers ----
         self.timer = self.create_timer(5, self.updateNavigation)  # 0.2 Hz
 
@@ -135,6 +143,12 @@ class NavigationNode(Node):
                 ColorCodes.BLUE_OK,
             )"""
         )
+
+    def searcher_status_callback(self, msg: String) -> None:
+        if msg.data == "found":
+            self.active_waypoint = None
+            self.searcher_activated = False
+            self.get_logger().info("Tag found by searcher, clearing waypoint")
 
     def determine_global_yaw(self) -> None:
         x = math.cos(math.radians(self.current_lat)) * math.sin(
@@ -238,7 +252,19 @@ class NavigationNode(Node):
         pos_msg.theta = self.current_yaw
         self.pos_pub.publish(pos_msg)
 
-        if dist_to_goal < self.reached_threshold:
+        if dist_to_goal < self.search_threshold and not self.searcher_activated:
+            self.searcher_pub.publish(String(data="activate"))
+            goal_msg = Pose2D()
+            goal_msg.x = goal_x
+            goal_msg.y = goal_y
+            goal_msg.theta = 0.0
+            self.searcher_goal_pub.publish(goal_msg)
+            self.searcher_activated = True
+            self.publishStatus(
+                f"Within search range, activating searcher at ({goal_x:.2f}, {goal_y:.2f})"
+            )
+            return
+        elif dist_to_goal < self.reached_threshold:
             # Reached => Publish success, clear waypoint
             self.publishStatus(f"Successfully reached waypoint ({goal_x:.2f}, {goal_y:.2f})")
             self.active_waypoint = None
