@@ -1,0 +1,16 @@
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        observation_sources: filtered_cloud
+        filtered_cloud:
+          topic: /filtered_point_cloud
+          sensor_frame: zed_left_camera_frame
+          data_type: "PointCloud2"
+          marking: true
+          clearing: true
+          min_obstacle_height: 0.1
+          max_obstacle_height: 2.0
