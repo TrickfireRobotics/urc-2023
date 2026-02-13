@@ -143,7 +143,10 @@ controller_server:
       RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
 
-    local_costmap:
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
       update_frequency: 5.0
       publish_frequency: 2.0
       global_frame: odom
@@ -174,7 +177,6 @@ controller_server:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
         inflation_radius: 0.55
-          
 
 global_costmap:
   global_costmap:
