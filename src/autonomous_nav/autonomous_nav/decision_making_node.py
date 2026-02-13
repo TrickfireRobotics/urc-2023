@@ -258,7 +258,7 @@ class DecisionMakingNode(Node):
 
     # ===== NAV2 ACTION CALLBACKS =====
 
-    def goal_response_callback(self, future: Future[ClientGoalHandle[FollowPath]]) -> None:
+    def goal_response_callback(self, future: Future) -> None:
         """Handle Nav2 action server's response to our goal request."""
         self.goal_handle = future.result()
 
@@ -291,9 +291,7 @@ class DecisionMakingNode(Node):
             f"Speed: {feedback.speed:.2f}m/s"
         )
 
-    def result_callback(
-        self, future: Future[ClientGoalHandle[FollowPath].GetResultResponse]
-    ) -> None:
+    def result_callback(self, future: Future) -> None:
         """Handle navigation completion or failure."""
         # result: ClientGoalHandle[FollowPath].GetResultResponse = future.result()
         result = future.result()
