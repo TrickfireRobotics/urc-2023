@@ -205,7 +205,9 @@ class NavigationNode(Node):
     def updateNavigation(self) -> None:
         # If anchor not received, publish status but do not navigate
         if not self.anchor_received:
-            self.get_logger().info("anchor not received, creating fake navigation data for testing")
+            self.get_logger().info(
+                "anchor not received, creating sample navigation data for testing"
+            )
             # self.publishStatus("No anchor received; Navigation Stopped.")
             # return
         # If no active waypoint
@@ -324,17 +326,27 @@ class NavigationNode(Node):
     def find_lowest_cost_node(self, target_area: list[Tuple[int, int]], grid: OccupancyGrid) -> int:
         self.get_logger().info(f"target area is this large: {len(target_area)}")
         minimum_cost = sys.float_info.max
+        minimum_index = None
+        if target_area == []:
+            self.get_logger().warn(f"target area is empty, cannot find lowest cost node")
+            return self.position_to_index(grid, self.current_position)
         for item in target_area:
-            item_cost = self.distance_between_indicies(grid, item[1], self.end_goal_index)
+            item_value = item[0]
+            item_index = item[1]
+            item_cost = self.distance_between_indicies(grid, item_index, self.end_goal_index)
             if (
                 item_cost < minimum_cost
-                and item_cost != 100
-                and item_cost != -1
-                and item_cost != 50
+                and item_value != 100
+                # and item_value != -1
+                and item_value != 50
             ):
                 minimum_cost = item_cost
-                minimum_index = item[1]
-
+                minimum_index = item_index
+        if minimum_index is None:
+            self.get_logger().warn(
+                f"no valid nodes found in target area, defaulting to current position"
+            )
+            return self.position_to_index(grid, self.current_position)
         return minimum_index
 
     def append_path(self, new_pose: Tuple[float, float]) -> None:

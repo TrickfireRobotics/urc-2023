@@ -25,7 +25,11 @@ cd src
 # Setup zed-ros2-wrapper
 if [ ! -d "zed-ros2-wrapper" ]; then
     echo -e "${BLUE}[ZED SETUP] Cloning zed-ros2-wrapper...${NC}"
-    git clone -b humble-v4.2.5 https://github.com/stereolabs/zed-ros2-wrapper.git
+    git clone https://github.com/stereolabs/zed-ros2-wrapper.git
+    cd zed-ros2-wrapper
+    git fetch --all --tags
+    git checkout humble-v4.2.5
+    cd ..
     echo -e "${GREEN}[ZED SETUP] zed-ros2-wrapper cloned successfully${NC}"
 else
     echo -e "${YELLOW}[ZED SETUP] zed-ros2-wrapper already exists, skipping...${NC}"

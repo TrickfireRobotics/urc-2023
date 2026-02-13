@@ -8,7 +8,7 @@ from rclpy.subscription import Subscription
 from std_msgs.msg import String
 
 from lib.configs import MoteusMotorConfig
-from lib.moteus_motor_state import MoteusMotorState, MoteusRunSettings
+from lib.motor_state.moteus_motor_state import MoteusMotorState, MoteusRunSettings
 
 
 class MoteusMotor:

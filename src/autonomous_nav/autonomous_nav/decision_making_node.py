@@ -17,6 +17,7 @@ from typing import List, Tuple
 import rclpy
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import Twist
+from lifecycle_msgs.srv import GetState
 from nav2_msgs.action import FollowPath
 from nav2_simple_commander.costmap_2d import PyCostmap2D
 
@@ -391,6 +392,42 @@ class DecisionMakingNode(Node):
         local_y = dx_global * sin_theta + dy_global * cos_theta
 
         return (local_x, local_y)
+
+    def wait_until_active(self, timeout_sec: float = 30.0) -> bool:
+        if not self.client.wait_for_service(timeout_sec=timeout_sec):
+            self.get_logger().error("controller_server get_state service not available")
+            return False
+
+        start_time = time.time()
+
+        while rclpy.ok():
+            request = GetState.Request()
+            future = self.client.call_async(request)
+
+            # DO NOT spin here
+            while not future.done():
+                if time.time() - start_time > timeout_sec:
+                    self.get_logger().error(
+                        "Timed out waiting for controller_server to become active"
+                    )
+                    return False
+                time.sleep(0.05)
+
+            if future.result() is None:
+                self.get_logger().warn("get_state call failed, retrying")
+                time.sleep(0.2)
+                continue
+
+            state = future.result().current_state.label
+            self.get_logger().info(f"controller_server state: {state}")
+
+            if state == "active":
+                return True
+
+            time.sleep(0.2)
+
+        self.get_logger().error("ROS shutdown while waiting for controller_server")
+        return False
 
     def transform_path_to_list(self) -> List[Tuple[float, float]]:
         """Convert Path message to waypoint queue."""

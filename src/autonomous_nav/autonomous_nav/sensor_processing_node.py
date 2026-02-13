@@ -1,6 +1,7 @@
 import math
 import struct
 import sys
+import traceback
 from typing import Optional
 
 import cv2  # pylint: disable=no-member
@@ -75,45 +76,45 @@ class SensorProcessingNode(Node):
     # --------------------------------------------------------------------------
     #   YOLO World Object Detection
     # --------------------------------------------------------------------------
-    # def yoloDetectionCallback(self, msg: Image) -> None:
-    #     """
-    #     Runs YOLO World detection on the camera feed.
-    #     """
-    #     try:
-    #         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-    #     except Exception as e:
-    #         self.get_logger().error(f"Failed to convert image for YOLO World detection: {e}")
-    #         return
+    def yoloDetectionCallback(self, msg: Image) -> None:
+        """
+        Runs YOLO World detection on the camera feed.
+        """
+        try:
+            frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        except Exception as e:
+            self.get_logger().error(f"Failed to convert image for YOLO World detection: {e}")
+            return
 
-    #     # Predict with YOLO World
-    #     results = self.model(frame, conf=0.3)[0]  # Adjust confidence threshold if needed
+        # Predict with YOLO World
+        results = self.model(frame, conf=0.3)[0]  # Adjust confidence threshold if needed
 
-    #     # Get frame dimensions
-    #     frame_h, frame_w = frame.shape[:2]
+        # Get frame dimensions
+        frame_h, frame_w = frame.shape[:2]
 
-    #     # Filter results for "hammer" and "bottle"
-    #     for det in results.boxes.data:
-    #         x1, y1, x2, y2, confidence, class_idx = det.tolist()
-    #         label = self.model.names[int(class_idx)]  # Get detected object name
-    #         confidence = float(confidence)
+        # Filter results for "hammer" and "bottle"
+        for det in results.boxes.data:
+            x1, y1, x2, y2, confidence, class_idx = det.tolist()
+            label = self.model.names[int(class_idx)]  # Get detected object name
+            confidence = float(confidence)
 
-    #         if confidence < 0.3:  # Adjust confidence threshold if needed
-    #             continue
+            if confidence < 0.3:  # Adjust confidence threshold if needed
+                continue
 
-    #         # Pick color
-    #         color = (255, 255, 255) if label.lower() == "bottle" else (0, 165, 255)
+            # Pick color
+            color = (255, 255, 255) if label.lower() == "bottle" else (0, 165, 255)
 
-    #         # Draw bounding box
-    #         cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
-    #         text = f"{label} {confidence:.2f}"
-    #         cv2.putText(
-    #             frame, text, (int(x1), int(y1) - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2
-    #         )
+            # Draw bounding box
+            cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
+            text = f"{label} {confidence:.2f}"
+            cv2.putText(
+                frame, text, (int(x1), int(y1) - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2
+            )
 
-    #     # Display result
-    #     disp = cv2.resize(frame, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
-    #     cv2.imshow("YOLO World Detection", disp)
-    #     cv2.waitKey(1)
+        # Display result
+        disp = cv2.resize(frame, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
+        cv2.imshow("YOLO World Detection", disp)
+        cv2.waitKey(1)
 
     # --------------------------------------------------------------------------
     #   Point Cloud Processing
@@ -171,6 +172,7 @@ class SensorProcessingNode(Node):
             points = np.full((total_points, 3), np.nan, dtype=np.float32)
 
             # self.get_logger().info(f"Extracting {total_points} points from PointCloud2")
+            # self.get_logger().info(f"Extracting {total_points} points from PointCloud2")
 
             point_step = cloud_msg.point_step
             row_step = cloud_msg.row_step
@@ -201,6 +203,7 @@ class SensorProcessingNode(Node):
                     except struct.error as e:
                         self.get_logger().error(f"Struct error at point index {point_index}: {e}")
                         continue
+            # self.get_logger().info(f"Extracted {valid_count} valid points out of {total_points}")
             # self.get_logger().info(f"Extracted {valid_count} valid points out of {total_points}")
             return points
         except Exception as e:
@@ -238,8 +241,13 @@ class SensorProcessingNode(Node):
         """
         Basic ArUco marker detection.
         """
-        if self.camera_matrix is None or self.dist_coeffs is None:
-            self.get_logger().warning("Camera intrinsics not received yet. Skipping frame.")
+        if self.camera_matrix is None:
+            self.get_logger().warning("Camera matrix not received yet. Skipping frame.")
+            traceback.print_stack()
+            return
+        if self.dist_coeffs is None:
+            self.get_logger().warning("Distortion coefficients not received yet. Skipping frame.")
+            traceback.print_stack()
             return
 
         cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
