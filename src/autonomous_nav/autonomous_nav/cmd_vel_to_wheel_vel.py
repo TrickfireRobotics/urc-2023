@@ -2,6 +2,8 @@
 Node to convert /cmd_vel (Twist) to individual wheel velocities for differential drive.
 """
 
+from typing import List
+
 import rclpy
 from geometry_msgs.msg import Twist
 from rclpy.node import Node
@@ -9,7 +11,7 @@ from std_msgs.msg import Float32
 
 
 class CmdVelToWheelVel(Node):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__("cmd_vel_to_wheel_vel")
 
         # Parameters
@@ -23,7 +25,7 @@ class CmdVelToWheelVel(Node):
         self.left_wheel_pub = self.create_publisher(Float32, "/left_wheel_velocity", 10)
         self.right_wheel_pub = self.create_publisher(Float32, "/right_wheel_velocity", 10)
 
-    def cmd_vel_callback(self, msg: Twist):
+    def cmd_vel_callback(self, msg: Twist) -> None:
         linear_vel = msg.linear.x
         angular_vel = msg.angular.z
 
@@ -43,7 +45,7 @@ class CmdVelToWheelVel(Node):
         self.get_logger().debug(f"Left vel: {left_vel}, Right vel: {right_vel}")
 
 
-def main(args=None):
+def main(args: List[str] | None = None) -> None:
     rclpy.init(args=args)
     node = CmdVelToWheelVel()
     rclpy.spin(node)
