@@ -62,36 +62,38 @@ controller_server:
       RotateToGoal.lookahead_time: -1.0
 
     local_costmap:
-      update_frequency: 5.0
-      publish_frequency: 2.0
-      global_frame: odom
-      robot_base_frame: zed_camera_link
-      transform_tolerance: 0.1
-      rolling_window: true
-      width: 3
-      height: 3
-      resolution: 0.05
-      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        map_subscribe_transient_local: True
-        enabled: true
-        subscribe_to_updates: true
+      local_costmap:
+        update_frequency: 5.0
+        publish_frequency: 2.0
+        global_frame: odom
+        robot_base_frame: zed_camera_link
         transform_tolerance: 0.1
-      obstacle_layer:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: true
-        observation_sources: filtered_cloud
-        filtered_cloud:
-          topic: /filtered_point_cloud
-          sensor_frame: zed_left_camera_frame
-          data_type: "PointCloud2"
-          marking: true
-          clearing: true
-      inflation_layer:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.55
+        rolling_window: true
+        width: 3
+        height: 3
+        resolution: 0.05
+        plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+        static_layer:
+          plugin: "nav2_costmap_2d::StaticLayer"
+          map_topic: /projected_map
+          map_subscribe_transient_local: True
+          enabled: true
+          subscribe_to_updates: true
+          transform_tolerance: 0.1
+        obstacle_layer:
+          plugin: "nav2_costmap_2d::ObstacleLayer"
+          enabled: true
+          observation_sources: filtered_cloud
+          filtered_cloud:
+            topic: /filtered_point_cloud
+            sensor_frame: zed_left_camera_frame
+            data_type: "PointCloud2"
+            marking: true
+            clearing: true
+        inflation_layer:
+          plugin: "nav2_costmap_2d::InflationLayer"
+          cost_scaling_factor: 3.0
+          inflation_radius: 0.55
           
 
 global_costmap:
