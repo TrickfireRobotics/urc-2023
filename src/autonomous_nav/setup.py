@@ -27,6 +27,7 @@ setup(
             "sensor_processing_node = autonomous_nav.sensor_processing_node:main",
             "gps_anchor_node = autonomous_nav.gps_anchor_node:main",
             "decision_making_node = autonomous_nav.decision_making_node:main",
+            "cmd_vel_to_wheel_vel = autonomous_nav.cmd_vel_to_wheel_vel:main",
         ],
     },
 )
