@@ -52,6 +52,9 @@ navigation_node = Node(
 sensor_processing_node = Node(
     package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
 )
+cmd_vel_to_wheel_vel_node = Node(
+    package="autonomous_nav", executable="cmd_vel_to_wheel_vel", name="cmd_vel_to_wheel_vel"
+)
 nav2_params = os.path.join(
     get_package_share_directory("autonomous_nav"), "config", "nav2_params.yaml"
 )
@@ -182,6 +185,7 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             gps_anchor_node,
             navigation_node,
             sensor_processing_node,
+            cmd_vel_to_wheel_vel_node,
             launch_include,
             gps_node,
             zed_launch,
