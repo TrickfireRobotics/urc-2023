@@ -50,15 +50,9 @@ class NavigationNode(Node):
         self.current_position = (0.0, 0.0)  # x, y
 
         #initilize waypoint queue
-        self.waypoint_queue: PriorityQueue[Tuple[float, Tuple[float, float]]] = PriorityQueue(maxsize=5)
-        self.points = [(1.0, 1.0), (2.0, 2.0), (3.0, 3.0), (4.0, 4.0), (5.0, 5.0)]
-        for x,y in self.points:
-            distance = self.distance_2d(
-            self.current_position[0], self.current_position[1], x, y
-        )
-            self.waypoint_queue.put((distance, (x, y)))
         
-        
+        #hardcoded points for testing
+        self.waypoints = [(1.0, 1.0), (2.0, 2.0), (3.0, 3.0), (4.0, 4.0), (5.0, 5.0)]
         self.active_waypoint: Optional[Tuple[float, float]] = None
         self.current_yaw = 0.0
         self.current_global_yaw = 0.0
@@ -207,6 +201,10 @@ class NavigationNode(Node):
     # ----------------------
     #   Main Navigation Logic
     # ----------------------
+    def calculate_waypoints(self) -> None:
+        #order list by distance to current position
+        self.waypoints.sort(key=lambda point: self.distance_2d(self.current_position[0], self.current_position[1], point[0], point[1]))
+
     def updateNavigation(self) -> None:
         # If anchor not received, publish status but do not navigate
         if not self.anchor_received:
@@ -218,23 +216,16 @@ class NavigationNode(Node):
         # If no active waypoint
         if self.active_waypoint is None:
             # Plan a set of waypoints using a queue
-            
+            self.calculate_waypoints()
 
-            if not self.waypoint_queue.empty():
-                # '_,' gets only the coordinates, ignoring the distance value
-                _, self.active_waypoint = self.waypoint_queue.get()
+            if self.waypoints != []:
+                self.active_waypoint = self.waypoints.pop(0)
                 self.end_goal_waypoint = self.active_waypoint
-                self.get_logger().info(f"New active waypoint from queue: {self.active_waypoint}")
+                self.get_logger().info(f"New active waypoint from waypointlist: {self.active_waypoint}")
 
             else:
                 self.publishStatus("No waypoints remaining")
                 return
-                #self.get_logger().info("No active waypoint, setting a default one for testing")
-                #self.active_waypoint = (2, 2)
-                #self.end_goal_waypoint = (2, 2)
-                # self.publishStatus("No waypoint provided; Navigation Stopped.")
-                # return
-        
         
         # Compute distance to the waypoint
         goal_x, goal_y = self.active_waypoint
