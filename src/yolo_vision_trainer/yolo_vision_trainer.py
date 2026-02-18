@@ -26,7 +26,6 @@ import torch
 import os
 
 def pre_train_model():
-    print("Torch version: torch.__version__")
     parent_dir = os.path.dirname(os.getcwd())
     print("Parent Path: " + parent_dir)
     
@@ -36,12 +35,16 @@ def pre_train_model():
 
     print("Starting cuda check")
     # Check if GPU is available
+    print("Torch Version:",torch.__version__)
+    print("Torch Version Cuda:",torch.version.cuda)
     print("CUDA Available:", torch.cuda.is_available())
+    
 
     # Get GPU details
     if torch.cuda.is_available():
         print("GPU Name:", torch.cuda.get_device_name(0))
     else:
+        print("GPU Unavailable")
         return
 
     # Initialize a YOLO-World model
@@ -67,3 +70,4 @@ def pre_train_model():
 if __name__ == "__main__":
     print("launching pre_training")
     pre_train_model()
+    

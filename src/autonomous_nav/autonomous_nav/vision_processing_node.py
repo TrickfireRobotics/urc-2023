@@ -7,16 +7,19 @@ import numpy as np
 import rclpy
 from cv2 import aruco
 from cv_bridge import CvBridge
-from octomap_msgs.msg import Octomap as OctomapMsg
+#from octomap_msgs.msg import Octomap as OctomapMsg
 from rclpy.node import Node
-from rclpy.time import Time
-from sensor_msgs.msg import CameraInfo, Image, PointCloud2, PointField
-from std_msgs.msg import Bool, Float32MultiArray, Header
+#from rclpy.time import Time
+from sensor_msgs.msg import CameraInfo, Image#, PointCloud2, PointField
+#from std_msgs.msg import Bool, Float32MultiArray, Header
+from geometry_msgs.msg import Vector3
+
+#defined in src\custom_interfaces\msg\Aruco.msg
+from custom_interfaces.msg import Aruco
 
 # Install: pip install "ultralytics>=8.1.0" "torch>=1.8"
 from ultralytics import YOLO
-from visualization_msgs.msg import MarkerArray
-
+#from visualization_msgs.msg import MarkerArray
 
 class VisionProcessingNode(Node):
     """
@@ -35,8 +38,13 @@ class VisionProcessingNode(Node):
         self.dist_coeffs: Optional[np.ndarray] = None
 
         # Load YOLO World model
-        self.model = YOLO("yolov8l-world.pt")
-        self.get_logger().info("YOLO World model loaded successfully.")
+        try:
+            self.model = YOLO("trained_yolov8l.pt")
+            self.get_logger().info("Trained YOLO World model loaded successfully.")
+        except:
+            self.model = YOLO("yolov8l-world.pt")
+            self.get_logger.warning("Could not find trained yolo model (trained_yolov8l.pt), falling back on default model (yolov8l-world.pt)")
+            self.get_logger().info("Default YOLO World model loaded successfully.")
 
         self.camera_frame_id = "zed_camera_frame"
         self.map_frame_id = "map"
@@ -58,6 +66,15 @@ class VisionProcessingNode(Node):
         # Publishers
         self.object_detection_pub = self.create_publisher(
             Image, "/object_detection_image", 10
+        )
+
+        self.aruco_detection_image_pub = self.create_publisher(
+            Image, "/aruco_detection_image", 10
+        )
+        
+        #emitted whenever we see a aruco marker
+        self.aruco_detection_pub = self.create_publisher(
+            Aruco, "/aruco_detection", 10
         )
 
         self.get_logger().info("vision_processing_node is up and running.")
@@ -199,7 +216,30 @@ class VisionProcessingNode(Node):
                 f"Marker ID: {int(marker_id)}, Distance: {distance:.2f} m, tvec: {tvec}, rvec: {rvec}"
             )
 
-            cv2.drawFrameAxes(
+            #int, float, vec3, vec3
+            #emit the aruco marker id,distance,tvec,rvec
+            #tvec is transform vector aka position, rvec is rotation vector
+
+            aruco_message = Aruco()
+            aruco_message.id = marker_id
+            aruco_message.distance = distance
+
+            tvec_out = Vector3()
+            tvec_out.x = tvec[0]
+            tvec_out.y = tvec[1]
+            tvec_out.z = tvec[2]
+
+            rvec_out = Vector3()
+            rvec_out.x = rvec[0]
+            rvec_out.y = rvec[1]
+            rvec_out.z = rvec[2]
+
+            aruco_message.transform_vec = tvec_out
+            aruco_message.rotation_vec = rvec_out
+            self.aruco_detection_pub.publish(aruco_message)
+
+            #draw a axes showing the aruco marker detected
+            disp = cv2.drawFrameAxes(
                 cv_image,
                 self.camera_matrix,
                 self.dist_coeffs,
@@ -207,6 +247,11 @@ class VisionProcessingNode(Node):
                 tvec,
                 marker_length /2.0,
             )
+
+            #return the finished image to rvis to see what aruco markers are being detected
+            image_message = self.bridge.cv2_to_imgmsg(disp, "passthrough")
+            self.aruco_detection_image_pub.publish(image_message)
+
     # --------------------------------------------------------------------------
     #   ROS 2 Node Main
     # --------------------------------------------------------------------------

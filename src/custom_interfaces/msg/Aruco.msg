@@ -1,0 +1,4 @@
+int64 id
+float64 distance
+geometry_msgs/Vector3 transform_vec
+geometry_msgs/Vector3 rotation_vec
