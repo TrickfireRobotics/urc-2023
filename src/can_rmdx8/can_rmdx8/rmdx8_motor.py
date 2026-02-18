@@ -69,6 +69,8 @@ class RMDx8Motor:
         The publisher to send data to.
         """
         topic_name = self.config.getCanTopicName()
+        logger = self._ros_node.get_logger()
+        logger.info(f"Creating RMDx8 Publisher on topic: {topic_name}")
         # Size of queue is 1. All additional ones are dropped
         publisher = self._ros_node.create_publisher(std_msgs.msg.String, topic_name, 10)
         self._ros_node.get_logger().info("RMDx8 Publisher Created!!")
