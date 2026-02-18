@@ -342,10 +342,6 @@ class NavigationNode(Node):
             ):
                 minimum_cost = item_cost
                 minimum_index = item_index
-
-                self.get_logger().info(
-                    f"found a cell at index {item_index} with a cost of {item[0]}"
-                )
         if minimum_index is None:
             self.get_logger().warn(
                 f"no valid nodes found in target area, defaulting to current position"
