@@ -347,6 +347,9 @@ class NavigationNode(Node):
                 f"no valid nodes found in target area, defaulting to current position"
             )
             return self.position_to_index(grid, self.current_position)
+        self.get_logger().info(
+            f"lowest cost node has index {minimum_index} with a cost of {minimum_cost}"
+        )
         return minimum_index
 
     def append_path(self, new_pose: Tuple[float, float]) -> None:
