@@ -239,7 +239,7 @@ class VisionProcessingNode(Node):
             self.aruco_detection_pub.publish(aruco_message)
 
             #draw a axes showing the aruco marker detected
-            disp = cv2.drawFrameAxes(
+            cv2.drawFrameAxes(
                 cv_image,
                 self.camera_matrix,
                 self.dist_coeffs,
@@ -247,10 +247,10 @@ class VisionProcessingNode(Node):
                 tvec,
                 marker_length /2.0,
             )
-
-            #return the finished image to rvis to see what aruco markers are being detected
-            image_message = self.bridge.cv2_to_imgmsg(disp, "passthrough")
-            self.aruco_detection_image_pub.publish(image_message)
+            
+        #return the finished image to rvis to see what aruco markers are being detected
+        image_message = self.bridge.cv2_to_imgmsg(cv_image, "passthrough")
+        self.aruco_detection_image_pub.publish(image_message)
 
     # --------------------------------------------------------------------------
     #   ROS 2 Node Main
