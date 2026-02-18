@@ -342,14 +342,15 @@ class NavigationNode(Node):
             ):
                 minimum_cost = item_cost
                 minimum_index = item_index
+                if item[0] == -1:
+                    self.get_logger().info(
+                        f"found an unknown cell at index {item_index} with a cost of {item_cost}"
+                    )
         if minimum_index is None:
             self.get_logger().warn(
                 f"no valid nodes found in target area, defaulting to current position"
             )
             return self.position_to_index(grid, self.current_position)
-        self.get_logger().info(
-            f"lowest cost node has index {minimum_index} with a cost of {minimum_cost}"
-        )
         return minimum_index
 
     def append_path(self, new_pose: Tuple[float, float]) -> None:
