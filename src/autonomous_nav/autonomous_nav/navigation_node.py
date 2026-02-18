@@ -344,7 +344,7 @@ class NavigationNode(Node):
                 minimum_index = item_index
 
                 self.get_logger().info(
-                    f"found a cell at index {item_index} with a cost of {item_cost}"
+                    f"found a cell at index {item_index} with a cost of {item[0]}"
                 )
         if minimum_index is None:
             self.get_logger().warn(
