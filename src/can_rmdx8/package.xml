@@ -7,7 +7,7 @@
   <maintainer email="trickfire@todo.todo">trickfire</maintainer>
   <license>TODO: License declaration</license>
 
-  <exec_depend>myactuator-rmd-py</exec_depend>
+  <exec_depend>myactuator_rmd</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
