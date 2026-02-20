@@ -4,7 +4,12 @@ This module contains objects representing the RMD-X8 motor state and settings fo
 
 from dataclasses import dataclass
 
-from myactuator_rmd_py.actuator_state import AccelerationType, MotorStatus1, MotorStatus2, PiGains
+from myactuator_rmd.myactuator_rmd_py.actuator_state import (
+    AccelerationType,
+    MotorStatus1,
+    MotorStatus2,
+    PiGains,
+)
 
 from lib.motor_state.can_motor_state import CanMotorRunSettings, CANMotorState
 
@@ -67,6 +72,9 @@ class RMDX8RunSettings(CanMotorRunSettings["RMDX8RunSettings"]):
     """
     Target acceleration in revolutions/s^2
     """
+    acceleration_type: AccelerationType | None = None
+
+    current: float | None = None
     acceleration_type: AccelerationType | None = None
 
     current: float | None = None
