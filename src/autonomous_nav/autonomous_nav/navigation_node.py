@@ -324,7 +324,7 @@ class NavigationNode(Node):
             )
 
     def find_lowest_cost_node(self, target_area: list[Tuple[int, int]], grid: OccupancyGrid) -> int:
-        self.get_logger().info(f"target area is this large: {len(target_area)}")
+        # self.get_logger().info(f"target area is this large: {len(target_area)}")
         minimum_cost = sys.float_info.max
         minimum_index = None
         if target_area == []:
