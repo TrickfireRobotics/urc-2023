@@ -5,7 +5,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 "$SCRIPT_DIR/setup_zed_dependencies.sh"
 
 # Run rmxd8 dependency setup first
-"$SCRIPT_DIR/setup_rmxd8_dependencies.sh"
+"$SCRIPT_DIR/setup_rmdx8_dependencies.sh"
 
 source /opt/ros/$ROS_DISTRO/setup.bash
 
