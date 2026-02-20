@@ -31,6 +31,7 @@ colcon build \
     --packages-select myactuator_rmd \
     --cmake-args \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        -DPYTHON_BINDINGS=ON
 
 colcon build \
     --symlink-install \
