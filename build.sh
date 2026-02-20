@@ -30,7 +30,7 @@ colcon build \
     --base-paths "$SCRIPT_DIR"\
     --packages-select myactuator_rmd \
     --cmake-args \
-        -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DPYTHON_BINDINGS=ON
 
 colcon build \
