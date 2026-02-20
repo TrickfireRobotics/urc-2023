@@ -8,9 +8,9 @@ import time
 from threading import Lock
 from typing import TypeGuard
 
-import myactuator_rmd_py as rmd
+import myactuator_rmd.myactuator_rmd_py as rmd
 import std_msgs.msg
-from myactuator_rmd_py.actuator_state import Gains
+from myactuator_rmd.myactuator_rmd_py.actuator_state import Gains
 from rclpy.node import Node
 from rclpy.publisher import Publisher
 from rclpy.subscription import Subscription

@@ -1,6 +1,6 @@
 import sys
 
-import myactuator_rmd_py as rmd
+import myactuator_rmd.myactuator_rmd_py as rmd
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
