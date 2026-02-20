@@ -39,18 +39,20 @@ class VisionProcessingNode(Node):
 
         # Load YOLO World model
         try:
-            self.model = YOLO("trained_yolov8l.pt")
-            self.get_logger().info("Trained YOLO World model loaded successfully.")
+            #"yolo26x.pt" for more accuracy, if l isn't good enough
+            self.model = YOLO("yolo26l.pt")
+            #self.get_logger().info("Trained YOLO World model loaded successfully.")
+            self.get_logger().info("YOLO 26.l model loaded successfully.")
         except:
             self.model = YOLO("yolov8l-world.pt")
-            self.get_logger.warning("Could not find trained yolo model (trained_yolov8l.pt), falling back on default model (yolov8l-world.pt)")
+            self.get_logger.warning("Could not find new yolo model (yolo26l.pt), falling back on default model (yolov8l-world.pt)")
             self.get_logger().info("Default YOLO World model loaded successfully.")
 
         self.camera_frame_id = "zed_camera_frame"
         self.map_frame_id = "map"
         
         # Aruco detector setup
-        self.aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
+        self.aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250) #we only detect 6x6 markers
         self.aruco_params = aruco.DetectorParameters()
         self.aruco_detector = aruco.ArucoDetector(self.aruco_dict, self.aruco_params)
 
