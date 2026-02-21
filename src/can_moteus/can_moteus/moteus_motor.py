@@ -49,6 +49,7 @@ class MoteusMotor:
         The format of the topic is the following: moteusmotor_<can_id>_from_interface
         """
         topic_name = self.config.getInterfaceTopicName()
+        self._ros_node.get_logger().info("Creating subscriber for topic: " + topic_name)
         subscriber = self._ros_node.create_subscription(
             std_msgs.msg.String,
             topic_name,
@@ -101,4 +102,5 @@ class MoteusMotor:
                 # Specifically, when we crtl-c we want the motors to be set_stop(), but if this
                 # thread crashes we cannot do that. So we catch any errors
                 self._ros_node.get_logger().info("Failed to publish motor data")
+                self._ros_node.get_logger().info(str(error))
                 self._ros_node.get_logger().info(str(error))
