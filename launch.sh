@@ -13,6 +13,7 @@ ip link set can0 up
 ip link set can1 type can bitrate 1000000
 ip link set can1 up
 
+echo "CAN interfaces set up successfully."
 if
 
 # Launch octomap server
