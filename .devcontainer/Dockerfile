@@ -68,17 +68,11 @@ RUN apt-get update && apt-get install -y \
     # OpenCV
     libopencv-dev \
     python3-opencv \
-    #rmd
-    pybind11-dev \
     # Clean out the apt lists after `apt-get update`
     && rm -rf /var/lib/apt/lists/*
 
 
-# Clone myactuator_rmd repository
-WORKDIR /home/trickfire/urc-2023/src
-RUN git clone https://github.com/2b-t/myactuator_rmd.git && \
-    cd myactuator_rmd && \
-    git fetch --all --tags
+
 # Install moteus python library. 
 # https://github.com/mjbots/moteus/tree/main/lib/python
 RUN pip3 install moteus
