@@ -35,6 +35,8 @@ RUN pip3 install opencv-python
 # Update pydocstyle to remove a deprecation warning when testing for PEP257
 RUN pip install --upgrade pydocstyle
 
+RUN pip install godirect
+
 # Add a user so we can remote into this container with a non-root user
 RUN useradd trickfire \
   # Bash will be its default shell
