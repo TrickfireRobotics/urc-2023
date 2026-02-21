@@ -5,6 +5,8 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$SCRIPT_DIR/install/setup.bash"
 
 #Setting up CAN interfaces
+sudo ip link set can0 down
+sudo ip link set can1 down
 sudo modprobe can
 sudo modprobe can_raw
 sudo modprobe mttcan
