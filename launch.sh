@@ -5,15 +5,15 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$SCRIPT_DIR/install/setup.bash"
 
 #Setting up CAN interfaces
-sudo ip link set can0 down
-sudo ip link set can1 down
-sudo modprobe can
-sudo modprobe can_raw
-sudo modprobe mttcan
-sudo ip link set can0 type can bitrate 1000000 dbitrate 5000000 fd on
-sudo ip link set can0 up
-sudo ip link set can1 type can bitrate 1000000
-sudo ip link set can1 up
+#sudo ip link set can0 down
+#sudo ip link set can1 down
+#sudo modprobe can
+#sudo modprobe can_raw
+#sudo modprobe mttcan
+#sudo ip link set can0 type can bitrate 1000000 dbitrate 5000000 fd on
+#sudo ip link set can0 up
+#sudo ip link set can1 type can bitrate 1000000
+#sudo ip link set can1 up
 
 echo "CAN interfaces set up successfully."
 
