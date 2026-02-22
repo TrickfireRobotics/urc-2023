@@ -65,6 +65,5 @@ COPY .devcontainer/trickfire.bashrc /home/trickfire/.bashrc
 
 # ---- ROSDEP SETUP ----
 # Initialize, update and install rosdep dependencies
-RUN rosdep init && \
-    rosdep update && \
+RUN rosdep update && \
     rosdep install --from-paths /home/trickfire/urc-2023/src --ignore-src -r -y
