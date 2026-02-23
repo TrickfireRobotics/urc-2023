@@ -24,6 +24,7 @@ import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import Float32
+from typing import Optional
 
 from lib.color_codes import ColorCodes, colorStr
 
@@ -32,7 +33,7 @@ class MessageHandlerNode(Node):
     def __init__(self) -> None:
         super().__init__("message_handler_node")
         self.key_positions = None
-        with open("src/autonomous_nav/autonomous_arm/key_positions.json") as f:
+        with open("src/arm/arm/autonomous_arm/key_positions.json") as f:
             self.key_positions = json.load(f)
 
         # ... existing code ...

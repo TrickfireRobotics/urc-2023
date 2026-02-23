@@ -15,3 +15,6 @@ src/zed-ros2-wrapper/
 
 # pycache
 __pycache__
+
+# Personal learning notes (not tracked in repo)
+robot.md
