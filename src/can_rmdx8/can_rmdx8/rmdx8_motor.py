@@ -131,8 +131,13 @@ class RMDx8Motor:
                     self._ros_node.get_logger().info("POSITION")
                 if _checkValid(run_settings.velocity):
                     # Velocity is 0.01 dps
-                    self.motor.sendVelocitySetpoint(run_settings.velocity * DEGREE_TO_REV * 100)
-                    self._ros_node.get_logger().info("VELOCITY")
+                    try:
+                        self.motor.sendVelocitySetpoint(run_settings.velocity * DEGREE_TO_REV * 100)
+                        self._ros_node.get_logger().info("VELOCITY")
+                    except Exception as ex:
+                        self._ros_node.get_logger().warning(
+                            f"No data received for velocity setpoint: {ex}"
+                        )
 
                 if _checkValid(run_settings.current):
                     # Value is 0.01 A
