@@ -3,7 +3,7 @@ import sys
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSHistoryPolicy
+from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float64MultiArray
 
@@ -31,6 +31,7 @@ class GpsAnchorNode(Node):
         self.anchor_alt = 0.0
 
         self.start_time = self.get_clock().now()
+        # subscriptions
         self.gps_sub = self.create_subscription(NavSatFix, "/fix", self.gpsCallback, 10)
 
         transient_local_qos = QoSProfile(
@@ -38,6 +39,7 @@ class GpsAnchorNode(Node):
             depth=1,
             durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
         )
+        # publishers
         self.anchor_pub = self.create_publisher(
             Float64MultiArray, "/anchor_position", transient_local_qos
         )

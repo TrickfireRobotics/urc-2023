@@ -22,9 +22,9 @@ from rclpy.node import Node
 from std_msgs.msg import Float32, String
 from transforms3d.euler import quat2euler
 
-# from lib.color_codes import ColorCodes, colorStr
-
 from .dwa_planner import DWAPlanner
+
+# from lib.color_codes import ColorCodes, colorStr
 
 
 class DecisionMakingNode(Node):
@@ -32,39 +32,30 @@ class DecisionMakingNode(Node):
         super().__init__("decision_making_node")
 
         # ===== STATE VARIABLES =====
-        
+
         # Global pose tracking (from odometry)
         self.global_x = 0.0
         self.global_y = 0.0
         self.global_theta = 0.0
 
         # Local/costmap frame tracking
-        self.local_x = 0.0
-        self.local_y = 0.0
+        # self.local_x = 0.0
+        # self.local_y = 0.0
 
         # Velocity tracking
         self.current_wheel_vel = (0.0, 0.0)
         self.last_left_vel = 0.0
         self.last_right_vel = 0.0
 
-        # Waypoint list (stores waypoints in global frame)  - Updated to Path message
-        self.waypoint_list: List[Tuple[float, float]] = [(0, 0)]
-        self.waypoint_reached_threshold = 0.05  # meters
+        # Waypoint queue (stores waypoints in global frame)  - Updated to Path message
+        self.waypoint_list: List[Tuple[float, float]] = []
+        self.waypoint_reached_threshold = 0.5  # meters
 
-        # Costmap with fake/no data.
-        # self.costmap: Optional[PyCostmap2D] = None
-        self.costmap: PyCostmap2D = PyCostmap2D(OccupancyGrid())
+        # Costmap
+        self.costmap: Optional[PyCostmap2D] = None
 
         # DWA Planner
-        self.dwa_planner: DWAPlanner = DWAPlanner(
-                costmap=self.costmap,
-                robot_radius=0.3,
-                current_velocity=self.current_wheel_vel,
-                current_position=(0.0, 0.0),
-                time_delta=0.1,
-                goal=self.waypoint_list[0],
-                theta=self.global_theta,
-            )
+        self.dwa_planner: Optional[DWAPlanner] = None
 
         # Navigation status
         self.navigation_status = "No waypoint provided"
@@ -73,18 +64,15 @@ class DecisionMakingNode(Node):
 
         # Odometry for global pose tracking
         self.create_subscription(
-            Odometry, "/odometry/filtered", self.odometry_callback, 10
+            Odometry, "/odometry/filtered", self.odometry_callback, 10  # or '/odom'
         )
 
         # Costmap (rolling window)
-        self.create_subscription(
-            # OccupancyGrid, "/local_costmap/costmap", self.costmap_callback, 10
-            OccupancyGrid, "/projected_map", self.costmap_callback, 10
-        )
+        self.create_subscription(OccupancyGrid, "/local_costmap/costmap", self.costmap_callback, 10)
 
-        # Waypoint path
+        # Waypoint path (queue of waypoints)
         self.create_subscription(
-            Path, "/path", self.path_callback, 10
+            Path, "/path", self.path_callback, 10  # Navigation node publishes this
         )
 
         # Navigation status
@@ -92,16 +80,9 @@ class DecisionMakingNode(Node):
 
         # ===== PUBLISHERS =====
 
-        # Publishers to be used if the control node is used
-        # self.left_drive_pub = self.create_publisher(Float32, "/left_wheel_velocity", 10)
-        # self.right_drive_pub = self.create_publisher(Float32, "/right_wheel_velocity", 10)
+        self.left_drive_pub = self.create_publisher(Float32, "/left_wheel_velocity", 10)
 
-        self.left_drive_pub = self.create_publisher(
-            Float32, "/move_left_drivebase_side_message", 10
-        )
-        self.right_drive_pub = self.create_publisher(
-            Float32, "/move_right_drivebase_side_message", 10
-        )
+        self.right_drive_pub = self.create_publisher(Float32, "/right_wheel_velocity", 10)
 
         # ===== TIMER =====
         self.timer = self.create_timer(0.5, self.update_decision)  # 2 Hz
@@ -139,12 +120,24 @@ class DecisionMakingNode(Node):
     def costmap_callback(self, msg: OccupancyGrid) -> None:
         """Update costmap and initialize planner if needed."""
         self.costmap = PyCostmap2D(msg)
-        self.get_logger().info(f"Costmap updated with {msg.info.width} x {msg.info.height} grid")
+
+        # Initialize DWA planner on first costmap
+        if self.dwa_planner is None:
+            self.dwa_planner = DWAPlanner(
+                costmap=self.costmap,
+                robot_radius=0.3,
+                current_velocity=self.current_wheel_vel,
+                current_position=(0.0, 0.0),  # Robot at costmap center
+                time_delta=0.1,
+                goal=(1.0, 0.0),  # Dummy goal
+                theta=0.0,
+            )
+            self.get_logger().info("DWA Planner initialized")
 
     def path_callback(self, msg: Path) -> None:
         """Receive new waypoint queue."""
         self.get_logger().info("Received new path")
-        
+
         self.waypoint_list.clear()
 
         # Take first 10 waypoints
@@ -164,21 +157,23 @@ class DecisionMakingNode(Node):
 
     def update_decision(self) -> None:
         """Main control loop - runs at 2 Hz."""
-        
+
         self.get_logger().info("Updating decision making...")
-        
-        # Check if we have a valid costmap (non-empty)
-        if self.costmap.getSizeInCellsX() == 0 or self.costmap.getSizeInCellsY() == 0:
+
+        # Check if we have necessary data
+        if self.costmap is None or self.dwa_planner is None:
             # Create fake costmap for testing
-            self.get_logger().info("Costmap not initialized or empty, creating fake costmap for testing")
+            self.get_logger().info(
+                "Costmap or DWA planner not initialized, creating fake costmap for testing"
+            )
             fake_grid = OccupancyGrid()
             fake_grid.info.resolution = 0.1
             fake_grid.info.width = 100
             fake_grid.info.height = 100
             fake_grid.info.origin.position.x = self.global_x - 5.0
             fake_grid.info.origin.position.y = self.global_y - 5.0
-            fake_grid.data = [0] * (100 * 100)  # Initialize with free space
-            self.costmap = PyCostmap2D(fake_grid)  # Actually assign the fake costmap
+            # self.stop_rover()
+            # return
 
         # Check if we have waypoints
         if not self.waypoint_list:
@@ -194,7 +189,6 @@ class DecisionMakingNode(Node):
             current_goal_global[0],
             current_goal_global[1],
         )
-        self.get_logger().info(f"Navigating to waypoint ({current_goal_global[0]}, {current_goal_global[1]})")
 
         # Check if reached current waypoint
         distance_to_goal = math.sqrt(
@@ -204,35 +198,45 @@ class DecisionMakingNode(Node):
 
         if distance_to_goal < self.waypoint_reached_threshold:
             self.waypoint_list.pop(0)
-            self.get_logger().info(f"Reached waypoint!")
+            self.get_logger().info(f"Reached waypoint! {len(self.waypoint_list)} remaining")
 
             if not self.waypoint_list:
                 self.stop_rover()
                 return
 
             # Update to next waypoint
-            # current_goal_global = self.waypoint_list[0]
-            
-        if self.costmap is not None:
-            self.local_x  = self.costmap.getSizeInCellsX()
+            current_goal_global = self.waypoint_list[0]
 
         # Transform goal from global (odom) to local (robot/costmap frame)
         goal_local = self.transform_global_to_local(current_goal_global)
 
+        if self.dwa_planner is None:
+            self.get_logger().info("DWA planner not initialized")
+            # Initialize DWA planner with default params
+            self.dwa_planner = DWAPlanner(
+                costmap=self.costmap,
+                robot_radius=0.3,
+                current_velocity=self.current_wheel_vel,
+                current_position=(0.0, 0.0),  # Robot at costmap center
+                time_delta=0.1,
+                goal=goal_local,
+                theta=self.global_theta,
+            )
+
         # Update DWA planner state
-        self.get_logger().info("Updating states")
         self.dwa_planner.update_state(
             costmap=self.costmap,
-            current_position=(0.0, 0.0),
-            current_theta=self.global_theta,
+            robot_radius=0.3,
+            current_position=(0.0, 0.0),  # Robot at center of rolling costmap
+            current_theta=0.0,  # Always facing forward in own frame
             current_velocity=self.current_wheel_vel,
             goal=goal_local,
             global_pose=(self.global_x, self.global_y, self.global_theta),
         )
 
         # Plan and execute
-        self.get_logger().info("Getting wheel velocities")
         left_vel, right_vel = self.dwa_planner.plan()
+
         self.get_logger().info(f"Left Vel: {left_vel:.2f}, Right Vel: {right_vel:.2f}")
 
         # Store for next cycle
@@ -266,7 +270,7 @@ class DecisionMakingNode(Node):
 
     def transform_path_to_list(self) -> List[Tuple[float, float]]:
         """Convert Path message to waypoint queue."""
-        self.waypoint_list.clear()
+        # self.waypoint_queue.clear()
         path_list: List[Tuple[float, float]] = []
         for pose_stamped in self.waypoint_list:
             x = pose_stamped[0]
@@ -276,12 +280,10 @@ class DecisionMakingNode(Node):
 
     def stop_rover(self) -> None:
         """Publish zero velocity."""
-        # self.get_logger.info("Stopping rover")
         self.publish_drive_commands(0.0, 0.0)
 
     def publish_drive_commands(self, left_speed: float, right_speed: float) -> None:
         """Publish motor commands."""
-        self.get_logger().info(f"Left Vel: {left_speed:.2f}, Right Vel: {right_speed:.2f}")
         self.left_drive_pub.publish(Float32(data=left_speed))
         self.right_drive_pub.publish(Float32(data=right_speed))
 
@@ -300,9 +302,7 @@ def main(args: list[str] | None = None) -> None:
             # decision_making_node.get_logger().info(
             #     colorStr("Shutting down decision_making_node", ColorCodes.BLUE_OK)
             # )
-            decision_making_node.get_logger().info(
-                "Shutting down decision_making_node"
-            )
+            decision_making_node.get_logger().info("Shutting down decision_making_node")
     finally:
         if decision_making_node is not None:
             decision_making_node.destroy_node()
@@ -311,4 +311,3 @@ def main(args: list[str] | None = None) -> None:
 
 if __name__ == "__main__":
     main()
-    

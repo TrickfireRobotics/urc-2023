@@ -1,5 +1,6 @@
 import math
 import sys
+import traceback
 from queue import Queue
 from typing import List, Optional, Tuple
 
@@ -16,24 +17,23 @@ from std_msgs.msg import Bool, Float32MultiArray, Float64MultiArray, String
 
 class NavigationNode(Node):
     """
-    A ROS 2 node for handling robot navigation using latitude/longitudes waypoints
-    relative to a dynamically received anchor lat/lon. This node manages the navigation status
-    (are we there yet?) and plots an initial path to our goal corrdinate.
+    A ROS 2 node for handling robot navigation using latitude/longitude waypoints
+    relative to a dynamically received anchor lat/lon.
 
     This node:
         - Subscribes to /anchor_position (Float64MultiArray).
         - Subscribes to /goal_latlon (NavSatFix) for a new lat/lon waypoint.
         - Subscribes to /odometry/filtered (Odometry) for current pose.
         - Publishes /navigation_status (String) and /navigation_feedback (Pose2D).
-        - Publishes /path (Path) to be followed by a lower level node.
     """
 
     def __init__(self) -> None:
         super().__init__("navigation_node")
-        self.get_logger().info(f"Navigation Node has been started successfully...")
+        self.get_logger().info("Entered __init__")
+        # self.get_logger().info(f"Navigation Node has been started successfully...")
 
         # ---- Configuration / Parameters ----
-        self.reached_threshold = 0.05  # meters
+        self.reached_threshold = 1.0  # meters
         self.earth_radius = 6371000.0  # Approx Earth radius in meters
 
         # ---- Anchor State (from /anchor_position) ----
@@ -46,19 +46,17 @@ class NavigationNode(Node):
         self.start_alt = 0.0
 
         # ---- Internal State ----
-        self.active_waypoint: Optional[Tuple[float, float]] = (3, 0)
+        self.active_waypoint: Optional[Tuple[float, float]] = None
         self.current_position = (0.0, 0.0)  # x, y
         self.current_yaw = 0.0
         self.current_global_yaw = 0.0
         self.current_lat = 0
         self.current_lon = 0.0
         self.current_alt = 0.0
-        self.end_goal_waypoint: Tuple[float, float] = (3, 0)
+        self.end_goal_waypoint: Tuple[float, float] = (2, 2)
         self.path: Path = Path()
         self.global_costmap: Optional[OccupancyGrid] = None
-        self.end_goal_index: int = 0
-        self.get_logger().info(f"Navigation Node has initialized first arguments")
-        self.index_count: int = 0
+        # self.get_logger().info(f"Navigation Node has initialized first arguments")
         # ---- Subscribers ----
         # latitude, longitude, altitude
         self.global_costmap_subscription = self.create_subscription(
@@ -82,9 +80,8 @@ class NavigationNode(Node):
         self.status_pub = self.create_publisher(String, "/navigation_status", 10)
         self.feedback_pub = self.create_publisher(Pose2D, "/navigation_feedback", 10)
         self.path_pub = self.create_publisher(Path, "/path", 10)
-        self.pos_pub = self.create_publisher(Pose2D, "/pos", 10)
         # ---- Timers ----
-        self.timer = self.create_timer(5, self.updateNavigation)  # 0.2 Hz
+        self.timer = self.create_timer(0.5, self.updateNavigation)  # 2 Hz
 
         """self.get_logger().info(
             colorStr("NavigationNode (dynamic anchor) initialized", ColorCodes.BLUE_OK)
@@ -94,6 +91,7 @@ class NavigationNode(Node):
     #   Subscriptions
     # ----------------------
     def anchorCallback(self, msg: Float64MultiArray) -> None:
+        self.get_logger().info("Entered anchorCallback")
         """
         Receives the anchor position [lat, lon, alt].
         """
@@ -107,15 +105,16 @@ class NavigationNode(Node):
             if len(msg.data) >= 3:
                 self.ref_alt = msg.data[2]
             self.anchor_received = True
-            self.get_logger().info(
+            ''' self.get_logger().info(
                 """colorStr(
                     f"Anchor received. ref_lat={self.ref_lat:.6f}, "
                     f"ref_lon={self.ref_lon:.6f}, ref_alt={self.ref_alt:.2f}",
                     ColorCodes.BLUE_OK,
                 )"""
-            )
+            ) '''
 
     def gpsCallback(self, msg: NavSatFix) -> None:
+        self.get_logger().info("Entered gpsCallback")
         if not self.anchor_received:
             return
         if msg.status.status >= 0 and self.current_lat == 0:
@@ -128,15 +127,16 @@ class NavigationNode(Node):
             self.current_lat = msg.latitude
             self.current_lon = msg.longitude
             self.current_alt = msg.altitude
-        self.get_logger().info(
+        '''self.get_logger().info(
             """colorStr(
                 f"current position received. current_lat={self.current_lat:.6f}, "
                 f"current_lon={self.current_lon:.6f}, current_alt={self.current_alt:.2f}",
                 ColorCodes.BLUE_OK,
             )"""
-        )
+        )'''
 
     def determine_global_yaw(self) -> None:
+        self.get_logger().info("Entered determine_global_yaw")
         x = math.cos(math.radians(self.current_lat)) * math.sin(
             math.radians(self.current_lon) - math.radians(self.ref_lon)
         )
@@ -153,6 +153,7 @@ class NavigationNode(Node):
         self.current_global_yaw = result
 
     def processLatLonGoal(self, msg: NavSatFix) -> None:
+        self.get_logger().info("Entered processLatLonGoal")
         """
         Converts lat/lon from the NavSatFix message into local x,y coordinates
         only if anchor is known. Otherwise, do nothing.
@@ -166,16 +167,18 @@ class NavigationNode(Node):
 
         x, y = self.convertLatLonToXY(lat, lon)
         # TODO these two variables track the same thing, fix it
+        self.get_logger().info("Entered convertLatLonToXY")
         self.active_waypoint = (x, y)
         self.end_goal_waypoint = (x, y)
-        self.get_logger().info(
-            """colorStr(
-                f"New lat/lon goal received: lat={lat:.6f}, lon={lon:.6f} => (x={x:.2f}, y={y:.2f})",
-                ColorCodes.BLUE_OK,
-            )"""
-        )
+        # self.get_logger().info(
+        #   colorStr(
+        #       f"New lat/lon goal received: lat={lat:.6f}, lon={lon:.6f} => (x={x:.2f}, y={y:.2f})",
+        #       ColorCodes.BLUE_OK,
+        #   )
+        # )
 
     def odomCallback(self, msg: Odometry) -> None:
+        self.get_logger().info("Entered odomCallback")
         """
         Updates self.current_position and self.current_yaw from odometry.
         """
@@ -187,118 +190,75 @@ class NavigationNode(Node):
         self.current_yaw = self.quaternion_to_yaw(q.x, q.y, q.z, q.w)
 
     def costmap_callback(self, msg: OccupancyGrid) -> None:
-        self.get_logger().info(f"Received costmap: {msg.info.width} x {msg.info.height}")
-        self.get_logger().info(f"Resolution: {msg.info.resolution}")
+        self.get_logger().info("Entered costmap_callback")
+        # self.get_logger().info(f"Received costmap: {msg.info.width} x {msg.info.height}")
         self.global_costmap = msg
-        self.end_goal_index = self.position_to_index(self.global_costmap, self.end_goal_waypoint)
-        self.get_logger().info(
-            f"occupancy grid has an origin of {self.global_costmap.info.origin.position.x},{self.global_costmap.info.origin.position.y}"
-        )
-        self.get_logger().info(f"resolution: {self.global_costmap.info.resolution}")
+        # self.get_logger().info(
+        # f"occupancy grid has an origin of {self.global_costmap.info.origin.position.x},{self.global_costmap.info.origin.position.y}"
+        # )
         # check first 10 cells
         print(msg.data[:10])
 
     # ----------------------
     #   Main Navigation Logic
     # ----------------------
-    # updateNavigation publishes the current navigation status and runs the path planner if and only if the proper data has been provided and a path has not been planned
     def updateNavigation(self) -> None:
+        self.get_logger().info("Entered updateNavigation")
         # If anchor not received, publish status but do not navigate
-        if not self.anchor_received:
-            self.get_logger().info("anchor not received, creating fake navigation data for testing")
-            # self.publishStatus("No anchor received; Navigation Stopped.")
-            # return
+        # if not self.anchor_received:
+        # self.get_logger().info("anchor not received, creating fake navigation data for testing")
+        # self.publishStatus("No anchor received; Navigation Stopped.")
+        # return
+
         # If no active waypoint
         if self.active_waypoint is None:
-            # Plan a set of waypoints using a queue
-            self.get_logger().info("No active waypoint, setting a default one for testing")
-
-            if len(self.path.poses) > 0:
-                path_length: int = max(len(self.path.poses) - 1, 0)
-                self.active_waypoint = (
-                    # self.path.poses[path_length].pose.position.x,
-                    self.path.poses[0].pose.position.x,
-                    # self.path.poses[path_length].pose.position.y,
-                    self.path.poses[0].pose.position.y,
-                )
-                return
+            self.active_waypoint = (2, 2)
+            self.end_goal_waypoint = (2, 2)
             # self.publishStatus("No waypoint provided; Navigation Stopped.")
             # return
 
         # Compute distance to the waypoint
         goal_x, goal_y = self.active_waypoint
-        self.get_logger().info(f"Goal X: {goal_x}, Goal Y: {goal_y}")
         dist_to_goal = self.distance_2d(
             self.current_position[0], self.current_position[1], goal_x, goal_y
         )
-
-        pos_msg = Pose2D()
-        pos_msg.x = self.current_position[0]
-        pos_msg.y = self.current_position[1]
-        pos_msg.theta = self.current_yaw
-        self.pos_pub.publish(pos_msg)
 
         if dist_to_goal < self.reached_threshold:
             # Reached => Publish success, clear waypoint
             self.publishStatus(f"Successfully reached waypoint ({goal_x:.2f}, {goal_y:.2f})")
             self.active_waypoint = None
             return
-        elif self.global_costmap != None and len(self.path.poses) == 0:
-            self.get_logger().warn("Running test")
+        elif self.global_costmap != None:
             self.planPath(self.global_costmap)
-            self.get_logger().info(f"total indices queried: {self.index_count}")
-            return
         self.publishStatus(f"En route to waypoint ({goal_x:.2f}, {goal_y:.2f})")
         self.publishFeedback(goal_x, goal_y)
-
-    def test_via_fire(self, grid: OccupancyGrid) -> None:
-        # this is a test function that "fires" in a stright line on the occupancy grid
-        # to use this function, throw a bunch of boxes in front of the camera, and esnure that it shows up on the costmap as blocked
-        # if the translation functions are working, it should give you cost values that line up with the map
-        length = 1
-        starting_index = self.position_to_index(grid, (0.0, 0.0))  #
-        self.get_logger().info(f"plotting point beginning at index  {starting_index} at 0,0")
-        counter = int(length / grid.info.resolution)
-        for i in range(0, counter):
-            index = starting_index + (i)  # increasing the width takes you directly to the left
-            x, y = self.index_to_position(grid, index)  #
-            # self.append_path((x, y))
-            # going forwards by one row brings me to the left
-            self.get_logger().info(
-                f"index  {index} has a value of {grid.data[index]} and a position of {x},{y}"
-            )
 
     def planPath(
         self,
         grid: OccupancyGrid,
     ) -> None:
+        self.get_logger().info("Entered planPath")
         """
         This algorithm looks at the global occupancy grid in order to plan a path through it for the rover using an A* style search algorithm.
         """
+        # gather points within a certain radius
+        search_radius: int = 2
         lowest_cost_position = self.current_position
-        previous_position = lowest_cost_position
         distance_to_goal = self.distance_2d(
             lowest_cost_position[0],
             lowest_cost_position[1],
             self.end_goal_waypoint[0],
             self.end_goal_waypoint[1],
         )
-        while distance_to_goal > 0.2:
-            target_area = self.collect_adjacent(
-                grid, self.position_to_index(grid, lowest_cost_position)
+        while distance_to_goal > 2:
+            # self.get_logger().info(
+            # f"position {lowest_cost_position[0]}, {lowest_cost_position[1]} is {distance_to_goal} meters away from the goal"
+            # )
+            target_area = self.collect_area(
+                grid, self.position_to_index(grid, lowest_cost_position), search_radius
             )
-            if len(target_area) == 0:
-                # we have found no suitable indicies
-                # pop the current position from the path
-                self.get_logger.info(f"backtracking")
-                self.path.poses.pop()
-                # make the new lowest position the item at the top of the stack
-                lowest_cost_position = self.path.poses[-1]
-                # continue loop to avoid find lowest cost node
-                continue
+            lowest_cost_position = self.find_lowest_cost_node(target_area, grid)
 
-            lowest_cost_node = self.find_lowest_cost_node(target_area, grid)
-            lowest_cost_position = self.index_to_position(grid, lowest_cost_node)
             self.append_path(lowest_cost_position)
             distance_to_goal = self.distance_2d(
                 lowest_cost_position[0],
@@ -306,90 +266,88 @@ class NavigationNode(Node):
                 self.end_goal_waypoint[0],
                 self.end_goal_waypoint[1],
             )
-        self.get_logger().info(f"plotted to goal successfully")
         self.path_pub.publish(self.path)
 
-    def find_lowest_cost_node(self, target_area: list[Tuple[int, int]], grid: OccupancyGrid) -> int:
-        self.get_logger().info(f"target area is this large: {len(target_area)}")
-        minimum_cost = sys.float_info.max
+    def find_lowest_cost_node(
+        self, target_area: list[Tuple[int, int]], grid: OccupancyGrid
+    ) -> Tuple[float, float]:
+        self.get_logger().info("Entered find_lowest_cost_node")
+        self.get_logger().info(f"target are has {len(target_area)} points")
+        minimum_cost = 100.0
+        minimum_position: Tuple[float, float] = (
+            self.current_position
+        )  # the lowest cost position (AKA the position we will add next)
         for item in target_area:
-            item_cost = self.distance_between_indicies(grid, item[1], self.end_goal_index)
+            item_position = self.index_to_position(
+                grid, item[1]
+            )  # the x,y position of a point currently in the target area
+            item_cost = item[0] + self.distance_2d(
+                item_position[0],
+                item_position[1],
+                self.end_goal_waypoint[0],
+                self.end_goal_waypoint[1],
+            )  # item cost is the cost from the occupancy grid (item[1]) + distance to the goal
             if item_cost < minimum_cost and item_cost != 100 and item_cost != -1:
+                minimum_position = item_position
                 minimum_cost = item_cost
-                minimum_index = item[1]
+            if item_cost == -1:
+                self.publishStatus(
+                    f"position ({item_position[0]:.2f}, {item_position[1]:.2f}) has been chosen as unknown)"
+                )
 
-        return minimum_index
+        return minimum_position
 
     def append_path(self, new_pose: Tuple[float, float]) -> None:
-
+        self.get_logger().info("Entered append_path")
         self.path.header.frame_id = "map"
         pose = PoseStamped()
         pose.header.frame_id = "map"
         pose.pose.position.x = new_pose[0]
         pose.pose.position.y = new_pose[1]
         pose.pose.orientation.w = 1.0
-        self.get_logger().info(f"adding position {new_pose[0]} x {new_pose[1]}")
+        # self.get_logger().info(f"adding position {new_pose[0]} x {new_pose[1]}")
         self.path.poses.append(pose)
 
-    def distance_between_indicies(self, grid: OccupancyGrid, ind1: int, ind2: int) -> float:
-        # distance = distance in sqrt((row_distance)^2+(collumn_distance)^2)
-        row1 = ind1 // grid.info.width
-        col1 = ind1 % grid.info.width
-        row2 = ind2 // grid.info.width
-        col2 = ind2 % grid.info.width
-        distance = math.sqrt((row1 - row2) ** 2 + (col1 - col2) ** 2)
-        return distance
+    def collect_area(
+        self, grid: OccupancyGrid, current_index: int, radius: int
+    ) -> list[Tuple[int, int]]:
+        self.get_logger().info("collecting radius")
+        points_in_radius: list[Tuple[int, int]] = []
+        row_width = grid.info.width
+        num_rows = int(radius / grid.info.resolution)
+        starting_index = int(
+            current_index - ((grid.info.width * (radius / 2) / grid.info.resolution))
+        )
+        ending_index = int(
+            current_index + ((grid.info.width * (radius / 2) / grid.info.resolution))
+        )
+        for i in range(0, num_rows):
+            for j in range(0, row_width):
+                index = int(starting_index + (i * row_width) + j)
+                if index < len(grid.data) and index >= 0:
+                    data = int(grid.data[index])
+                    points_in_radius.append((data, index))
+        return points_in_radius
 
-    # This function collect all indicies adjacent to the index given, and only collects them if they are unoccupied and unvisited
-    def collect_adjacent(self, grid: OccupancyGrid, current_index: int) -> list[Tuple[int, int]]:
-        adjacent_points: list[Tuple[int, int]] = []
-        grid.data[current_index] = 50
-        self.index_count = self.index_count + 4
-        if grid.data[current_index - 1] != 100 and grid.data[current_index - 1] != 50:
-            adjacent_points.append((grid.data[current_index - 1], current_index - 1))
-        if grid.data[current_index + 1] != 100 and grid.data[current_index + 1] != 50:
-            adjacent_points.append((grid.data[current_index + 1], current_index + 1))
-        if (
-            grid.data[current_index - grid.info.width] != 100
-            and grid.data[current_index - grid.info.width] != 50
-        ):
-            adjacent_points.append(
-                (grid.data[current_index - grid.info.width], current_index - grid.info.width)
-            )
-        if (
-            grid.data[current_index + grid.info.width] != 100
-            and grid.data[current_index + grid.info.width] != 50
-        ):
-            adjacent_points.append(
-                (grid.data[current_index + grid.info.width], current_index + grid.info.width)
-            )
-        return adjacent_points
-
-    # Converts from map fram position to costmap index
-    def position_to_index(self, grid: OccupancyGrid, position: Tuple[float, float]) -> int:
+    def position_to_index(self, grid: OccupancyGrid, current_position: Tuple[float, float]) -> int:
         # this function takes in the occupancy grid and an index within in it, and returns the map coordinates of that point
-        # for testing, i have swapped the row and column variables (10/28/2025)
-        x, y = position
-        col = int(
-            (x - grid.info.origin.position.x) / grid.info.resolution
-        )  # the number of cells forward
-        row = int(
-            (y - grid.info.origin.position.y) / grid.info.resolution
-        )  # the number of cells side to side
-        current_index = int((row * grid.info.width) + col)
-        if current_index > len(grid.data):
-            self.get_logger().warn(f"the position  {x}, {y} is outside the occupancy grid")
+        self.get_logger().info("Entered position_to_index")
+        row = (current_position[1] - grid.info.origin.position.y) / grid.info.resolution
+        column = (current_position[0] - grid.info.origin.position.x) / grid.info.resolution
+        current_index = int((row * grid.info.width) + column)
         return current_index
 
     def index_to_position(self, grid: OccupancyGrid, target_index: int) -> Tuple[float, float]:
-        x_grid = target_index % grid.info.width  # the number of rows we have gone up or down
-        y_grid = target_index // grid.info.width
-        x_position = grid.info.origin.position.x + (x_grid + 0.5) * grid.info.resolution
-        y_position = grid.info.origin.position.y + (y_grid + 0.5) * grid.info.resolution
+        self.get_logger().info("Entered index_to_position")
+        row = target_index // grid.info.width
+        col = target_index % grid.info.width
+        x_position = grid.info.origin.position.x + (col) * grid.info.resolution
+        y_position = grid.info.origin.position.y + (row) * grid.info.resolution
         # self.get_logger().info(f"index {target_index} has a position of {x_position},{y_position}")
         return (x_position, y_position)
 
     def turnTowardGoal(self, goal_Location: Tuple[float, float]) -> None:
+        self.get_logger().info("Entered turnTowardGoal")
         a = self.distance_2d(
             self.current_position[0], self.current_position[1], goal_Location[0], goal_Location[1]
         )
@@ -405,10 +363,12 @@ class NavigationNode(Node):
     #   Publishing Helpers
     # ----------------------
     def publishStatus(self, msg: str) -> None:
+        self.get_logger().info("Entered publishStatus")
         self.status_pub.publish(String(data=msg))
         # self.get_logger().info(colorStr(msg, ColorCodes.GREEN_OK))
 
     def publishFeedback(self, gx: float, gy: float) -> None:
+        self.get_logger().info("Entered publishFeedback")
         dx = gx - self.current_position[0]
         dy = gy - self.current_position[1]
         desired_yaw = math.atan2(dy, dx)
@@ -424,6 +384,7 @@ class NavigationNode(Node):
     #   Coordinate Conversion
     # ----------------------
     def convertLatLonToXY(self, lat: float, lon: float) -> Tuple[float, float]:
+        self.get_logger().info("Entered convertLatLonToXY")
         lat_r = math.radians(lat)
         lon_r = math.radians(lon)
         ref_lat_r = math.radians(self.ref_lat)
@@ -460,10 +421,15 @@ def main(args: list[str] | None = None) -> None:
     node = NavigationNode()
     try:
         rclpy.spin(node)
-    except Exception as e:
-        node.get_logger().error(f"Exception during spin: {e}")
-    # except ExternalShutdownException:
-    # node.get_logger().info(colorStr("External shutdown request received", ColorCodes.BLUE_OK))
+    except BaseException as e:
+        import traceback
+
+        error_msg = f"Exception during spin: {traceback.format_exc()}"
+        print(error_msg)  # Print to stdout for visibility
+        try:
+            node.get_logger().error(error_msg)
+        except:
+            print("Failed to log error")
     finally:
         node.destroy_node()
         rclpy.shutdown()
