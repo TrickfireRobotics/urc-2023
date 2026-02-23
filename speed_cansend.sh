@@ -4,6 +4,9 @@
 START_CMD="8800000000000000"
 CLEAR_CMD="9B00000000000000"
 SPEED_CMD="A200000000000000"
+modprobe can
+modprobe can_raw
+modprobe mttcan
 sudo ip link set can0 down
 sudo ip link set can0 type can bitrate 1000000
 sudo ip link set can0 up
