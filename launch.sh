@@ -4,8 +4,7 @@ source /opt/ros/$ROS_DISTRO/setup.bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$SCRIPT_DIR/install/setup.bash"
 
-./setup_zed_dependencies.sh
-
+chmod +x ./speed_cansend.sh
 ./speed_cansend.sh
 
 # Launch octomap server
