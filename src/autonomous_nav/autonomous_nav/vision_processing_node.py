@@ -1,4 +1,4 @@
-#!/home/trickfire/autonomous-nav-vision/urc-2023/my_venv
+#!/home/trickfire/autonomous-nav-vision/urc-2023/my_venv/bin/python3
 #use virtual enviroment
 import struct
 import sys
@@ -56,10 +56,10 @@ class VisionProcessingNode(Node):
         #use cpu or gpu
         self.get_logger().info(colorStr("Torch Version:"+torch.__version__, ColorCodes.BLUE_OK))
         self.get_logger().info(colorStr("Torch Version Cuda:"+torch.version.cuda, ColorCodes.BLUE_OK))
-        self.get_logger().info(colorStr("CUDA Available:"+torch.cuda.is_available(), ColorCodes.BLUE_OK))
+        self.get_logger().info(colorStr("CUDA Available:"+str(torch.cuda.is_available()), ColorCodes.BLUE_OK))
         # Get GPU details
         if torch.cuda.is_available():
-            self.get_logger().info(colorStr("GPU Name:", torch.cuda.get_device_name(0), ColorCodes.GREEN_OK))
+            self.get_logger().info(colorStr("GPU Name:"+str(torch.cuda.get_device_name(0)), ColorCodes.GREEN_OK))
             self.model.to("cuda")
         else:
             self.get_logger().info(colorStr("GPU Unavailable, switching to cpu", ColorCodes.WARNING_YELLOW))
