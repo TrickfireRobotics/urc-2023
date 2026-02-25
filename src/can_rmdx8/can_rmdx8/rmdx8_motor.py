@@ -61,6 +61,8 @@ class RMDx8Motor:
             self.dataInCallback,
             10,
         )
+        logger = self._ros_node.get_logger()
+        logger.info(f"Creating RMDx8 Subscriber on topic: {topic_name}")
         return subscriber
 
     # create a publisher
