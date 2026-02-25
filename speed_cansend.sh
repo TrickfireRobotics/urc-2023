@@ -5,9 +5,9 @@ START_CMD="8800000000000000"
 CLEAR_CMD="9B00000000000000"
 SPEED_CMD="A200000000000000"
 #Ensure driver dependencies are laoded
-modprobe can
-modprobe can_raw
-modprobe mttcan
+sudo modprobe can
+sudo modprobe can_raw
+sudo modprobe mttcan
 #Set up the CAN interface
 sudo ip link set can0 down
 sudo ip link set can0 type can bitrate 1000000
