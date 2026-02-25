@@ -1,3 +1,5 @@
+#!/home/trickfire/autonomous-nav-vision/urc-2023/my_venv
+#use virtual enviroment
 import struct
 import sys
 from typing import Optional
