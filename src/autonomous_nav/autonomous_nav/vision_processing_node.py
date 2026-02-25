@@ -170,7 +170,7 @@ class VisionProcessingNode(Node):
         Basic ArUco marker detection with pose estimation
         """
         if self.camera_matrix is None or self.dist_coeffs is None:
-            self.get_logger().warning("Camera intrinsics not received yet. Skipping frame.")
+            self.get_logger().warn("Camera intrinsics not received yet. Skipping frame.")
             return
 
         #cv_image isn't defined so I will assume it is mislabled frame
