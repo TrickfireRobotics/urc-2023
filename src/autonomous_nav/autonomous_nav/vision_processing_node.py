@@ -5,6 +5,7 @@ from typing import Optional
 import cv2  # pylint: disable=no-member
 import numpy as np
 import rclpy
+import torch #for switching to cpu
 from cv2 import aruco
 from cv_bridge import CvBridge
 #from octomap_msgs.msg import Octomap as OctomapMsg
@@ -16,7 +17,7 @@ from geometry_msgs.msg import Vector3
 
 #defined in src\custom_interfaces\msg\Aruco.msg
 from custom_interfaces.msg import Aruco
-
+from lib.color_codes import ColorCodes, colorStr
 # Install: pip install "ultralytics>=8.1.0" "torch>=1.8"
 from ultralytics import YOLO
 #from visualization_msgs.msg import MarkerArray
@@ -31,8 +32,7 @@ class VisionProcessingNode(Node):
     def __init__(self) -> None:
         super().__init__("vision_processing_node")
 
-        self.get_logger().info("Initializing vision_processing_node...")
-
+        self.get_logger().info(colorStr("Initializing vision_processing_node...", ColorCodes.BLUE_OK))
         self.bridge = CvBridge()
         self.camera_matrix: Optional[np.ndarray] = None
         self.dist_coeffs: Optional[np.ndarray] = None
@@ -44,14 +44,25 @@ class VisionProcessingNode(Node):
             self.model = YOLO("yoloe-26x-seg.pt")
             self.model.set_classes(["mallet","rockhammer","hammer", "bottle"])
             #self.get_logger().info("Trained YOLO World model loaded successfully.")
-            self.get_logger().info("YOLO 26.l model loaded successfully.")
+            self.get_logger().info(colorStr("YOLO 26.l model loaded successfully.", ColorCodes.BLUE_OK))
         except:
+            self.get_logger().info(colorStr("Could not find new yolo model (yolo26l.pt), falling back on default model (yolov8l-world.pt)"+torch.__version__, ColorCodes.WARNING_YELLOW))
             self.model = YOLO("yolov8l-world.pt")
-            self.get_logger.warning("Could not find new yolo model (yolo26l.pt), falling back on default model (yolov8l-world.pt)")
-            self.get_logger().info("Default YOLO World model loaded successfully.")
+            self.get_logger().info(colorStr("Default YOLO World model loaded successfully.", ColorCodes.BLUE_OK))
+            
 
-        #use cpu
-        self.model.to("cpu")
+        #use cpu or gpu
+        self.get_logger().info(colorStr("Torch Version:"+torch.__version__, ColorCodes.BLUE_OK))
+        self.get_logger().info(colorStr("Torch Version Cuda:"+torch.version.cuda, ColorCodes.BLUE_OK))
+        self.get_logger().info(colorStr("CUDA Available:"+torch.cuda.is_available(), ColorCodes.BLUE_OK))
+        # Get GPU details
+        if torch.cuda.is_available():
+            self.get_logger().info(colorStr("GPU Name:", torch.cuda.get_device_name(0), ColorCodes.GREEN_OK))
+            self.model.to("cuda")
+        else:
+            self.get_logger().info(colorStr("GPU Unavailable, switching to cpu", ColorCodes.WARNING_YELLOW))
+            self.model.to("cpu")
+            self.get_logger().info(colorStr("Running on cpu", ColorCodes.BLUE_OK))
 
         self.camera_frame_id = "zed_camera_frame"
         self.map_frame_id = "map"
@@ -173,7 +184,7 @@ class VisionProcessingNode(Node):
         Basic ArUco marker detection with pose estimation
         """
         if self.camera_matrix is None or self.dist_coeffs is None:
-            self.get_logger().warn("Camera intrinsics not received yet. Skipping frame.")
+            self.get_logger().info(colorStr("Camera intrinsics not received yet. Skipping frame.", ColorCodes.WARNING_YELLOW))
             return
 
         #cv_image isn't defined so I will assume it is mislabled frame
