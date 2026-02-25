@@ -40,7 +40,9 @@ class VisionProcessingNode(Node):
         # Load YOLO World model
         try:
             #"yolo26x.pt" for more accuracy, if l isn't good enough
-            self.model = YOLO("yolo26l.pt")
+            #curl -L -o yoloe-26x-seg.pt https://github.com/ultralytics/assets/releases/download/v8.4.0/yoloe-26x-seg.pt
+            self.model = YOLO("yoloe-26x-seg.pt")
+            self.model.set_classes(["mallet","rockhammer","hammer", "bottle"])
             #self.get_logger().info("Trained YOLO World model loaded successfully.")
             self.get_logger().info("YOLO 26.l model loaded successfully.")
         except:
