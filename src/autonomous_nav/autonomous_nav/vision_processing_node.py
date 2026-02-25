@@ -50,6 +50,9 @@ class VisionProcessingNode(Node):
             self.get_logger.warning("Could not find new yolo model (yolo26l.pt), falling back on default model (yolov8l-world.pt)")
             self.get_logger().info("Default YOLO World model loaded successfully.")
 
+        #use cpu
+        self.model.to("cpu")
+
         self.camera_frame_id = "zed_camera_frame"
         self.map_frame_id = "map"
         
