@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 # This script should run when you launch the robot. It loads the CAN driver dependencies, sets up the CAN interface, and sends the necessary commands to the motors to enable speed mode.
 START_CMD="8800000000000000"
 CLEAR_CMD="9B00000000000000"
