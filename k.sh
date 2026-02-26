@@ -1,0 +1,8 @@
+#stop all the motors via cansend
+cansend can0 155#A200000000000000
+cansend can0 156#A200000000000000
+cansend can0 157#A200000000000000
+cansend can0 158#A200000000000000
+cansend can0 159#A200000000000000
+cansend can0 15A#A200000000000000
+
