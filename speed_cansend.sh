@@ -11,9 +11,9 @@ sudo modprobe can_raw
 sudo modprobe mttcan
 
 # Set up the CAN interface
-#sudo ip link set can0 down
-#sudo ip link set can0 type can bitrate 1000000
-#sudo ip link set can0 up
+sudo ip link set can0 down
+sudo ip link set can0 type can bitrate 1000000
+sudo ip link set can0 up
 echo "CAN interface can0 set up successfully."
 
 # Motor CAN IDs (hexadecimal)
