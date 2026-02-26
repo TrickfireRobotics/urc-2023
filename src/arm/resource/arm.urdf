@@ -116,48 +116,4 @@
 		</visual>	
 	</link>
 
-
-    <!-- Wrist updown joint -->
-    <joint name="wrist_y_joint" type="revolute">
-      <parent link="forearm"/>
-      <child link="wristbone"/>
-      <origin xyz="-0.304 0 0" rpy="0 0 0" />
-      <axis xyz="0 1 0"/>
-      <limit velocity="1" effort="1" lower="-1" upper="1" />
-    </joint>
-
-    <link name="wristbone">
-		<visual>
-          <origin xyz="-0.015 0 0" rpy="0 0 0" />
-          	<geometry>
-            	<box size="0.03 0.02 0.02" />
-			</geometry>
-            <material name="Yellow">
-            <color rgba="1 1 0 1"/>
-          </material>
-		</visual>	
-	</link>
-
-        <!-- Wrist rotate joint -->
-    <joint name="wrist_x_joint" type="revolute">
-      <parent link="wristbone"/>
-      <child link="hand"/>
-      <origin xyz="-0.03 0 0" rpy="0 3 0" />
-      <axis xyz="1 0 0"/>
-      <limit velocity="1" effort="1" lower="-3.14" upper="3.14" />
-    </joint>
-
-
-    <link name="hand">
-		<visual>
-          <origin xyz="0.02 0 0" rpy="0 0 0" />
-          	<geometry>
-            	<box size="0.04 0.06 0.05" />
-			</geometry>
-            <material name="Red">
-            <color rgba="1 0 0 1"/>
-          </material>
-		</visual>	
-	</link>
-
 </robot>
