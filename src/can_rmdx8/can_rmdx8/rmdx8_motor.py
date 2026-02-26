@@ -134,7 +134,7 @@ class RMDx8Motor:
                 if _checkValid(run_settings.velocity):
                     # Velocity is 0.01 dps
                     try:
-                        self.sleep(
+                        time.sleep(
                             0.01
                         )  # Sleep for 10 ms to prevent CAN overload. This is a band-aid solution and should be fixed in the future by implementing a better message queue system
                         self.motor.sendVelocitySetpoint(run_settings.velocity * DEGREE_TO_REV * 100)
