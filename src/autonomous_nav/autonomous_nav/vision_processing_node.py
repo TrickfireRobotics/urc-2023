@@ -58,6 +58,11 @@ class VisionProcessingNode(Node):
         self.get_logger().info(colorStr("Torch Version Cuda:"+torch.version.cuda, ColorCodes.BLUE_OK))
         self.get_logger().info(colorStr("CUDA Available:"+str(torch.cuda.is_available()), ColorCodes.BLUE_OK))
         # Get GPU details
+        #disable gpu for current tests
+        self.get_logger().info(colorStr("GPU Unavailable, switching to cpu", ColorCodes.WARNING_YELLOW))
+        self.model.to("cpu")
+        self.get_logger().info(colorStr("Running on cpu", ColorCodes.BLUE_OK))
+        '''
         if torch.cuda.is_available():
             self.get_logger().info(colorStr("GPU Name:"+str(torch.cuda.get_device_name(0)), ColorCodes.GREEN_OK))
             self.model.to("cuda")
@@ -65,7 +70,7 @@ class VisionProcessingNode(Node):
             self.get_logger().info(colorStr("GPU Unavailable, switching to cpu", ColorCodes.WARNING_YELLOW))
             self.model.to("cpu")
             self.get_logger().info(colorStr("Running on cpu", ColorCodes.BLUE_OK))
-
+        '''
         self.camera_frame_id = "zed_camera_frame"
         self.map_frame_id = "map"
         
