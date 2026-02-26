@@ -18,7 +18,7 @@ sudo modprobe mttcan
 echo "CAN interface can0 set up successfully."
 
 # Motor CAN IDs (hexadecimal)
-MOTOR_IDS=("15" "16" "17" "18" "19" "1A")  # 21->0x15 ... 26->0x1A
+MOTOR_IDS=("155" "156" "157" "158" "159" "15A")  
 
 # Enable motors in speed mode
 for CAN_ID in "${MOTOR_IDS[@]}"; do
