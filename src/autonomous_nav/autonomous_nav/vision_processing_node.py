@@ -1,5 +1,5 @@
 #!/home/trickfire/autonomous-nav-vision/urc-2023/my_venv/bin/python3
-#use virtual enviroment
+# use virtual enviroment
 import struct
 import sys
 from typing import Optional
@@ -7,22 +7,28 @@ from typing import Optional
 import cv2  # pylint: disable=no-member
 import numpy as np
 import rclpy
-import torch #for switching to cpu
+import torch  # for switching to cpu
 from cv2 import aruco
 from cv_bridge import CvBridge
-#from octomap_msgs.msg import Octomap as OctomapMsg
-from rclpy.node import Node
-#from rclpy.time import Time
-from sensor_msgs.msg import CameraInfo, Image#, PointCloud2, PointField
-#from std_msgs.msg import Bool, Float32MultiArray, Header
+
+# from std_msgs.msg import Bool, Float32MultiArray, Header
 from geometry_msgs.msg import Vector3
 
-#defined in src\custom_interfaces\msg\Aruco.msg
-from custom_interfaces.msg import Aruco
-from lib.color_codes import ColorCodes, colorStr
+# from octomap_msgs.msg import Octomap as OctomapMsg
+from rclpy.node import Node
+
+# from rclpy.time import Time
+from sensor_msgs.msg import CameraInfo, Image  # , PointCloud2, PointField
+
 # Install: pip install "ultralytics>=8.1.0" "torch>=1.8"
 from ultralytics import YOLO
-#from visualization_msgs.msg import MarkerArray
+
+# defined in src\custom_interfaces\msg\Aruco.msg
+from custom_interfaces.msg import Aruco
+from lib.color_codes import ColorCodes, colorStr
+
+# from visualization_msgs.msg import MarkerArray
+
 
 class VisionProcessingNode(Node):
     """
@@ -34,35 +40,52 @@ class VisionProcessingNode(Node):
     def __init__(self) -> None:
         super().__init__("vision_processing_node")
 
-        self.get_logger().info(colorStr("Initializing vision_processing_node...", ColorCodes.BLUE_OK))
+        self.get_logger().info(
+            colorStr("Initializing vision_processing_node...", ColorCodes.BLUE_OK)
+        )
         self.bridge = CvBridge()
         self.camera_matrix: Optional[np.ndarray] = None
         self.dist_coeffs: Optional[np.ndarray] = None
 
         # Load YOLO World model
         try:
-            #"yolo26x.pt" for more accuracy, if l isn't good enough
-            #curl -L -o yoloe-26x-seg.pt https://github.com/ultralytics/assets/releases/download/v8.4.0/yoloe-26x-seg.pt
+            # "yolo26x.pt" for more accuracy, if l isn't good enough
+            # curl -L -o yoloe-26x-seg.pt https://github.com/ultralytics/assets/releases/download/v8.4.0/yoloe-26x-seg.pt
             self.model = YOLO("yoloe-26x-seg.pt")
-            self.model.set_classes(["mallet","rockhammer","hammer", "bottle"])
-            #self.get_logger().info("Trained YOLO World model loaded successfully.")
-            self.get_logger().info(colorStr("YOLO 26.l model loaded successfully.", ColorCodes.BLUE_OK))
+            self.model.set_classes(["mallet", "rockhammer", "hammer", "bottle"])
+            # self.get_logger().info("Trained YOLO World model loaded successfully.")
+            self.get_logger().info(
+                colorStr("YOLO 26.l model loaded successfully.", ColorCodes.BLUE_OK)
+            )
         except:
-            self.get_logger().info(colorStr("Could not find new yolo model (yolo26l.pt), falling back on default model (yolov8l-world.pt)"+torch.__version__, ColorCodes.WARNING_YELLOW))
+            self.get_logger().info(
+                colorStr(
+                    "Could not find new yolo model (yolo26l.pt), falling back on default model (yolov8l-world.pt)"
+                    + torch.__version__,
+                    ColorCodes.WARNING_YELLOW,
+                )
+            )
             self.model = YOLO("yolov8l-world.pt")
-            self.get_logger().info(colorStr("Default YOLO World model loaded successfully.", ColorCodes.BLUE_OK))
-            
+            self.get_logger().info(
+                colorStr("Default YOLO World model loaded successfully.", ColorCodes.BLUE_OK)
+            )
 
-        #use cpu or gpu
-        self.get_logger().info(colorStr("Torch Version:"+torch.__version__, ColorCodes.BLUE_OK))
-        self.get_logger().info(colorStr("Torch Version Cuda:"+torch.version.cuda, ColorCodes.BLUE_OK))
-        self.get_logger().info(colorStr("CUDA Available:"+str(torch.cuda.is_available()), ColorCodes.BLUE_OK))
+        # use cpu or gpu
+        self.get_logger().info(colorStr("Torch Version:" + torch.__version__, ColorCodes.BLUE_OK))
+        self.get_logger().info(
+            colorStr("Torch Version Cuda:" + torch.version.cuda, ColorCodes.BLUE_OK)
+        )
+        self.get_logger().info(
+            colorStr("CUDA Available:" + str(torch.cuda.is_available()), ColorCodes.BLUE_OK)
+        )
         # Get GPU details
-        #disable gpu for current tests
-        self.get_logger().info(colorStr("GPU Unavailable, switching to cpu", ColorCodes.WARNING_YELLOW))
+        # disable gpu for current tests
+        self.get_logger().info(
+            colorStr("GPU Unavailable, switching to cpu", ColorCodes.WARNING_YELLOW)
+        )
         self.model.to("cpu")
         self.get_logger().info(colorStr("Running on cpu", ColorCodes.BLUE_OK))
-        '''
+        """
         if torch.cuda.is_available():
             self.get_logger().info(colorStr("GPU Name:"+str(torch.cuda.get_device_name(0)), ColorCodes.GREEN_OK))
             self.model.to("cuda")
@@ -70,12 +93,14 @@ class VisionProcessingNode(Node):
             self.get_logger().info(colorStr("GPU Unavailable, switching to cpu", ColorCodes.WARNING_YELLOW))
             self.model.to("cpu")
             self.get_logger().info(colorStr("Running on cpu", ColorCodes.BLUE_OK))
-        '''
+        """
         self.camera_frame_id = "zed_camera_frame"
         self.map_frame_id = "map"
-        
+
         # Aruco detector setup
-        self.aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250) #we only detect 6x6 markers
+        self.aruco_dict = aruco.getPredefinedDictionary(
+            aruco.DICT_6X6_250
+        )  # we only detect 6x6 markers
         self.aruco_params = aruco.DetectorParameters()
         self.aruco_detector = aruco.ArucoDetector(self.aruco_dict, self.aruco_params)
 
@@ -89,21 +114,14 @@ class VisionProcessingNode(Node):
         )
 
         # Publishers
-        self.object_detection_pub = self.create_publisher(
-            Image, "/object_detection_image", 10
-        )
+        self.object_detection_pub = self.create_publisher(Image, "/object_detection_image", 10)
 
-        self.aruco_detection_image_pub = self.create_publisher(
-            Image, "/aruco_detection_image", 10
-        )
-        
-        #emitted whenever we see a aruco marker
-        self.aruco_detection_pub = self.create_publisher(
-            Aruco, "/aruco_detection", 10
-        )
+        self.aruco_detection_image_pub = self.create_publisher(Image, "/aruco_detection_image", 10)
+
+        # emitted whenever we see a aruco marker
+        self.aruco_detection_pub = self.create_publisher(Aruco, "/aruco_detection", 10)
 
         self.get_logger().info("vision_processing_node is up and running.")
-
 
     # --------------------------------------------------------------------------
     #   processCameraInfo
@@ -111,7 +129,6 @@ class VisionProcessingNode(Node):
     def processCameraInfo(self, msg: CameraInfo) -> None:
         self.camera_matrix = np.array(msg.k, dtype=np.float64).reshape(3, 3)
         self.dist_coeffs = np.array(msg.d, dtype=np.float64)
-
 
     # --------------------------------------------------------------------------
     #   Combined callback
@@ -128,10 +145,11 @@ class VisionProcessingNode(Node):
             self.get_logger().error(f"Failed to convert image: {e}")
             return
         self.arucoMarkerDetection(frame)
-        
+
         # This resizes the frame for yolo, if its not accurate enough maybe increase the size
         resized = cv2.resize(frame, (640, 360), interpolation=cv2.INTER_AREA)
         self.yoloDetectionCallback(resized)
+
     # --------------------------------------------------------------------------
     #   YOLO World Object Detection
     # --------------------------------------------------------------------------
@@ -139,10 +157,10 @@ class VisionProcessingNode(Node):
         """
         Runs YOLO World detection on the camera feed.
         """
-        #we dont need to convert a ros2 Image to nparray with imgmsg_to_cv2 because this method accepts a np array from combined callback
-        #try:
+        # we dont need to convert a ros2 Image to nparray with imgmsg_to_cv2 because this method accepts a np array from combined callback
+        # try:
         #    frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-        #except Exception as e:
+        # except Exception as e:
         #    self.get_logger().error(f"Failed to convert image for YOLO World detection: {e}")
         #    return
         frame = msg
@@ -160,7 +178,7 @@ class VisionProcessingNode(Node):
             confidence = float(confidence)
 
             if confidence < 0.3:  # Adjust confidence threshold if needed
-                 continue
+                continue
 
             # Pick color
             color = (255, 255, 255) if label.lower() == "bottle" else (0, 165, 255)
@@ -173,16 +191,15 @@ class VisionProcessingNode(Node):
             )
 
         # Display result
-        #disp = cv2.resize(frame, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
-        #cv2.imshow("YOLO World Detection", disp)
-        #cv2.waitKey(1)
+        # disp = cv2.resize(frame, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
+        # cv2.imshow("YOLO World Detection", disp)
+        # cv2.waitKey(1)
 
-        #publish results to view with rviz
+        # publish results to view with rviz
         disp = cv2.resize(frame, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
         image_message = self.bridge.cv2_to_imgmsg(disp, "passthrough")
         self.object_detection_pub.publish(image_message)
 
-            
     # --------------------------------------------------------------------------
     #   ArUco Marker Detection
     # --------------------------------------------------------------------------
@@ -191,14 +208,17 @@ class VisionProcessingNode(Node):
         Basic ArUco marker detection with pose estimation
         """
         if self.camera_matrix is None or self.dist_coeffs is None:
-            self.get_logger().info(colorStr("Camera intrinsics not received yet. Skipping frame.", ColorCodes.WARNING_YELLOW))
+            self.get_logger().info(
+                colorStr(
+                    "Camera intrinsics not received yet. Skipping frame.", ColorCodes.WARNING_YELLOW
+                )
+            )
             return
 
-        #cv_image isn't defined so I will assume it is mislabled frame
+        # cv_image isn't defined so I will assume it is mislabled frame
         cv_image = frame
 
         gray_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
-
 
         corners, ids, _ = self.aruco_detector.detectMarkers(gray_image)
 
@@ -207,16 +227,18 @@ class VisionProcessingNode(Node):
 
         self.get_logger().info(f"Detected ArUco markers: {ids.flatten()}")
 
-        marker_length = 0.20 # Marker size in meters
+        marker_length = 0.20  # Marker size in meters
         half_size = marker_length / 2.0
 
-        obj_points = np.array([
-            [-half_size,  half_size, 0],
-            [ half_size,  half_size, 0],
-            [ half_size, -half_size, 0],
-            [-half_size, -half_size, 0],
-        ], dtype=np.float32)
-
+        obj_points = np.array(
+            [
+                [-half_size, half_size, 0],
+                [half_size, half_size, 0],
+                [half_size, -half_size, 0],
+                [-half_size, -half_size, 0],
+            ],
+            dtype=np.float32,
+        )
 
         for i, marker_id in enumerate(ids.flatten()):
             img_points = corners[i][0].astype(np.float32)
@@ -233,21 +255,21 @@ class VisionProcessingNode(Node):
                 continue
 
             tvec = tvec.reshape(3)
-            rvec  = rvec.reshape(3)
-                
+            rvec = rvec.reshape(3)
+
             distance = float(np.linalg.norm(tvec))
 
             self.get_logger().info(
                 f"Marker ID: {int(marker_id)}, Distance: {distance:.2f} m, tvec: {tvec}, rvec: {rvec}"
             )
 
-            #int, float, vec3, vec3
-            #emit the aruco marker id,distance,tvec,rvec
-            #tvec is transform vector aka position, rvec is rotation vector
+            # int, float, vec3, vec3
+            # emit the aruco marker id,distance,tvec,rvec
+            # tvec is transform vector aka position, rvec is rotation vector
 
             aruco_message = Aruco()
-            aruco_message.id = marker_id
-            aruco_message.distance = distance
+            aruco_message.id = np.int64(marker_id)
+            aruco_message.distance = np.float64(distance)
 
             tvec_out = Vector3()
             tvec_out.x = tvec[0]
@@ -263,17 +285,17 @@ class VisionProcessingNode(Node):
             aruco_message.rotation_vec = rvec_out
             self.aruco_detection_pub.publish(aruco_message)
 
-            #draw a axes showing the aruco marker detected
+            # draw a axes showing the aruco marker detected
             cv2.drawFrameAxes(
                 cv_image,
                 self.camera_matrix,
                 self.dist_coeffs,
                 rvec,
                 tvec,
-                marker_length /2.0,
+                marker_length / 2.0,
             )
-            
-        #return the finished image to rvis to see what aruco markers are being detected
+
+        # return the finished image to rvis to see what aruco markers are being detected
         image_message = self.bridge.cv2_to_imgmsg(cv_image, "passthrough")
         self.aruco_detection_image_pub.publish(image_message)
 
