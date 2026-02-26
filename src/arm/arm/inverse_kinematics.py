@@ -10,6 +10,7 @@ import threading
 import time
 from typing import Callable
 
+import can
 import roboticstoolbox as rtb
 import spatialgeometry as sg
 import spatialmath as sm
@@ -179,6 +180,19 @@ class InverseKinematics:
         self._interface.stopMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
         self._interface.stopMotor(MotorConfigs.ARM_SHOULDER_MOTOR)
         self._interface.stopMotor(MotorConfigs.ARM_ELBOW_MOTOR)
+
+        # give zero velocity to turntable motor
+        with can.Bus(interface="socketcan", channel="can0", receive_own_messages=True) as bus:
+            msg = can.Message(
+                arbitration_id=0x00000305,
+                data=[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+                is_extended_id=True,
+            )
+            try:
+                bus.send(msg)
+                self._ros_node.get_logger().info(f"Message sent on {bus.channel_info}")
+            except can.CanError:
+                self._ros_node.get_logger().info("Message NOT sent")
 
     def _createSub(
         self, delta: Callable[[float], sm.SE3], pre: bool = False
