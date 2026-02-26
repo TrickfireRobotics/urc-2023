@@ -19,12 +19,12 @@ def collect_keyboard_input() -> str:
 '''
 import json
 import threading
+from typing import Optional
 
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-from std_msgs.msg import Float32
-from typing import Optional
+from std_msgs.msg import Bool, Float32, String
 
 from lib.color_codes import ColorCodes, colorStr
 
@@ -36,19 +36,45 @@ class MessageHandlerNode(Node):
         with open("src/arm/arm/autonomous_arm/key_positions.json") as f:
             self.key_positions = json.load(f)
 
-        # ... existing code ...
-        self.user_message = None
+        # ===== PUBLISHERS =====
+
+        # Sends one character at a time to the motion planner
+        self.key_publisher = self.create_publisher(String, "/key_to_press", 10)
+
+        # Broadcasts typing status for the C2 station display
+        self.status_publisher = self.create_publisher(String, "/typing_status", 10)
+
+        # ===== SUBSCRIBERS =====
+
+        # Receives success/fail from the motion planner after each keypress
+        self.create_subscription(Bool, "/key_press_result", self.key_press_callback, 10)
+
+        # ===== STATE VARIABLES =====
+
+        self.user_message: Optional[str] = None
+        self.message_index: int = 0          # which character we're currently on
+        self.status: str = "Not Started"     # current lifecycle state
+        self.waiting_for_result: bool = False  # True while motion planner is pressing a key
 
         # Start input thread
         input_thread = threading.Thread(target=self.collect_user_input)
         input_thread.daemon = True
         input_thread.start()
 
+    def update_status(self, status: str) -> None:
+        """Update the typing state and publish it to /typing_status."""
+        self.status = status
+        msg = String()
+        msg.data = status
+        self.status_publisher.publish(msg)
+        self.get_logger().info(f"Typing status: {status}")
+
     def collect_user_input(self) -> None:
         """Collect user input in a separate thread"""
         try:
             self.user_message = input("Enter the message to type (3-6 characters): ")
             self.get_logger().info(f"Received message: {self.user_message}")
+            self.update_status("In Progress")
         except EOFError:
             self.get_logger().info("Input stream closed")
 
