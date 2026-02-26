@@ -24,6 +24,8 @@ RUN pip3 install moteus
 
 RUN pip3 install pyusb
 
+RUN pip3 install python-can
+
 RUN pip3 install scipy==1.11.0
 # Install inverse kinematics library https://github.com/Phylliade/ikpy 
 RUN pip3 install roboticstoolbox-python
