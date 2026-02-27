@@ -19,5 +19,6 @@ colcon build \
 colcon build \
     --symlink-install \
     --base-paths /home/trickfire/urc-2023\
+    --packages-ignore myactuator_rmd \
     --cmake-args \
         -DCMAKE_BUILD_TYPE=Debug
