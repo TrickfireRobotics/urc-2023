@@ -39,9 +39,9 @@ logging.basicConfig()
 class GoDirectNode(Node):
 
     def __init__(self) -> None:
-        self.avg_diff = 0.0
-        self.example_pub = self.create_publisher(float, "science_topic", 10)
-        self.example_pub_timer = self.create_timer(1.0, self.publish_data)
+        super().__init__("go_direct_node")
+        self.datapoint = 0.0
+        self.pub = self.create_publisher(float, "science_topic", 10)
 
     def collect_data(self) -> None:
         # The first USB device found will be used. If no USB devices are found, then
@@ -94,22 +94,25 @@ class GoDirectNode(Node):
                 total = 0
                 amt = sensors[0].values[0]
                 print(sensors[0].sensor_description + ": " + str(sensors[0].values))
+                self.datapoint = amt
                 sensors[0].clear()
 
             for i in range(1, length):
                 if device.read():
                     if stop_flag:
                         break
+                    self.pub_timer = self.create_timer(1.0, self.publish_data)
                     for sensor in sensors:
                         # The 'sensor.values' call returns a list of measurements. This list might contain
                         # one sensor value, or multiple sensor values (if fast sampling)
                         print(sensor.sensor_description + ": " + str(sensor.values))
                         total += abs(amt - sensor.values[0])
                         amt = sensor.values[0]
-                        self.publish_data(amt)
+                        self.datapoint = amt
                         sensor.clear()
             device.stop()
             device.close()
+            self.pub_timer.cancel()
             print("\nDisconnected from " + device.name)
             self.avg_diff = (total / (length / 2)) - baseline
             print("Avg diff: " + str(self.avg_diff))
@@ -119,8 +122,7 @@ class GoDirectNode(Node):
 
         godirect.quit()
 
-    def publish_data(self, datapoint: float = 0.0) -> None:
-        if self.avg_diff is not None:
-            msg = str(datapoint)
-            msg.data = str(self.avg_diff)
-            self.example_pub.publish(msg)
+    def publish_data(self) -> None:
+        msg = String()
+        msg.data = str(self.datapoint)
+        self.pub.publish(msg)
