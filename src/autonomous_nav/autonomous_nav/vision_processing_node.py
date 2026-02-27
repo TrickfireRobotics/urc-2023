@@ -63,7 +63,8 @@ class VisionProcessingNode(Node):
         try:
             # "yolo26x.pt" for more accuracy, if l isn't good enough
             # curl -L -o yoloe-26x-seg.pt https://github.com/ultralytics/assets/releases/download/v8.4.0/yoloe-26x-seg.pt
-            self.model = YOLO("yoloe-26x-seg.pt")
+            # tried hard coding path to yolo model
+            self.model = YOLO("/home/trickfire/autonomous-nav-vision-urc/urc-2023/yoloe-26x-seg.pt")
             self.model.set_classes(["mallet", "rockhammer", "hammer", "bottle"])
             # self.get_logger().info("Trained YOLO World model loaded successfully.")
             self.get_logger().info(
