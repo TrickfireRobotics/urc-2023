@@ -49,8 +49,17 @@ controller_server:
       short_circuit_trajectory_evaluation: True
       limit_vel_cmd_in_traj: False
       stateful: True
-      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
-      BaseObstacle.scale: 0.02
+      critics:
+        [
+          "RotateToGoal",
+          "Oscillation",
+          "BaseObstacle",
+          "GoalAlign",
+          "PathAlign",
+          "PathDist",
+          "GoalDist",
+        ]
+      BaseObstacle.scale: 0.2
       PathAlign.scale: 32.0
       GoalAlign.scale: 24.0
       PathAlign.forward_point_distance: 0.1
@@ -73,14 +82,9 @@ local_costmap:
       width: 3
       height: 3
       resolution: 0.05
-      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        map_topic: /projected_map
-        map_subscribe_transient_local: True
-        enabled: true
-        subscribe_to_updates: true
-        transform_tolerance: 0.1
+      #If_Break_Return
+      #plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      plugins: ["obstacle_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
@@ -93,9 +97,9 @@ local_costmap:
           clearing: true
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
+        #Return to 3.0 for better performance
+        cost_scaling_factor: 1.0
         inflation_radius: 0.55
-          
 
 global_costmap:
   global_costmap:
@@ -128,5 +132,3 @@ global_costmap:
         inflate_around_unknown: true
         always_send_full_costmap: True
         introspection_mode: "disabled"
-        
-
