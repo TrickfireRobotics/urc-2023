@@ -7,7 +7,7 @@ from typing import Optional
 import cv2  # pylint: disable=no-member
 import numpy as np
 import rclpy
-import torch  # for switching to cpu
+#import torch  # for switching to cpu
 from cv2 import aruco
 from cv_bridge import CvBridge
 
@@ -108,6 +108,7 @@ class VisionProcessingNode(Node):
                 self.model = None
 
         # use cpu or gpu
+        """
         self.get_logger().info(colorStr("Torch Version:" + torch.__version__, ColorCodes.BLUE_OK))
         self.get_logger().info(
             colorStr("Torch Version Cuda:" + torch.version.cuda, ColorCodes.BLUE_OK)
@@ -122,7 +123,7 @@ class VisionProcessingNode(Node):
         )
         self.model.to("cpu")
         self.get_logger().info(colorStr("Running on cpu", ColorCodes.BLUE_OK))
-        """
+        
         if torch.cuda.is_available():
             self.get_logger().info(colorStr("GPU Name:"+str(torch.cuda.get_device_name(0)), ColorCodes.GREEN_OK))
             self.model.to("cuda")
