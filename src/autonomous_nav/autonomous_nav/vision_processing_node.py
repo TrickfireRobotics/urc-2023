@@ -14,11 +14,15 @@ from cv_bridge import CvBridge
 # from std_msgs.msg import Bool, Float32MultiArray, Header
 from geometry_msgs.msg import Vector3
 
+# added Navigate to pose to support logic control (activating aruco and obj search)
+from nav2_msgs.action import NavigateToPose
+
 # from octomap_msgs.msg import Octomap as OctomapMsg
 from rclpy.node import Node
 
 # from rclpy.time import Time
 from sensor_msgs.msg import CameraInfo, Image  # , PointCloud2, PointField
+from std_msgs.msg import Float32
 
 # Install: pip install "ultralytics>=8.1.0" "torch>=1.8"
 from ultralytics import YOLO
@@ -26,9 +30,6 @@ from ultralytics import YOLO
 # defined in src\custom_interfaces\msg\Aruco.msg
 from custom_interfaces.msg import Aruco
 from lib.color_codes import ColorCodes, colorStr
-#added Navigate to pose to support logic control (activating aruco and obj search)
-from nav2_msgs.action import NavigateToPose
-from std_msgs.msg import Float32
 
 # from visualization_msgs.msg import MarkerArray
 
@@ -49,7 +50,10 @@ class VisionProcessingNode(Node):
         self.bridge = CvBridge()
         self.camera_matrix: Optional[np.ndarray] = None
         self.dist_coeffs: Optional[np.ndarray] = None
-        self.reached_goal = False
+        # Spin search control variable (should be written better later but this is a quick solution to only activate vision processing when we are at the goal location)
+        self.enable_spin = False
+        self.found_aruco = False
+        self.found_object = False
         # Spin search timer setup
         self.frame_counter = 0
         self.timer = self.create_timer(0.1, self._tick)  # 10 Hz timer
@@ -121,9 +125,11 @@ class VisionProcessingNode(Node):
             CameraInfo, "/zed/zed_node/rgb/camera_info", self.processCameraInfo, 10
         )
         self.navigation_status = self.create_subscription(
-            NavigateToPose.Impl.FeedbackMessage, "/navigate_to_pose/_action/feedback", self._nav_feedback_callback, 10
+            NavigateToPose.Impl.FeedbackMessage,
+            "/navigate_to_pose/_action/feedback",
+            self._nav_feedback_callback,
+            10,
         )
-
 
         # ----------------------------------------------------------------------
         # Publishers
@@ -134,9 +140,9 @@ class VisionProcessingNode(Node):
         # emitted whenever we see a aruco marker
         self.aruco_detection_pub = self.create_publisher(Aruco, "/aruco_detection", 10)
 
-        self.get_logger().info(colorStr(
-                    "vision_processing_node is up and running.", ColorCodes.GREEN_OK
-                ))
+        self.get_logger().info(
+            colorStr("vision_processing_node is up and running.", ColorCodes.GREEN_OK)
+        )
         # velocity publisher for the spin search (Please move this by 3/15/2026 it shouldnt really go here)
         self.right_wheel_pub = self.create_publisher(Float32, "/right_wheel_velocity", 10)
         self.left_wheel_pub = self.create_publisher(Float32, "/left_wheel_velocity", 10)
@@ -152,9 +158,12 @@ class VisionProcessingNode(Node):
         # Check if the status indicates that the goal has been reached
         if msg.status.status == 3:  # Status code 3 typically indicates success
             self.get_logger().info(
-                colorStr("Navigation goal reached! Activating vision processing.", ColorCodes.GREEN_OK)
+                colorStr(
+                    "Navigation goal reached! Activating vision processing.", ColorCodes.GREEN_OK
+                )
             )
-            self.reached_goal = True
+            self.enable_spin = True
+
     # --------------------------------------------------------------------------
     #   processCameraInfo
     # --------------------------------------------------------------------------
@@ -173,20 +182,20 @@ class VisionProcessingNode(Node):
         if msg is None:
             self.get_logger().error("Received None message in combinedCallback")
             return
-        if self.reached_goal:
+        if self.enable_spin:
             try:
                 frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
             except Exception as e:
                 self.get_logger().error(f"Failed to convert image: {e}")
                 return
-            #maybe put a sleep or logic gate so these functions switch off every so many frames to avoid 2 functions/frame
+            # maybe put a sleep or logic gate so these functions switch off every so many frames to avoid 2 functions/frame
             self.arucoMarkerDetection(frame)
 
             # This resizes the frame for yolo, if its not accurate enough maybe increase the size
             resized = cv2.resize(frame, (640, 360), interpolation=cv2.INTER_AREA)
             self.yoloDetectionCallback(resized)
-            #every 3 seconds run spin search to look for objects, this is a placeholder and can be replaced with more sophisticated search patterns
-            #time.sleep(3)
+            # every 3 seconds run spin search to look for objects, this is a placeholder and can be replaced with more sophisticated search patterns
+            # time.sleep(3)
 
     # --------------------------------------------------------------------------
     #   YOLO World Object Detection
@@ -217,11 +226,22 @@ class VisionProcessingNode(Node):
 
             # Draw bounding box
             cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
-            text = f"{confidence:.2f}" #f"{label} {confidence:.2f}"
+            text = f"{confidence:.2f}"  # f"{label} {confidence:.2f}"
             cv2.putText(
                 frame, text, (int(x1), int(y1) - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2
             )
-            self.get_logger().info(colorStr(f"Detected {label} with confidence {confidence:.2f}", ColorCodes.BLUE_OK))
+            self.found_object = True
+            self.get_logger().info(
+                colorStr(f"Detected {label} with confidence {confidence:.2f}", ColorCodes.BLUE_OK)
+            )
+            if self.found_aruco:
+                self.get_logger().info(
+                    colorStr(
+                        f"Object and ArUco marker detected! Stopping spin search.",
+                        ColorCodes.GREEN_OK,
+                    )
+                )
+                self.enable_spin = False  # stop spin search once we have found an object and seen an aruco marker, this is a placeholder condition and can be replaced with better logic later
 
         # publish results to view with rviz
         disp = cv2.resize(frame, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
@@ -287,7 +307,12 @@ class VisionProcessingNode(Node):
 
             distance = float(np.linalg.norm(tvec))
 
-            self.get_logger().info(colorStr(f"Marker ID: {int(marker_id)}, Distance: {distance:.2f} m, tvec: {tvec}, rvec: {rvec}",ColorCodes.BLUE_OK))
+            self.get_logger().info(
+                colorStr(
+                    f"Marker ID: {int(marker_id)}, Distance: {distance:.2f} m, tvec: {tvec}, rvec: {rvec}",
+                    ColorCodes.BLUE_OK,
+                )
+            )
 
             # int, float, vec3, vec3
             # emit the aruco marker id,distance,tvec,rvec
@@ -320,11 +345,21 @@ class VisionProcessingNode(Node):
                 tvec,
                 marker_length / 2.0,
             )
+            self.found_aruco = True
+            if self.found_object and self.found_aruco:
+                self.get_logger().info(
+                    colorStr(
+                        f"Object and ArUco marker detected! Stopping spin search.",
+                        ColorCodes.GREEN_OK,
+                    )
+                )
+                self.enable_spin = False  # stop spin search once we have found an object and seen an aruco marker, this is a placeholder condition and can be replaced with better logic later
 
         # return the finished image to rvis to see what aruco markers are being detected
-        #self.get_logger().info(colorStr(f"Publishing aruco image!",ColorCodes.GREEN_OK))
+        # self.get_logger().info(colorStr(f"Publishing aruco image!",ColorCodes.GREEN_OK))
         image_message = self.bridge.cv2_to_imgmsg(cv_image, "passthrough")
         self.aruco_detection_image_pub.publish(image_message)
+
     # --------------------------------------------------------------------------
     #   Search Pattern (Spin in Place)
     # --------------------------------------------------------------------------
@@ -333,14 +368,17 @@ class VisionProcessingNode(Node):
         A simple search pattern that spins the robot in place to look for objects.
         This is a placeholder and can be replaced with a more sophisticated search pattern if needed.
         """
-        self.get_logger().info(colorStr("Spinning in place to search for objects...", ColorCodes.BLUE_OK))
-        spin_velocity = 0.5  # Adjust as needed for your robot
+        self.get_logger().info(
+            colorStr("Spinning in place to search for objects...", ColorCodes.BLUE_OK)
+        )
+        spin_velocity = 0.3  # Adjust as needed for your robot
         left_msg = Float32()
         right_msg = Float32()
         left_msg.data = spin_velocity
         right_msg.data = -spin_velocity
         self.left_wheel_pub.publish(left_msg)
         self.right_wheel_pub.publish(right_msg)
+
     # --------------------------------------------------------------------------
     #   Tick function to manage search pattern timing
     # --------------------------------------------------------------------------
@@ -348,11 +386,12 @@ class VisionProcessingNode(Node):
         """
         Tick function called by the timer to manage the timing of the search pattern.
         """
-        if self.reached_goal:
+        if self.enable_spin:
             self.frame_counter += 1
             if self.frame_counter >= self.spin_search_interval:
                 self.spinSearch()
                 self.frame_counter = 0
+
     # --------------------------------------------------------------------------
     #   ROS 2 Node Main
     # --------------------------------------------------------------------------
