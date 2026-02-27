@@ -15,6 +15,9 @@ colcon build \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DPYTHON_BINDINGS=ON
 
+find install/myactuator_rmd/local/lib/python3.10/dist-packages/myactuator_rmd/ -name "myactuator_rmd_py*.so" \
+    -exec cp {} install/myactuator_rmd/local/lib/python3.10/dist-packages/ \;
+
 
 colcon build \
     --symlink-install \
