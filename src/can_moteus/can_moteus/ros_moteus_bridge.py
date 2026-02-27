@@ -7,7 +7,7 @@ from std_msgs.msg import Float32
 from usb.core import find as finddev
 
 from lib.color_codes import ColorCodes, colorStr
-from lib.configs import MotorConfigs
+from lib.configs import MoteusMotorConfig, MotorConfigs
 
 from . import moteus_thread_manager
 
@@ -64,20 +64,10 @@ class RosMotuesBridge(Node):
 
         self.thread_manager = moteus_thread_manager.MoteusThreadManager(self)
 
-        # Drivebase
-        self.thread_manager.addMotor(MotorConfigs.REAR_RIGHT_DRIVE_MOTOR)
-        self.thread_manager.addMotor(MotorConfigs.MID_RIGHT_DRIVE_MOTOR)
-        self.thread_manager.addMotor(MotorConfigs.FRONT_RIGHT_DRIVE_MOTOR)
-        self.thread_manager.addMotor(MotorConfigs.REAR_LEFT_DRIVE_MOTOR)
-        self.thread_manager.addMotor(MotorConfigs.MID_LEFT_DRIVE_MOTOR)
-        self.thread_manager.addMotor(MotorConfigs.FRONT_LEFT_DRIVE_MOTOR)
-
-        # Arm
-        self.thread_manager.addMotor(MotorConfigs.ARM_TURNTABLE_MOTOR)
-        self.thread_manager.addMotor(MotorConfigs.ARM_SHOULDER_MOTOR)
-        self.thread_manager.addMotor(MotorConfigs.ARM_ELBOW_MOTOR)
-        self.thread_manager.addMotor(MotorConfigs.ARM_LEFT_WRIST_MOTOR)
-        self.thread_manager.addMotor(MotorConfigs.ARM_RIGHT_WRIST_MOTOR)
+        for config in MotorConfigs.getAllMotors():
+            if not isinstance(config, MoteusMotorConfig):
+                continue
+            self.thread_manager.addMotor(config)
 
         self.thread_manager.start()
 
@@ -96,7 +86,8 @@ def main(args: list[str] | None = None) -> None:
         pass
     except ExternalShutdownException:
         # This is done when we ctrl-c the progam to shut it down
-        node.get_logger().info(colorStr("Shutting down can_moteus", ColorCodes.BLUE_OK))
+        # node.get_logger().info(colorStr("Shutting down can_moteus", ColorCodes.BLUE_OK))
+        node.get_logger().info("Shutting down can_moteus")
         if node.thread_manager is not None:
             node.thread_manager.terminateAllThreads()
         node.destroy_node()

@@ -4,11 +4,8 @@ source /opt/ros/$ROS_DISTRO/setup.bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$SCRIPT_DIR/install/setup.bash"
 
-#modprobe can
-#modprobe can_raw
-#modprobe mttcan
-#ip link set can0 type can bitrate 1000000 dbitrate 5000000 fd on
-#ip link set can0 up
+chmod +x ./speed_cansend.sh
+./speed_cansend.sh
 
 # Launch octomap server
 ros2 run octomap_server octomap_server_node --ros-args \
@@ -23,5 +20,3 @@ ros2 run octomap_server octomap_server_node --ros-args \
 export PYTHONPATH="$SCRIPT_DIR/src/:$PYTHONPATH"
 
 ros2 launch viator_launch robot.launch.py
-
-

@@ -11,6 +11,7 @@ setup(
     packages=[package_name],
     data_files=[
         ("share/" + package_name, ["package.xml"]),
+        ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         (os.path.join("share", package_name, "launch"), glob("launch/*.py")),
         (os.path.join("share", package_name, "config"), glob("config/*.yaml")),
     ],
@@ -28,6 +29,7 @@ setup(
             "vision_processing_node = autonomous_nav.vision_processing_node:main",
             "gps_anchor_node = autonomous_nav.gps_anchor_node:main",
             "decision_making_node = autonomous_nav.decision_making_node:main",
+            "cmd_vel_to_wheel_vel = autonomous_nav.cmd_vel_to_wheel_vel:main",
         ],
     },
 )

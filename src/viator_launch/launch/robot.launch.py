@@ -2,9 +2,9 @@ import os
 
 import launch
 from ament_index_python import get_package_share_directory
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import Node
+from launch_ros.actions import LifecycleNode, Node
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 
 can_moteus_node = Node(package="can_moteus", executable="can_moteus", name="can_moteus_node")
@@ -12,6 +12,7 @@ can_moteus_node = Node(package="can_moteus", executable="can_moteus", name="can_
 
 drivebase_node = Node(package="drivebase", executable="drivebase", name="drivebase_node")
 
+can_rmdx8_node = Node(package="can_rmdx8", executable="can_rmdx8", name="can_rmdx8_node")
 
 mission_control_updater_node = Node(
     package="mission_control_updater",
@@ -50,6 +51,39 @@ navigation_node = Node(
 )
 sensor_processing_node = Node(
     package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
+)
+cmd_vel_to_wheel_vel_node = Node(
+    package="autonomous_nav", executable="cmd_vel_to_wheel_vel", name="cmd_vel_to_wheel_vel"
+)
+nav2_params = os.path.join(
+    get_package_share_directory("autonomous_nav"), "config", "nav2_params.yaml"
+)
+controller_server_node = Node(
+    package="nav2_controller",
+    executable="controller_server",
+    name="controller_server",
+    output="screen",
+    parameters=[nav2_params],
+)
+global_costmap_node = Node(
+    package="nav2_costmap_2d",
+    executable="nav2_costmap_2d",
+    name="global_costmap",
+    parameters=[nav2_params],
+)
+
+# Nav2 lifecycle manager - manages controller_server lifecycle states
+lifecycle_manager_node = Node(
+    package="nav2_lifecycle_manager",
+    executable="lifecycle_manager",
+    name="lifecycle_manager_navigation",
+    output="screen",
+    parameters=[
+        {
+            "autostart": True,
+            "node_names": ["controller_server"],
+        }
+    ],
 )
 vision_processing_node = Node(
     package="autonomous_nav", executable="vision_processing_node", name="vision_processing_node"
@@ -119,9 +153,15 @@ ekf_node = Node(
     output="screen",
     parameters=[config_file_path],
 )
+static_zed_base_tf = Node(
+    package="tf2_ros",
+    executable="static_transform_publisher",
+    name="base_link_tf_broadcaster",
+    arguments=["0", "0", "0", "0", "0", "0", "1", "zed_camera_link", "base_link"],
+)
 
 
-static_tf = Node(
+static_zed_gps_tf = Node(
     package="tf2_ros",
     executable="static_transform_publisher",
     name="gps_tf_broadcaster",
@@ -134,20 +174,27 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
         [
             can_moteus_node,
             drivebase_node,
+            can_rmdx8_node,
             mission_control_updater_node,
             arm_node,
+            navsat_transform,
+            ekf_node,
+            static_zed_gps_tf,
+            static_zed_base_tf,
+            global_costmap_node,
             heartbeat_node,
             camera_node,
             decision_making_node,
             gps_anchor_node,
             navigation_node,
             sensor_processing_node,
+            cmd_vel_to_wheel_vel_node,
             launch_include,
             gps_node,
             zed_launch,
-            navsat_transform,
-            ekf_node,
-            static_tf,
-            vision_processing_node,
+            # Start lifecycle manager first with minimal delay
+            TimerAction(period=1.0, actions=[lifecycle_manager_node]),
+            # Then start controller_server after delay to allow tf frames to be published
+            TimerAction(period=5.0, actions=[controller_server_node]),
         ]
     )

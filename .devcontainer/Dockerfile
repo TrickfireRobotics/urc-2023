@@ -43,6 +43,7 @@ RUN echo "Downloading ZED SDK from ${ZED_SDK_URL}" && \
     wget -qO ZED_SDK_Linux_Ubuntu.run ${ZED_SDK_URL} && \
     chmod +x ZED_SDK_Linux_Ubuntu.run
 
+
 # Install APT dependencies.
 RUN apt-get update && apt-get install -y \
     zstd \
@@ -69,6 +70,8 @@ RUN apt-get update && apt-get install -y \
     python3-opencv \
     # Clean out the apt lists after `apt-get update`
     && rm -rf /var/lib/apt/lists/*
+
+
 
 # Install moteus python library. 
 # https://github.com/mjbots/moteus/tree/main/lib/python

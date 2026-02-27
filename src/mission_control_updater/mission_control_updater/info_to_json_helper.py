@@ -1,6 +1,6 @@
 import json
 
-from lib.moteus_motor_state import MoteusMotorState
+from lib.motor_state.moteus_motor_state import MoteusMotorState
 
 
 class InfoToJSONHelper:
