@@ -26,7 +26,7 @@ class Drivebase(Node):
             Float32, "move_right_drivebase_side_message", self.moveRightSide, 10
         )
 
-        self.create_timer(0.05, self.stopMotors)
+        self.create_timer(1, self.stopMotors)
         self._last_received: list[float] = []
 
     def appendToLastReceived(self) -> None:
