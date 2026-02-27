@@ -34,26 +34,32 @@ class Drivebase(Node):
         self._last_received.append(time.time())
 
     def moveLeftSide(self, msg: Float32) -> None:
+        self.appendToLastReceived()
         vel = msg.data * self.SPEED
         self.bot_interface.runMotorSpeed(MotorConfigs.FRONT_LEFT_DRIVE_MOTOR, -vel)
         self.bot_interface.runMotorSpeed(MotorConfigs.MID_LEFT_DRIVE_MOTOR, -vel)
         self.bot_interface.runMotorSpeed(MotorConfigs.REAR_LEFT_DRIVE_MOTOR, -vel)
 
     def moveRightSide(self, msg: Float32) -> None:
+        self.appendToLastReceived()
         vel = msg.data * self.SPEED
         self.bot_interface.runMotorSpeed(MotorConfigs.FRONT_RIGHT_DRIVE_MOTOR, vel)
         self.bot_interface.runMotorSpeed(MotorConfigs.MID_RIGHT_DRIVE_MOTOR, vel)
         self.bot_interface.runMotorSpeed(MotorConfigs.REAR_RIGHT_DRIVE_MOTOR, vel)
 
     def turnLeft(self, msg: Float32) -> None:
+        self.appendToLastReceived()
         self.moveLeftSide(msg)
         self.moveRightSide(-msg)
 
     def turnRight(self, msg: Float32) -> None:
+        self.appendToLastReceived()
         self.moveLeftSide(-msg)
         self.moveRightSide(msg)
 
     def stopMotors(self) -> None:
+        if len(self._last_received) == 0:
+            self._last_received.append(time.time())
         last_receieved_index = len(self._last_received) - 1
         time_delta = time.time() - self._last_received[last_receieved_index]
         if time_delta > 0.25:
