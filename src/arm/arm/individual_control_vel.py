@@ -15,22 +15,6 @@ class IndividualControlVel:
 
         self.can_send = False
 
-        # Left wrist motor
-        self.left_wrist_motor_sub = ros_node.create_subscription(
-            Float32, "left_wrist_cw", self.leftWristCW, 10
-        )
-        self.left_wrist_motor_sub = ros_node.create_subscription(
-            Float32, "left_wrist_ccw", self.leftWristCCW, 10
-        )
-
-        # Right wrist motor
-        self.left_wrist_motor_sub = ros_node.create_subscription(
-            Float32, "right_wrist_cw", self.rightWristCW, 10
-        )
-        self.left_wrist_motor_sub = ros_node.create_subscription(
-            Float32, "right_wrist_ccw", self.rightWristCCW, 10
-        )
-
         # Elbow motor
         self.elbow_up_sub = ros_node.create_subscription(Float32, "elbow_up", self.elbowUp, 10)
 
