@@ -56,62 +56,6 @@ class IndividualControlVel:
             Float32, "turntable_ccw", self.turntableCCW, 10
         )
 
-    def leftWristCW(self, msg: Float32) -> None:
-        if not self.can_send:
-            return
-
-        joystick = msg.data
-
-        if joystick > 0:
-            self._ros_node.get_logger().info("Left Wrist CW" + str(joystick))
-            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_LEFT_WRIST_MOTOR, self.WRIST_VEL)
-
-        else:
-            self._ros_node.get_logger().info("Left Wrist STOP")
-            self.bot_interface.stopMotor(MotorConfigs.ARM_LEFT_WRIST_MOTOR)
-
-    def leftWristCCW(self, msg: Float32) -> None:
-        if not self.can_send:
-            return
-
-        joystick = msg.data
-
-        if joystick > 0:
-            self._ros_node.get_logger().info("Left Wrist CCW" + str(joystick))
-            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_LEFT_WRIST_MOTOR, -self.WRIST_VEL)
-
-        else:
-            self._ros_node.get_logger().info("Left Wrist STOP")
-            self.bot_interface.stopMotor(MotorConfigs.ARM_LEFT_WRIST_MOTOR)
-
-    def rightWristCW(self, msg: Float32) -> None:
-        if not self.can_send:
-            return
-
-        joystick = msg.data
-
-        if joystick > 0:
-            self._ros_node.get_logger().info("Right Wrist CW" + str(joystick))
-            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_RIGHT_WRIST_MOTOR, -self.WRIST_VEL)
-
-        else:
-            self._ros_node.get_logger().info("Right Wrist STOP")
-            self.bot_interface.stopMotor(MotorConfigs.ARM_RIGHT_WRIST_MOTOR)
-
-    def rightWristCCW(self, msg: Float32) -> None:
-        if not self.can_send:
-            return
-
-        joystick = msg.data
-
-        if joystick > 0:
-            self._ros_node.get_logger().info("Right Wrist CCW" + str(joystick))
-            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_RIGHT_WRIST_MOTOR, -self.WRIST_VEL)
-
-        else:
-            self._ros_node.get_logger().info("Right Wrist STOP")
-            self.bot_interface.stopMotor(MotorConfigs.ARM_RIGHT_WRIST_MOTOR)
-
     def elbowUp(self, msg: Float32) -> None:
         if not self.can_send:
             return

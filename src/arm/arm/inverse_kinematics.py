@@ -161,6 +161,11 @@ class InverseKinematics:
                             f"TURNTABLE FAULT: {self.turntableMotorFaultCode}"
                         )
 
+    def moveTurntableMotorToPos(self, target_position: int) -> None:
+        self.updateTurntableMotorState()
+        with can.Bus(interface="socketcan", channel="can0", receive_own_messages=True) as bus:
+            msg = can.Message(arbitration_id=0x00000405, data=[], is_extended_id=True)  # help
+
     def uint8_to_bin(self, value: int) -> str:
         if 0 <= value <= 255:  # Ensure it's within uint8 range
             return format(value, "08b")  # Format as an 8-bit binary string
