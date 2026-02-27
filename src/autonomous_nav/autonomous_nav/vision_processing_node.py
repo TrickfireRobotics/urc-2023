@@ -62,8 +62,8 @@ class VisionProcessingNode(Node):
         # Load YOLO World model
         self.model = None
         model_paths = [
-            "/home/trickfire/urc-2023/src/yoloe-26x-seg.pt",
-            "/home/trickfire/urc-2023/src/yolov8l-world.pt",
+            "/src/yoloe-26x-seg.pt",
+            "src/yolov8l-world.pt",
         ]
 
         for model_path in model_paths:
