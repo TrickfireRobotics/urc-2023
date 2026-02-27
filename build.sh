@@ -2,6 +2,16 @@
 
 source /opt/ros/$ROS_DISTRO/setup.bash
 
+#build motor components
+colcon build \
+    --symlink-install \
+    --base-paths "$SCRIPT_DIR"\
+    --packages-select myactuator_rmd \
+    --cmake-args \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+        -DPYTHON_BINDINGS=ON
+
+
 colcon build \
     --symlink-install \
     --base-paths /home/trickfire/urc-2023\
