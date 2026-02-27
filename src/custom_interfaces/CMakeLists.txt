@@ -32,6 +32,9 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+# Export generated typesupport so other packages can use the messages 
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+ament_export_targets(${cpp_typesupport_target})
 ament_export_dependencies(rosidl_default_runtime)
 ament_package()
 
