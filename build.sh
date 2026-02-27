@@ -2,6 +2,8 @@
 
 source /opt/ros/$ROS_DISTRO/setup.bash
 
+# Run rmxd8 dependency setup first
+"$SCRIPT_DIR/setup_rmdx8_dependencies.sh"
 #build motor components
 colcon build \
     --symlink-install \
