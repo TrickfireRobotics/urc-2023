@@ -15,9 +15,15 @@ colcon build \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
         -DPYTHON_BINDINGS=ON
 
-find install/myactuator_rmd/local/lib/python3.10/dist-packages/myactuator_rmd/ -name "myactuator_rmd_py*.so" \
-    -exec cp {} install/myactuator_rmd/local/lib/python3.10/dist-packages/ \;
+SO_FILE=$(find install/myactuator_rmd/local/lib/python3.10/dist-packages/myactuator_rmd/ -name "myactuator_rmd_py*.so" 2>/dev/null)
 
+if [ -n "$SO_FILE" ]; then
+    echo -e "${BLUE}[MOTOR SETUP] Fixing myactuator_rmd_py install path...${NC}"
+    cp "$SO_FILE" install/myactuator_rmd/local/lib/python3.10/dist-packages/
+    echo -e "${GREEN}[MOTOR SETUP] Copied $(basename $SO_FILE) to dist-packages root${NC}"
+else
+    echo -e "${YELLOW}[MOTOR SETUP] myactuator_rmd_py .so not found in expected location, skipping fix${NC}"
+fi
 
 colcon build \
     --symlink-install \
