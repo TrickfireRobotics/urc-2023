@@ -181,7 +181,7 @@ class VisionProcessingNode(Node):
 
             # Draw bounding box
             cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
-            text = f"{label} {confidence:.2f}"
+            text = f"{confidence:.2f}" #f"{label} {confidence:.2f}"
             cv2.putText(
                 frame, text, (int(x1), int(y1) - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2
             )
