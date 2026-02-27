@@ -132,14 +132,14 @@ class VisionProcessingNode(Node):
         aruco_message.distance = float(45.2)
 
         tvec_out = Vector3()
-        tvec_out.x = -1
-        tvec_out.y = -1
-        tvec_out.z = -1
+        tvec_out.x = -1.0
+        tvec_out.y = -1.0
+        tvec_out.z = -1.0
 
         rvec_out = Vector3()
-        rvec_out.x = -1
-        rvec_out.y = -1
-        rvec_out.z = -1
+        rvec_out.x = -1.0
+        rvec_out.y = -1.0
+        rvec_out.z = -1.0
 
         aruco_message.transform_vec = tvec_out
         aruco_message.rotation_vec = rvec_out
