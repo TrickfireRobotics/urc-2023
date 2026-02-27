@@ -26,6 +26,9 @@ from ultralytics import YOLO
 # defined in src\custom_interfaces\msg\Aruco.msg
 from custom_interfaces.msg import Aruco
 from lib.color_codes import ColorCodes, colorStr
+#added Navigate to pose to support logic control (activating aruco and obj search)
+from nav2_msgs.action import NavigateToPose
+from std_msgs.msg import Float32
 
 # from visualization_msgs.msg import MarkerArray
 
@@ -46,6 +49,11 @@ class VisionProcessingNode(Node):
         self.bridge = CvBridge()
         self.camera_matrix: Optional[np.ndarray] = None
         self.dist_coeffs: Optional[np.ndarray] = None
+        self.reached_goal = False
+        # Spin search timer setup
+        self.frame_counter = 0
+        self.timer = self.create_timer(0.1, self._tick)  # 10 Hz timer
+        self.spin_search_interval = 30  # every 30 ticks = every 3 seconds
 
         # Load YOLO World model
         try:
@@ -112,7 +120,12 @@ class VisionProcessingNode(Node):
         self.camera_info_sub = self.create_subscription(
             CameraInfo, "/zed/zed_node/rgb/camera_info", self.processCameraInfo, 10
         )
+        self.navigation_status = self.create_subscription(
+            NavigateToPose.Impl.FeedbackMessage, "/navigate_to_pose/_action/feedback", self._nav_feedback_callback, 10
+        )
 
+
+        # ----------------------------------------------------------------------
         # Publishers
         self.object_detection_pub = self.create_publisher(Image, "/object_detection_image", 10)
 
@@ -124,7 +137,24 @@ class VisionProcessingNode(Node):
         self.get_logger().info(colorStr(
                     "vision_processing_node is up and running.", ColorCodes.GREEN_OK
                 ))
+        # velocity publisher for the spin search (Please move this by 3/15/2026 it shouldnt really go here)
+        self.right_wheel_pub = self.create_publisher(Float32, "/right_wheel_velocity", 10)
+        self.left_wheel_pub = self.create_publisher(Float32, "/left_wheel_velocity", 10)
 
+    def _nav_feedback_callback(self, msg: NavigateToPose.Impl.FeedbackMessage) -> None:
+        """
+        Callback to monitor navigation status. Sets reached_goal to True when the robot reaches its goal.
+        """
+        if msg is None:
+            self.get_logger().error("Received None message in navigation feedback callback")
+            return
+
+        # Check if the status indicates that the goal has been reached
+        if msg.status.status == 3:  # Status code 3 typically indicates success
+            self.get_logger().info(
+                colorStr("Navigation goal reached! Activating vision processing.", ColorCodes.GREEN_OK)
+            )
+            self.reached_goal = True
     # --------------------------------------------------------------------------
     #   processCameraInfo
     # --------------------------------------------------------------------------
@@ -140,17 +170,23 @@ class VisionProcessingNode(Node):
         """
         Combined callback to run both YOLO World detection and ArUco marker detection.
         """
-
-        try:
-            frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-        except Exception as e:
-            self.get_logger().error(f"Failed to convert image: {e}")
+        if msg is None:
+            self.get_logger().error("Received None message in combinedCallback")
             return
-        self.arucoMarkerDetection(frame)
+        if self.reached_goal:
+            try:
+                frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
+            except Exception as e:
+                self.get_logger().error(f"Failed to convert image: {e}")
+                return
+            #maybe put a sleep or logic gate so these functions switch off every so many frames to avoid 2 functions/frame
+            self.arucoMarkerDetection(frame)
 
-        # This resizes the frame for yolo, if its not accurate enough maybe increase the size
-        resized = cv2.resize(frame, (640, 360), interpolation=cv2.INTER_AREA)
-        self.yoloDetectionCallback(resized)
+            # This resizes the frame for yolo, if its not accurate enough maybe increase the size
+            resized = cv2.resize(frame, (640, 360), interpolation=cv2.INTER_AREA)
+            self.yoloDetectionCallback(resized)
+            #every 3 seconds run spin search to look for objects, this is a placeholder and can be replaced with more sophisticated search patterns
+            #time.sleep(3)
 
     # --------------------------------------------------------------------------
     #   YOLO World Object Detection
@@ -288,7 +324,34 @@ class VisionProcessingNode(Node):
         #self.get_logger().info(colorStr(f"Publishing aruco image!",ColorCodes.GREEN_OK))
         image_message = self.bridge.cv2_to_imgmsg(cv_image, "passthrough")
         self.aruco_detection_image_pub.publish(image_message)
-
+    # --------------------------------------------------------------------------
+    #   Search Pattern (Spin in Place)
+    # --------------------------------------------------------------------------
+    def spinSearch(self) -> None:
+        """
+        A simple search pattern that spins the robot in place to look for objects.
+        This is a placeholder and can be replaced with a more sophisticated search pattern if needed.
+        """
+        self.get_logger().info(colorStr("Spinning in place to search for objects...", ColorCodes.BLUE_OK))
+        spin_velocity = 0.5  # Adjust as needed for your robot
+        left_msg = Float32()
+        right_msg = Float32()
+        left_msg.data = spin_velocity
+        right_msg.data = -spin_velocity
+        self.left_wheel_pub.publish(left_msg)
+        self.right_wheel_pub.publish(right_msg)
+    # --------------------------------------------------------------------------
+    #   Tick function to manage search pattern timing
+    # --------------------------------------------------------------------------
+    def _tick(self) -> None:
+        """
+        Tick function called by the timer to manage the timing of the search pattern.
+        """
+        if self.reached_goal:
+            self.frame_counter += 1
+            if self.frame_counter >= self.spin_search_interval:
+                self.spinSearch()
+                self.frame_counter = 0
     # --------------------------------------------------------------------------
     #   ROS 2 Node Main
     # --------------------------------------------------------------------------
