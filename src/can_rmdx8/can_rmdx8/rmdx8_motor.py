@@ -61,6 +61,7 @@ class RMDx8Motor:
             self.dataInCallback,
             10,
         )
+        self._ros_node.get_logger().info("RMDx8 Subscriber Created!! on topic: " + topic_name)
         return subscriber
 
     # create a publisher
@@ -71,7 +72,7 @@ class RMDx8Motor:
         topic_name = self.config.getCanTopicName()
         # Size of queue is 1. All additional ones are dropped
         publisher = self._ros_node.create_publisher(std_msgs.msg.String, topic_name, 10)
-        self._ros_node.get_logger().info("RMDx8 Publisher Created!!")
+        self._ros_node.get_logger().info("RMDx8 Publisher Created!! for topic: " + topic_name)
         return publisher
 
     def dataInCallback(self, msg: String) -> None:
