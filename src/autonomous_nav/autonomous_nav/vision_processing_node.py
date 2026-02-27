@@ -266,8 +266,8 @@ class VisionProcessingNode(Node):
             # tvec is transform vector aka position, rvec is rotation vector
 
             aruco_message = Aruco()
-            aruco_message.id = np.int64(marker_id)
-            aruco_message.distance = np.float64(distance)
+            aruco_message.id = int(marker_id)
+            aruco_message.distance = float(distance)
 
             tvec_out = Vector3()
             tvec_out.x = tvec[0]
@@ -316,7 +316,6 @@ def main(args: list[str] | None = None) -> None:
             )
     finally:
         if vision_processing_node is not None:
-            cv2.destroyAllWindows()
             vision_processing_node.destroy_node()
         rclpy.shutdown()
 
