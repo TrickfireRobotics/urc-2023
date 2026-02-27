@@ -60,28 +60,52 @@ class VisionProcessingNode(Node):
         self.spin_search_interval = 30  # every 30 ticks = every 3 seconds
 
         # Load YOLO World model
-        try:
-            # "yolo26x.pt" for more accuracy, if l isn't good enough
-            # curl -L -o yoloe-26x-seg.pt https://github.com/ultralytics/assets/releases/download/v8.4.0/yoloe-26x-seg.pt
-            # tried hard coding path to yolo model
-            self.model = YOLO("/home/trickfire/autonomous-nav-vision-urc/urc-2023/yoloe-26x-seg.pt")
-            self.model.set_classes(["mallet", "rockhammer", "hammer", "bottle"])
-            # self.get_logger().info("Trained YOLO World model loaded successfully.")
-            self.get_logger().info(
-                colorStr("YOLO 26.l model loaded successfully.", ColorCodes.BLUE_OK)
-            )
-        except:
-            self.get_logger().info(
-                colorStr(
-                    "Could not find new yolo model (yolo26l.pt), falling back on default model (yolov8l-world.pt)"
-                    + torch.__version__,
-                    ColorCodes.WARNING_YELLOW,
+        self.model = None
+        model_paths = [
+            "/home/trickfire/urc-2023/src/yoloe-26x-seg.pt",
+            "/home/trickfire/urc-2023/src/yolov8l-world.pt",
+        ]
+
+        for model_path in model_paths:
+            try:
+                self.model = YOLO(model_path)
+                self.model.set_classes(["mallet", "rockhammer", "hammer", "bottle"])
+                self.get_logger().info(
+                    colorStr(
+                        f"YOLO model loaded successfully from {model_path}", ColorCodes.BLUE_OK
+                    )
                 )
-            )
-            self.model = YOLO("yolov8l-world.pt")
-            self.get_logger().info(
-                colorStr("Default YOLO World model loaded successfully.", ColorCodes.BLUE_OK)
-            )
+                break
+            except Exception as e:
+                self.get_logger().warning(
+                    colorStr(
+                        f"Could not load model from {model_path}: {str(e)}",
+                        ColorCodes.WARNING_YELLOW,
+                    )
+                )
+
+        # Fall back to auto-downloading if local models fail
+        if self.model is None:
+            try:
+                self.get_logger().info(
+                    colorStr(
+                        "Loading YOLO World model from ultralytics (auto-download)...",
+                        ColorCodes.WARNING_YELLOW,
+                    )
+                )
+                self.model = YOLO("yolov8l-world.pt")
+                self.model.set_classes(["mallet", "rockhammer", "hammer", "bottle"])
+                self.get_logger().info(
+                    colorStr("Default YOLO World model loaded successfully.", ColorCodes.BLUE_OK)
+                )
+            except Exception as e:
+                self.get_logger().error(
+                    colorStr(
+                        f"Failed to load any YOLO model: {str(e)}. Vision processing will be unavailable.",
+                        ColorCodes.WARNING_YELLOW,
+                    )
+                )
+                self.model = None
 
         # use cpu or gpu
         self.get_logger().info(colorStr("Torch Version:" + torch.__version__, ColorCodes.BLUE_OK))
@@ -205,6 +229,10 @@ class VisionProcessingNode(Node):
         """
         Runs YOLO World detection on the camera feed.
         """
+        if self.model is None:
+            self.get_logger().warning("YOLO model not available. Skipping detection.")
+            return
+
         frame = msg
 
         # Predict with YOLO World
