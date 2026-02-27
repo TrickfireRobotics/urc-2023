@@ -178,6 +178,8 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             mission_control_updater_node,
             arm_node,
             navsat_transform,
+            navigation_node,
+            decision_making_node,
             ekf_node,
             static_zed_gps_tf,
             static_zed_base_tf,
