@@ -161,23 +161,57 @@ class InverseKinematics:
                             f"TURNTABLE FAULT: {self.turntableMotorFaultCode}"
                         )
 
-    def moveTurntableMotorToPos(self, target_position: int) -> None:
+    def moveTurntableMotorLilBit(self, target_position: int) -> None:
         self.updateTurntableMotorState()
-        """with can.Bus(interface="socketcan", channel="can0", receive_own_messages=True) as bus:
-            hex_string = target_position.to_bytes(4, byteorder="big")
-            self._ros_node.get_logger().info(
-                f"Converted position {target_position} to {hex_string}"
-            )
-            hex_array = hex_string.split("\\")
-            data_to_send = [
-                self.uint8_to_bin(hex_array[0]),
-                self.uint8_to_bin(hex_array[1]),
-                self.uint8_to_bin(hex_array[2]),
-                self.uint8_to_bin(hex_array[3]),
-            ]
+        with can.Bus(interface="socketcan", channel="can0", receive_own_messages=True) as bus:
             msg = can.Message(
-                arbitration_id=0x00000405, data=data_to_send, is_extended_id=True
-            )  # help"""
+                arbitration_id=0x00000305, data=[0x00, 0x00, 0x09, 0xC4], is_extended_id=True
+            )  # help
+            try:
+                bus.send(msg)
+                self._ros_node.get_logger().info(f"Message sent on {bus.channel_info}")
+            except can.CanError:
+                self._ros_node.get_logger().info("Message NOT sent")
+                return
+
+            time.sleep(0.5)
+
+            msg2 = can.Message(
+                arbitration_id=0x00000305, data=[0x00, 0x00, 0x00, 0x00], is_extended_id=True
+            )
+
+            try:
+                bus.send(msg2)
+                self._ros_node.get_logger().info(f"Message sent on {bus.channel_info}")
+            except can.CanError:
+                self._ros_node.get_logger().info("Message NOT sent")
+                return
+
+    def moveTurntableMotorLilBitOtherWay(self, target_position: int) -> None:
+        self.updateTurntableMotorState()
+        with can.Bus(interface="socketcan", channel="can0", receive_own_messages=True) as bus:
+            msg = can.Message(
+                arbitration_id=0x00000305, data=[0x00, 0x00, 0xF6, 0x3C], is_extended_id=True
+            )  # help
+            try:
+                bus.send(msg)
+                self._ros_node.get_logger().info(f"Message sent on {bus.channel_info}")
+            except can.CanError:
+                self._ros_node.get_logger().info("Message NOT sent")
+                return
+
+            time.sleep(0.5)
+
+            msg2 = can.Message(
+                arbitration_id=0x00000305, data=[0x00, 0x00, 0x00, 0x00], is_extended_id=True
+            )
+
+            try:
+                bus.send(msg2)
+                self._ros_node.get_logger().info(f"Message sent on {bus.channel_info}")
+            except can.CanError:
+                self._ros_node.get_logger().info("Message NOT sent")
+                return
 
     def uint8_to_bin(self, value: int) -> str:
         if 0 <= value <= 255:  # Ensure it's within uint8 range
