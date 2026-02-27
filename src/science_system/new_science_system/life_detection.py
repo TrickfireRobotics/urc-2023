@@ -48,22 +48,22 @@ class GoDirectNode(Node):
         # The first USB device found will be used. If no USB devices are found, then
         # the BLE device with the strongest signal over -100 is used.
         godirect = GoDirect(use_ble=False, use_usb=True)
-        print("GoDirect v" + str(godirect.get_version()))
-        print("\nSearching...", flush=True, end="")
+        self.get_logger().info("GoDirect v" + str(godirect.get_version()))
+        self.get_logger().info("\nSearching...", flush=True, end="")
         device = godirect.get_device(threshold=-100)
         stop_flag = False
 
         def get_user_input() -> None:
             nonlocal stop_flag
-            input("Press Enter to stop...\n")
+            self.get_logger().info("Press Enter to stop...\n")
             stop_flag = True
 
         input_thread = threading.Thread(target=get_user_input, daemon=True)
 
         # Once a device is found or selected it must be opened.
         if device != None and device.open(auto_start=False):
-            print("connecting.\n")
-            print("Connected to " + device.name)
+            self.get_logger().info("connecting.\n")
+            self.get_logger().info("Connected to " + device.name)
 
             # A specific sensor (or sensors) can be selected for data collection by calling
             # device.enable_sensors([]) prior to calling device.start().
@@ -80,12 +80,12 @@ class GoDirectNode(Node):
 
             # The start period is how often it collects data in milliseconds, i would reccomend leaving it at 1000 for now as I experienced some bugs when changing the value
             device.start(period=1000)
-            print("start")
+            self.get_logger().info("start")
             sensors = (
                 device.get_enabled_sensors()
             )  # after start() is called, an enabled sensor list is available
 
-            print("Reading measurements\n")
+            self.get_logger().info("Reading measurements\n")
             input_thread.start()
 
             # Doing one check before for loop so that we can take difference easier
@@ -114,12 +114,12 @@ class GoDirectNode(Node):
                         sensor.clear()
             device.stop()
             device.close()
-            print("\nDisconnected from " + device.name)
+            self.get_logger().info("\nDisconnected from " + device.name)
             self.avg_diff = (total / (length / 2)) - baseline
-            print("Avg diff: " + str(self.avg_diff))
+            self.get_logger().info("Avg diff: " + str(self.avg_diff))
 
         else:
-            print("Go Direct device not found/opened")
+            self.get_logger().info("Go Direct device not found/opened")
 
         godirect.quit()
 
