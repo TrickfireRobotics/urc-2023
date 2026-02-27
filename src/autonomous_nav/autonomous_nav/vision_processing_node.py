@@ -121,7 +121,34 @@ class VisionProcessingNode(Node):
         # emitted whenever we see a aruco marker
         self.aruco_detection_pub = self.create_publisher(Aruco, "/aruco_detection", 10)
 
-        self.get_logger().info("vision_processing_node is up and running.")
+        self.get_logger().info(colorStr(
+                    "vision_processing_node is up and running.", ColorCodes.GREEN_OK
+                ))
+        self.aruco_publish_test()
+
+    def aruco_publish_test(self):
+        aruco_message = Aruco()
+        aruco_message.id = int(12)
+        aruco_message.distance = float(45.2)
+
+        tvec_out = Vector3()
+        tvec_out.x = -1
+        tvec_out.y = -1
+        tvec_out.z = -1
+
+        rvec_out = Vector3()
+        rvec_out.x = -1
+        rvec_out.y = -1
+        rvec_out.z = -1
+
+        aruco_message.transform_vec = tvec_out
+        aruco_message.rotation_vec = rvec_out
+        self.aruco_detection_pub.publish(aruco_message)
+        self.get_logger().info(
+                colorStr(
+                    "Published aruco test message", ColorCodes.WARNING_YELLOW
+                )
+            )
 
     # --------------------------------------------------------------------------
     #   processCameraInfo
