@@ -5,6 +5,7 @@ from rclpy.node import Node
 from std_msgs.msg import Float32
 
 from lib.configs import MotorConfigs
+from lib.interface.robot_info import RobotInfo
 from lib.interface.robot_interface import RobotInterface
 
 
@@ -12,9 +13,10 @@ class IndividualControlVel:
     WRIST_VEL = 0.3
     VEL = 1.0
 
-    def __init__(self, ros_node: Node, interface: RobotInterface):
+    def __init__(self, ros_node: Node, interface: RobotInterface, info: RobotInfo):
         self._ros_node = ros_node
         self.bot_interface = interface
+        self.bot_info = info
 
         self.can_send = False
 
@@ -180,7 +182,27 @@ class IndividualControlVel:
 
         if data > 0:
             self._ros_node.get_logger().info("Shoulder up" + str(data))
-            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_SHOULDER_MOTOR, -self.VEL)
+
+            # this line uses velocity to run shoulder motor
+            # i replace it with incrementing position because velocity on new shoulder motor scary
+            # uncomment this line and comment out the other run motor line if it doesn't work
+            # same with shoulderDown method
+            # self.bot_interface.runMotorSpeed(MotorConfigs.ARM_SHOULDER_MOTOR, -self.VEL)
+
+            motorState = self.bot_info.getMotorState(MotorConfigs.ARM_SHOULDER_MOTOR)
+
+            curPos = motorState.position
+            if curPos == None:
+                self._ros_node.get_logger().info(
+                    "Couldn't get shoulder position. something is wrong..."
+                )
+                curPos = 0.0
+            newPos = curPos + 0.02  # revolutions
+            newPosRadians = newPos * 6.28  # radians
+            self._ros_node.get_logger().info(
+                f"Running shoulder to position (radians) {newPosRadians}"
+            )
+            self.bot_interface.runMotorPosition(MotorConfigs.ARM_SHOULDER_MOTOR, newPosRadians)
 
         else:
             self._ros_node.get_logger().info("Shoulder STOP")
@@ -193,8 +215,20 @@ class IndividualControlVel:
         data = msg.data
 
         if data > 0:
-            self._ros_node.get_logger().info("Shoulder down" + str(data))
-            self.bot_interface.runMotorSpeed(MotorConfigs.ARM_SHOULDER_MOTOR, self.VEL)
+            motorState = self.bot_info.getMotorState(MotorConfigs.ARM_SHOULDER_MOTOR)
+
+            curPos = motorState.position
+            if curPos == None:
+                self._ros_node.get_logger().info(
+                    "Couldn't get shoulder position. something is wrong..."
+                )
+                curPos = 0.0
+            newPos = curPos - 0.02  # revolutions
+            newPosRadians = newPos * 6.28  # radians
+            self._ros_node.get_logger().info(
+                f"Running shoulder to position (radians) {newPosRadians}"
+            )
+            self.bot_interface.runMotorPosition(MotorConfigs.ARM_SHOULDER_MOTOR, newPosRadians)
 
         else:
             self._ros_node.get_logger().info("Shoulder STOP")
@@ -224,4 +258,6 @@ class IndividualControlVel:
 
         else:
             self._ros_node.get_logger().info("Turntable STOP")
+            self.updateTurntableMotorState()
+            self.updateTurntableMotorState()
             self.updateTurntableMotorState()
