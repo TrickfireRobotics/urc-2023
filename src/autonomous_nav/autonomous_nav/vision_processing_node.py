@@ -259,9 +259,7 @@ class VisionProcessingNode(Node):
 
             distance = float(np.linalg.norm(tvec))
 
-            self.get_logger().info(
-                f"Marker ID: {int(marker_id)}, Distance: {distance:.2f} m, tvec: {tvec}, rvec: {rvec}"
-            )
+            self.get_logger().info(colorStr(f"Marker ID: {int(marker_id)}, Distance: {distance:.2f} m, tvec: {tvec}, rvec: {rvec}",ColorCodes.BLUE_OK))
 
             # int, float, vec3, vec3
             # emit the aruco marker id,distance,tvec,rvec
@@ -296,6 +294,7 @@ class VisionProcessingNode(Node):
             )
 
         # return the finished image to rvis to see what aruco markers are being detected
+        self.get_logger().info(colorStr(f"Publishing aruco image!",ColorCodes.GREEN_OK))
         image_message = self.bridge.cv2_to_imgmsg(cv_image, "passthrough")
         self.aruco_detection_image_pub.publish(image_message)
 

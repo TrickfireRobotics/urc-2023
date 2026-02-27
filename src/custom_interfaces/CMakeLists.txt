@@ -33,3 +33,4 @@ if(BUILD_TESTING)
 endif()
 
 ament_package()
+ament_export_dependencies(rosidl_default_runtime)
