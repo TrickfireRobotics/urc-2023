@@ -124,22 +124,22 @@ class InverseKinematics:
         self.turntableMotorSpeed = 0
         self.turntableMotorFaultCode = 0
 
-        with can.Bus(interface="socketcan", channel="can0", receive_own_messages=True) as bus:
-            # send zero velocity
-            msg = can.Message(
-                arbitration_id=0x00000305,  # velocity loop
-                data=[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
-                is_extended_id=True,
-            )
-            try:
-                bus.send(msg)
-                self._ros_node.get_logger().info(f"Message sent on {bus.channel_info}")
-            except can.CanError:
-                self._ros_node.get_logger().info("Message NOT sent")
         self.updateTurntableMotorState()
 
-    def updateTurntableMotorState(self) -> None:
+    def updateTurntableMotorState(self, send_msg_before: bool = True) -> None:
         with can.Bus(interface="socketcan", channel="can0", receive_own_messages=True) as bus:
+            if send_msg_before:
+                msg = can.Message(
+                    arbitration_id=0x00000305,  # velocity loop
+                    data=[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+                    is_extended_id=True,
+                )
+                try:
+                    bus.send(msg)
+                    self._ros_node.get_logger().info(f"Message sent on {bus.channel_info}")
+                except can.CanError:
+                    self._ros_node.get_logger().info("Message NOT sent")
+
             for msg in bus:
                 self._ros_node.get_logger().info(f"{msg.arbitration_id:X}: {msg.data}")
                 if msg.arbitration_id == 0x00002905:
