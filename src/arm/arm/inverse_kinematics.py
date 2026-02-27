@@ -163,14 +163,30 @@ class InverseKinematics:
 
     def moveTurntableMotorToPos(self, target_position: int) -> None:
         self.updateTurntableMotorState()
-        with can.Bus(interface="socketcan", channel="can0", receive_own_messages=True) as bus:
-            msg = can.Message(arbitration_id=0x00000405, data=[], is_extended_id=True)  # help
+        """with can.Bus(interface="socketcan", channel="can0", receive_own_messages=True) as bus:
+            hex_string = target_position.to_bytes(4, byteorder="big")
+            self._ros_node.get_logger().info(
+                f"Converted position {target_position} to {hex_string}"
+            )
+            hex_array = hex_string.split("\\")
+            data_to_send = [
+                self.uint8_to_bin(hex_array[0]),
+                self.uint8_to_bin(hex_array[1]),
+                self.uint8_to_bin(hex_array[2]),
+                self.uint8_to_bin(hex_array[3]),
+            ]
+            msg = can.Message(
+                arbitration_id=0x00000405, data=data_to_send, is_extended_id=True
+            )  # help"""
 
     def uint8_to_bin(self, value: int) -> str:
         if 0 <= value <= 255:  # Ensure it's within uint8 range
             return format(value, "08b")  # Format as an 8-bit binary string
         else:
             raise ValueError("Value must be between 0 and 255")
+
+    def byte_to_uint8(self, byte_val: str) -> int:
+        return int(byte_val, 16)
 
     def _startSwift(self) -> None:
         try:
