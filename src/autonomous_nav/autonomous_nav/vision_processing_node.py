@@ -124,31 +124,6 @@ class VisionProcessingNode(Node):
         self.get_logger().info(colorStr(
                     "vision_processing_node is up and running.", ColorCodes.GREEN_OK
                 ))
-        self.aruco_publish_test()
-
-    def aruco_publish_test(self):
-        aruco_message = Aruco()
-        aruco_message.id = int(12)
-        aruco_message.distance = float(45.2)
-
-        tvec_out = Vector3()
-        tvec_out.x = -1.0
-        tvec_out.y = -1.0
-        tvec_out.z = -1.0
-
-        rvec_out = Vector3()
-        rvec_out.x = -1.0
-        rvec_out.y = -1.0
-        rvec_out.z = -1.0
-
-        aruco_message.transform_vec = tvec_out
-        aruco_message.rotation_vec = rvec_out
-        self.aruco_detection_pub.publish(aruco_message)
-        self.get_logger().info(
-                colorStr(
-                    "Published aruco test message", ColorCodes.WARNING_YELLOW
-                )
-            )
 
     # --------------------------------------------------------------------------
     #   processCameraInfo
@@ -184,12 +159,6 @@ class VisionProcessingNode(Node):
         """
         Runs YOLO World detection on the camera feed.
         """
-        # we dont need to convert a ros2 Image to nparray with imgmsg_to_cv2 because this method accepts a np array from combined callback
-        # try:
-        #    frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
-        # except Exception as e:
-        #    self.get_logger().error(f"Failed to convert image for YOLO World detection: {e}")
-        #    return
         frame = msg
 
         # Predict with YOLO World
@@ -216,11 +185,6 @@ class VisionProcessingNode(Node):
             cv2.putText(
                 frame, text, (int(x1), int(y1) - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2
             )
-
-        # Display result
-        # disp = cv2.resize(frame, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
-        # cv2.imshow("YOLO World Detection", disp)
-        # cv2.waitKey(1)
 
         # publish results to view with rviz
         disp = cv2.resize(frame, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
@@ -321,7 +285,7 @@ class VisionProcessingNode(Node):
             )
 
         # return the finished image to rvis to see what aruco markers are being detected
-        self.get_logger().info(colorStr(f"Publishing aruco image!",ColorCodes.GREEN_OK))
+        #self.get_logger().info(colorStr(f"Publishing aruco image!",ColorCodes.GREEN_OK))
         image_message = self.bridge.cv2_to_imgmsg(cv_image, "passthrough")
         self.aruco_detection_image_pub.publish(image_message)
 
