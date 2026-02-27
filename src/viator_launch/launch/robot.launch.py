@@ -192,6 +192,7 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             launch_include,
             gps_node,
             zed_launch,
+            vision_processing_node,
             # Start lifecycle manager first with minimal delay
             TimerAction(period=1.0, actions=[lifecycle_manager_node]),
             # Then start controller_server after delay to allow tf frames to be published
