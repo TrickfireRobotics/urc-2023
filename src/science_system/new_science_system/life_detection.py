@@ -41,7 +41,8 @@ class GoDirectNode(Node):
     def __init__(self) -> None:
         super().__init__("go_direct_node")
         self.datapoint = 0.0
-        self.pub = self.create_publisher(float, "science_topic", 10)
+        self.pub = self.create_publisher(String, "science_topic", 10)
+        self.collect_data()
 
     def collect_data(self) -> None:
         # The first USB device found will be used. If no USB devices are found, then
@@ -109,10 +110,10 @@ class GoDirectNode(Node):
                         total += abs(amt - sensor.values[0])
                         amt = sensor.values[0]
                         self.datapoint = amt
+                        self.publish_data()
                         sensor.clear()
             device.stop()
             device.close()
-            self.pub_timer.cancel()
             print("\nDisconnected from " + device.name)
             self.avg_diff = (total / (length / 2)) - baseline
             print("Avg diff: " + str(self.avg_diff))
@@ -126,3 +127,22 @@ class GoDirectNode(Node):
         msg = String()
         msg.data = str(self.datapoint)
         self.pub.publish(msg)
+
+
+def main(args: list[str] | None = None) -> None:
+    rclpy.init(args=args)
+    try:
+        # Create a new instance of our class
+        GDnode = GoDirectNode()
+
+        # Have ROS spin this node, meaning that this object will continuously
+        # be part of the ROS event loop and such.
+        rclpy.spin(GDnode)
+    except KeyboardInterrupt:  # Detects ctrl-c
+        pass
+    except ExternalShutdownException:
+        # If needed, we could call methods from the instance we made
+        # in order to shut somethings down before destroying the node
+        GDnode.get_logger().info(colorStr("Shutting down example_node node", ColorCodes.BLUE_OK))
+        GDnode.destroy_node()
+        sys.exit(0)
