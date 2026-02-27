@@ -221,6 +221,7 @@ class VisionProcessingNode(Node):
             cv2.putText(
                 frame, text, (int(x1), int(y1) - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2
             )
+            self.get_logger().info(colorStr(f"Detected {label} with confidence {confidence:.2f}", ColorCodes.BLUE_OK))
 
         # publish results to view with rviz
         disp = cv2.resize(frame, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_LINEAR)
