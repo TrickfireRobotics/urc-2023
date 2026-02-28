@@ -98,7 +98,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         #Return to 3.0 for better performance
-        cost_scaling_factor: 1.0
+        cost_scaling_factor: 0.5
         inflation_radius: 0.55
 
 global_costmap:
@@ -127,7 +127,7 @@ global_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
         inflation_radius: 0.55
-        cost_scaling_factor: 1.0
+        cost_scaling_factor: 0.5
         inflate_unknown: false
         inflate_around_unknown: true
         always_send_full_costmap: True
