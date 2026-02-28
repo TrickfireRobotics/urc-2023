@@ -66,8 +66,15 @@ class VisionProcessingNode(Node):
             "src/yolov8l-world.pt",
         ]
 
+
+        self.get_logger().info(
+            colorStr("Trying to load a model...", ColorCodes.BLUE_OK)
+        )
         for model_path in model_paths:
             try:
+                self.get_logger().info(
+                    colorStr(f"Try load {model_path}", ColorCodes.BLUE_OK)
+                )
                 self.model = YOLO(model_path)
                 self.model.set_classes(["mallet", "rockhammer", "hammer", "bottle"])
                 self.get_logger().info(
@@ -83,6 +90,9 @@ class VisionProcessingNode(Node):
                         ColorCodes.WARNING_YELLOW,
                     )
                 )
+        self.get_logger().info(
+                    colorStr(f"Falling back on default model", ColorCodes.BLUE_OK)
+        )
 
         # Fall back to auto-downloading if local models fail
         if self.model is None:
