@@ -53,7 +53,9 @@ class IndividualControlVel:
 
         with can.Bus(interface="socketcan", channel="can0", receive_own_messages=True) as bus:
             msg = can.Message(
-                arbitration_id=0x00000405, data=[0, 0, 0, 0, 0, 0, 0, 0], is_extended_id=True
+                arbitration_id=0x00000405,
+                data=[0x00, 0x00, 0x00, 0x00],
+                is_extended_id=True,
             )
             try:
                 bus.send(msg)
@@ -66,7 +68,7 @@ class IndividualControlVel:
             if send_msg_before:
                 msg = can.Message(
                     arbitration_id=0x00000305,  # velocity loop
-                    data=[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
+                    data=[0x00, 0x00, 0x00, 0x00],
                     is_extended_id=True,
                 )
                 try:
