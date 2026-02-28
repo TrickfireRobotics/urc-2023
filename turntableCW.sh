@@ -1,0 +1,5 @@
+echo "MOVING TURNTABLE"
+cansend can0 00000305#00001388
+sleep 1s
+echo "STOPPING TURNTABLE"
+cansend can0 00000305#00000000
