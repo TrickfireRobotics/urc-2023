@@ -51,6 +51,16 @@ class IndividualControlVel:
 
         self.updateTurntableMotorState()
 
+        with can.Bus(interface="socketcan", channel="can0", receive_own_messages=True) as bus:
+            msg = can.Message(
+                arbitration_id=0x00000405, data=[0, 0, 0, 0, 0, 0, 0, 0], is_extended_id=True
+            )
+            try:
+                bus.send(msg)
+                self._ros_node.get_logger().info(f"MOVE Message sent on {bus.channel_info}")
+            except can.CanError:
+                self._ros_node.get_logger().info("Message NOT sent")
+
     def updateTurntableMotorState(self, send_msg_before: bool = True) -> None:
         with can.Bus(interface="socketcan", channel="can0", receive_own_messages=True) as bus:
             if send_msg_before:
