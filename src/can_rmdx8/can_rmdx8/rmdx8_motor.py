@@ -134,7 +134,7 @@ class RMDx8Motor:
                         time.sleep(
                             0.01
                         )  # Sleep for 10 ms to prevent CAN overload. This is a band-aid solution and should be fixed in the future by implementing a better message queue system
-                        self.motor.sendVelocitySetpoint(run_settings.velocity * DEGREE_TO_REV * 100)
+                        self.motor.sendVelocitySetpoint(run_settings.velocity * DEGREE_TO_REV * 50)
                         self._ros_node.get_logger().info("VELOCITY")
                     except Exception as ex:
                         self._ros_node.get_logger().warning(
