@@ -62,7 +62,7 @@ class VisionProcessingNode(Node):
         # Load YOLO World model
         self.model = None
         model_paths = [
-            "/src/yoloe-26x-seg.pt",
+            "src/yoloe-26x-seg.pt",
             "src/yolov8l-world.pt",
         ]
 
