@@ -3,7 +3,6 @@ from typing import Optional
 import cv2
 import numpy as np
 import rclpy
-from geometry_msgs.msg import Pose
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, Image
@@ -27,18 +26,15 @@ class KeyboardLocatorNode(Node):
         self.frame: Optional[np.ndarray] = None
 
         # ============ Subscribers ============
-        self.char_subscriber = self.create_subscription(
-            String, "keyboard_input", self.keyboard_callback, 10
-        )
-
         self.camera_frame_subscriber = self.create_subscription(
-            int, "keyboard_camera_frame_id", self.camera_frame_id_callback, 10
+            int, "keyboard_camera_frame_id", self.camera_frame_id_callback, 1
         )
 
         # MUST BE REPLACED WITH ARM CAMERA TOPICS
         self.camera_info_sub = self.create_subscription(
             CameraInfo, "/zed/zed_node/rgb/camera_info", self.process_camera_info, 10
         )
+
         self.image_sub = self.create_subscription(
             Image, "/zed/zed_node/rgb/image_rect_color", self.camera_frame_callback, 10
         )
@@ -66,6 +62,8 @@ class KeyboardLocatorNode(Node):
         # self.frame = im
         self.get_logger().info("Camera frame received")
         self.frame = np.ndarray(msg.data, np.uint8)
+
+    # ============ Main Logic ============
 
     def publish_keyboard_frame(self) -> None:
         frame: Optional[ArucoFrame] = self.compute_frame()
