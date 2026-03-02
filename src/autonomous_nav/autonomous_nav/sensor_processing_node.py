@@ -52,7 +52,7 @@ class SensorProcessingNode(Node):
         )
 
         self.cloud_sub = self.create_subscription(
-            PointCloud2, "/zed/zed_node/point_cloud/cloud_registered", self.cloudCallBack, 10
+            PointCloud2, "/zed/zed_node/point_cloud/cloud_registered", self.cloud_callback, 10
         )
 
         # ----------------------------------------------------------------------
@@ -118,7 +118,7 @@ class SensorProcessingNode(Node):
     # --------------------------------------------------------------------------
     #   Point Cloud Processing
     # --------------------------------------------------------------------------
-    def cloudCallBack(self, msg: PointCloud2) -> None:
+    def cloud_callback(self, msg: PointCloud2) -> None:
         try:
             # limit the processing to every 30th frame
             self.cloud_frame_count += 1

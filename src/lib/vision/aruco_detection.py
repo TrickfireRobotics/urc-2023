@@ -56,6 +56,9 @@ class ArucoDetection:
         Detect ArUco markers in a frame and estimate their poses if calibration is loaded.
         Returns a list of ArucoMarkerResult for each detected marker.
         """
+        assert self.camera_matrix is not None and self.dist_coeffs is not None
+        if frame is None:
+            return []
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         corners, ids, _ = self.detector.detectMarkers(gray)
 
@@ -153,7 +156,12 @@ class ArucoDetection:
                 (0, 255, 0),
                 2,
             )
-            if m.rvec is not None and m.tvec is not None and self.camera_matrix is not None:
+            if (
+                m.rvec is not None
+                and m.tvec is not None
+                and self.camera_matrix is not None
+                and self.dist_coeffs is not None
+            ):
                 cv2.drawFrameAxes(
                     output,
                     self.camera_matrix,
