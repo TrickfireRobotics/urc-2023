@@ -20,7 +20,7 @@ class KeyboardLocatorNode(Node):
     """
 
     def __init__(self) -> None:
-        super().__init__("keyboard_locator")
+        super().__init__("keyboard_locator_node")
         self.target_char: str = ""
         self.camera_frame_id: Optional[int] = None
         self.frame: Optional[np.ndarray] = None

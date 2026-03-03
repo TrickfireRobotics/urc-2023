@@ -1,5 +1,3 @@
-"""This node computes where the Pose is for the current character that the arm should move to"""
-
 from typing import Optional
 
 import rclpy
@@ -16,6 +14,7 @@ class KeyboardPoseNode(Node):
     """
 
     def __init__(self) -> None:
+        super().__init__("keyboard_pose_node")
         self.message: String = ""
         self.frame: Optional[ArucoFrame] = None
 

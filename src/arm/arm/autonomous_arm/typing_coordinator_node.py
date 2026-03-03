@@ -13,6 +13,7 @@ from std_msgs.msg import String
 
 class TypingCoordinatorNode(Node):
     def __init__(self) -> None:
+        super().__init__("typing_coordinator_node")
         self.message = ""
         self.char_index = 0  # tracks progress of typing
 
