@@ -4,8 +4,8 @@ source /opt/ros/$ROS_DISTRO/setup.bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$SCRIPT_DIR/install/setup.bash"
 
-chmod +x ./speed_cansend.sh
-./speed_cansend.sh
+#setup can interfaces and put the motor controllers in speed mode
+./setup_can_network.sh
 
 # Launch octomap server
 ros2 run octomap_server octomap_server_node --ros-args \
