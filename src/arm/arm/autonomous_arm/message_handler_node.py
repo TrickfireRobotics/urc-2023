@@ -55,6 +55,7 @@ class MessageHandlerNode(Node):
         self.message_index: int = 0          # which character we're currently on
         self.status: str = "Not Started"     # current lifecycle state
         self.waiting_for_result: bool = False  # True while motion planner is pressing a key
+        self.is_backspacing: bool = False      # True when we sent BACKSPACE to recover from a failed keypress
 
         # Start input thread
         input_thread = threading.Thread(target=self.collect_user_input)
@@ -75,8 +76,47 @@ class MessageHandlerNode(Node):
             self.user_message = input("Enter the message to type (3-6 characters): ")
             self.get_logger().info(f"Received message: {self.user_message}")
             self.update_status("In Progress")
+            self.send_next_character()
         except EOFError:
             self.get_logger().info("Input stream closed")
+
+    def send_next_character(self) -> None:
+        """Publish the current character to /key_to_press and wait for result."""
+        if self.user_message is None:
+            return
+        key = self.user_message[self.message_index].upper()
+        self.get_logger().info(f"Sending key: '{key}' ({self.message_index + 1}/{len(self.user_message)})")
+        msg = String()
+        msg.data = key
+        self.key_publisher.publish(msg)
+        self.waiting_for_result = True
+
+    def key_press_callback(self, msg: Bool) -> None:
+        """Called when the motion planner reports success or failure on /key_press_result."""
+        if not self.waiting_for_result:
+            return
+        self.waiting_for_result = False
+
+        if msg.data:
+            if self.is_backspacing:
+                # Backspace succeeded — retry the same character
+                self.is_backspacing = False
+                self.send_next_character()
+            else:
+                # Character typed successfully — move to next
+                self.message_index += 1
+                if self.user_message is None or self.message_index >= len(self.user_message):
+                    self.update_status("Complete")
+                else:
+                    self.send_next_character()
+        else:
+            # Failure — send BACKSPACE to undo, then retry same character
+            self.get_logger().warning("Keypress failed, sending BACKSPACE and retrying")
+            self.is_backspacing = True
+            backspace_msg = String()
+            backspace_msg.data = "BACKSPACE"
+            self.key_publisher.publish(backspace_msg)
+            self.waiting_for_result = True
 
     def calculate_key_position(self, key: str) -> tuple[float, float, float] | None:
         """
