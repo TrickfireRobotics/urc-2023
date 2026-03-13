@@ -62,7 +62,7 @@ class Drivebase(Node):
             self._last_received.append(time.time())
         last_receieved_index = len(self._last_received) - 1
         time_delta = time.time() - self._last_received[last_receieved_index]
-        if time_delta > 0.25:
+        if time_delta > 0.1:
 
             self.get_logger().info("STOPPING ALL MOTORS")
             self.bot_interface.stopMotor(MotorConfigs.FRONT_LEFT_DRIVE_MOTOR)
