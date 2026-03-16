@@ -80,7 +80,8 @@ class RMDx8Motor:
         Updates the RMDx8 motor state
         """
         run_settings = RMDX8RunSettings.fromJsonMsg(msg)
-        if time.time() - self._last_message_time < 0.05:
+        # Reduced throttle to 5ms to allow responsive velocity commands while preventing CAN bus overload
+        if time.time() - self._last_message_time < 0.005:
             return
         self._last_message_time = time.time()
 
@@ -131,9 +132,6 @@ class RMDx8Motor:
                 if _checkValid(run_settings.velocity):
                     # Velocity is 0.01 dps
                     try:
-                        time.sleep(
-                            0.01
-                        )  # Sleep for 10 ms to prevent CAN overload. This is a band-aid solution and should be fixed in the future by implementing a better message queue system
                         self.motor.sendVelocitySetpoint(run_settings.velocity * DEGREE_TO_REV * 100)
                         self._ros_node.get_logger().info("VELOCITY")
                     except Exception as ex:
