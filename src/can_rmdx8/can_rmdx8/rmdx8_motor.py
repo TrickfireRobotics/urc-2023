@@ -92,8 +92,14 @@ class RMDx8Motor:
             return
         self._last_message_time = ts_received
 
+        ts_callback_start = time.time()
+
         try:
             with self.mutex_lock:
+                ts_mutex_acquired = time.time()
+                self._ros_node.get_logger().info(
+                    f"[CAN_LATENCY] CAN {self.config.can_id} waited {(ts_mutex_acquired-ts_callback_start)*1000:.2f}ms for mutex"
+                )
                 # Stop if requested
                 if run_settings.set_stop:
                     self._ros_node.get_logger().info("STOP")
@@ -116,12 +122,16 @@ class RMDx8Motor:
                     and run_settings.current_pi is not None
                     and run_settings.position_pi is not None
                 ):
+                    ts_can_start = time.time()
                     self.motor.setControllerGains(
                         Gains(
                             run_settings.current_pi, run_settings.speed_pi, run_settings.position_pi
                         )
                     )
-                    self._ros_node.get_logger().info("SET GAINS")
+                    ts_can_end = time.time()
+                    self._ros_node.get_logger().info(
+                        f"[CAN_LATENCY] setControllerGains took {(ts_can_end-ts_can_start)*1000:.2f}ms"
+                    )
                 elif (
                     run_settings.speed_pi is not None
                     or run_settings.current_pi is not None
@@ -131,19 +141,23 @@ class RMDx8Motor:
 
                 if _checkValid(run_settings.position):
                     # Position is 0.01 dps and velocity is dps
+                    ts_can_start = time.time()
                     self.motor.sendPositionAbsoluteSetpoint(
                         run_settings.position * DEGREE_TO_REV * 100,
                         _validOrZero(run_settings.velocity) * DEGREE_TO_REV,
                     )
-                    self._ros_node.get_logger().info("POSITION")
+                    ts_can_end = time.time()
+                    self._ros_node.get_logger().info(
+                        f"[CAN_LATENCY] sendPositionAbsoluteSetpoint took {(ts_can_end-ts_can_start)*1000:.2f}ms"
+                    )
                 if _checkValid(run_settings.velocity):
                     # Velocity is 0.01 dps
                     try:
-                        ts_send = time.time()
+                        ts_can_start = time.time()
                         self.motor.sendVelocitySetpoint(run_settings.velocity * DEGREE_TO_REV * 100)
-                        ts_sent = time.time()
+                        ts_can_end = time.time()
                         self._ros_node.get_logger().info(
-                            f"[TIMESTAMP] {ts_send:.6f} RMDx8Motor CAN {self.config.can_id} SENDING velocity command (send took {(ts_sent-ts_send)*1000:.2f}ms)"
+                            f"[CAN_LATENCY] sendVelocitySetpoint took {(ts_can_end-ts_can_start)*1000:.2f}ms for CAN {self.config.can_id}"
                         )
                     except Exception as ex:
                         self._ros_node.get_logger().warning(
@@ -152,8 +166,12 @@ class RMDx8Motor:
 
                 if _checkValid(run_settings.current):
                     # Value is 0.01 A
+                    ts_can_start = time.time()
                     self.motor.sendCurrentSetpoint(run_settings.current * 100)
-                    self._ros_node.get_logger().info("CURRENT")
+                    ts_can_end = time.time()
+                    self._ros_node.get_logger().info(
+                        f"[CAN_LATENCY] sendCurrentSetpoint took {(ts_can_end-ts_can_start)*1000:.2f}ms"
+                    )
 
                 # Acceleration and type must both be set
                 if _checkValid(run_settings.acceleration) != (
@@ -167,10 +185,19 @@ class RMDx8Motor:
                     and run_settings.acceleration_type is not None
                 ):
                     # Acceleration is dps/s
+                    ts_can_start = time.time()
                     self.motor.setAcceleration(
                         run_settings.acceleration * 360, run_settings.acceleration_type
                     )
-                    self._ros_node.get_logger().info("ACCLEREATION")
+                    ts_can_end = time.time()
+                    self._ros_node.get_logger().info(
+                        f"[CAN_LATENCY] setAcceleration took {(ts_can_end-ts_can_start)*1000:.2f}ms"
+                    )
+
+                ts_callback_end = time.time()
+                self._ros_node.get_logger().info(
+                    f"[CAN_LATENCY] Total callback for CAN {self.config.can_id}: {(ts_callback_end-ts_callback_start)*1000:.2f}ms"
+                )
         except (rmd.ProtocolException, rmd.can.ProtocolViolationError) as ex:
             self._ros_node.get_logger().warning(f"Ignoring rmd protocol exception: {ex}")
 
