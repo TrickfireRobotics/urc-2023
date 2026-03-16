@@ -79,11 +79,18 @@ class RMDx8Motor:
         """
         Updates the RMDx8 motor state
         """
+        ts_received = time.time()
         run_settings = RMDX8RunSettings.fromJsonMsg(msg)
+        self._ros_node.get_logger().info(
+            f"[TIMESTAMP] {ts_received:.6f} RMDx8Motor CAN {self.config.can_id} received command"
+        )
         # Reduced throttle to 5ms to allow responsive velocity commands while preventing CAN bus overload
-        if time.time() - self._last_message_time < 0.005:
+        if ts_received - self._last_message_time < 0.005:
+            self._ros_node.get_logger().info(
+                f"[TIMESTAMP] {ts_received:.6f} RMDx8Motor CAN {self.config.can_id} THROTTLED (too soon)"
+            )
             return
-        self._last_message_time = time.time()
+        self._last_message_time = ts_received
 
         try:
             with self.mutex_lock:
@@ -132,8 +139,12 @@ class RMDx8Motor:
                 if _checkValid(run_settings.velocity):
                     # Velocity is 0.01 dps
                     try:
+                        ts_send = time.time()
                         self.motor.sendVelocitySetpoint(run_settings.velocity * DEGREE_TO_REV * 100)
-                        self._ros_node.get_logger().info("VELOCITY")
+                        ts_sent = time.time()
+                        self._ros_node.get_logger().info(
+                            f"[TIMESTAMP] {ts_send:.6f} RMDx8Motor CAN {self.config.can_id} SENDING velocity command (send took {(ts_sent-ts_send)*1000:.2f}ms)"
+                        )
                     except Exception as ex:
                         self._ros_node.get_logger().warning(
                             f"No data received for velocity setpoint: {ex}"

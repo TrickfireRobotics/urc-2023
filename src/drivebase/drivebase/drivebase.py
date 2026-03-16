@@ -34,18 +34,26 @@ class Drivebase(Node):
         self._last_received.append(time.time())
 
     def moveLeftSide(self, msg: Float32) -> None:
+        ts_received = time.time()
+        self.get_logger().info(
+            f"[TIMESTAMP] {ts_received:.6f} Drivebase received LEFT command: {msg.data}"
+        )
         self.appendToLastReceived()
         vel = msg.data * self.SPEED
-        self.bot_interface.runMotorSpeed(MotorConfigs.FRONT_LEFT_DRIVE_MOTOR, -vel)
-        self.bot_interface.runMotorSpeed(MotorConfigs.MID_LEFT_DRIVE_MOTOR, -vel)
-        self.bot_interface.runMotorSpeed(MotorConfigs.REAR_LEFT_DRIVE_MOTOR, -vel)
+        self.bot_interface.runMotorSpeed(MotorConfigs.FRONT_LEFT_DRIVE_MOTOR, -vel, ts_received)
+        self.bot_interface.runMotorSpeed(MotorConfigs.MID_LEFT_DRIVE_MOTOR, -vel, ts_received)
+        self.bot_interface.runMotorSpeed(MotorConfigs.REAR_LEFT_DRIVE_MOTOR, -vel, ts_received)
 
     def moveRightSide(self, msg: Float32) -> None:
+        ts_received = time.time()
+        self.get_logger().info(
+            f"[TIMESTAMP] {ts_received:.6f} Drivebase received RIGHT command: {msg.data}"
+        )
         self.appendToLastReceived()
         vel = msg.data * self.SPEED
-        self.bot_interface.runMotorSpeed(MotorConfigs.FRONT_RIGHT_DRIVE_MOTOR, vel)
-        self.bot_interface.runMotorSpeed(MotorConfigs.MID_RIGHT_DRIVE_MOTOR, vel)
-        self.bot_interface.runMotorSpeed(MotorConfigs.REAR_RIGHT_DRIVE_MOTOR, vel)
+        self.bot_interface.runMotorSpeed(MotorConfigs.FRONT_RIGHT_DRIVE_MOTOR, vel, ts_received)
+        self.bot_interface.runMotorSpeed(MotorConfigs.MID_RIGHT_DRIVE_MOTOR, vel, ts_received)
+        self.bot_interface.runMotorSpeed(MotorConfigs.REAR_RIGHT_DRIVE_MOTOR, vel, ts_received)
 
     def turnLeft(self, msg: Float32) -> None:
         self.appendToLastReceived()

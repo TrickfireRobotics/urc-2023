@@ -4,6 +4,7 @@ motors on the robot.
 """
 
 import math
+import time
 from collections import defaultdict
 
 from rclpy.node import Node
@@ -31,7 +32,9 @@ class RobotInterface:
                 self._ros_node.create_publisher(String, motor_config.getInterfaceTopicName(), 10)
             )
 
-    def runMotor(self, motor: MotorConfig, run_settings: CanMotorRunSettings) -> None:
+    def runMotor(
+        self, motor: MotorConfig, run_settings: CanMotorRunSettings, ts_origin: float = 0.0
+    ) -> None:
         """
         Runs the specified motor with the specified settings.
 
@@ -41,10 +44,19 @@ class RobotInterface:
             The config of the motor to run.
         run_settings : CanMotorRunSettings
             The settings to run the motor with.
+        ts_origin : float
+            Original timestamp from drivebase for tracing
         """
+        ts_publish = time.time()
+        if ts_origin > 0:
+            self._ros_node.get_logger().info(
+                f"[TIMESTAMP] {ts_publish:.6f} RobotInterface publishing to CAN ID {motor.can_id} (delay from drivebase: {(ts_publish - ts_origin)*1000:.2f}ms)"
+            )
         self._publishers[motor.motor_type][motor.can_id].publish(run_settings.toMsg())
 
-    def runMotorSpeed(self, motor: MotorConfig, target_radians_per_second: float) -> None:
+    def runMotorSpeed(
+        self, motor: MotorConfig, target_radians_per_second: float, ts_origin: float = 0.0
+    ) -> None:
         """
         Runs the specified motor with the specified target speed.
 
@@ -54,6 +66,8 @@ class RobotInterface:
             The config of the motor to run.
         target_radians_per_second: float
             The target speed in radians per second to run the motor.
+        ts_origin : float
+            Original timestamp from drivebase for tracing
         """
         self.runMotor(
             motor,
@@ -62,6 +76,7 @@ class RobotInterface:
                 velocity=target_radians_per_second * RADIANS_TO_REVS,
                 set_stop=False,
             ),
+            ts_origin,
         )
 
     def runMotorPosition(self, motor: MotorConfig, target_radians: float) -> None:
