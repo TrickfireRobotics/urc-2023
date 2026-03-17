@@ -85,7 +85,7 @@ class RMDx8Motor:
             f"[TIMESTAMP] {ts_received:.6f} RMDx8Motor CAN {self.config.can_id} received command"
         )
         # Reduced throttle to 5ms to allow responsive velocity commands while preventing CAN bus overload
-        if ts_received - self._last_message_time < 0.005:
+        if ts_received - self._last_message_time < 1:
             self._ros_node.get_logger().info(
                 f"[TIMESTAMP] {ts_received:.6f} RMDx8Motor CAN {self.config.can_id} THROTTLED (too soon)"
             )
@@ -205,6 +205,13 @@ class RMDx8Motor:
         """
         Publishes data from the rmdx8 controller
         """
+        ts_received = time.time()
+        if ts_received - self._last_message_time < 1:
+            self._ros_node.get_logger().info(
+                f"[TIMESTAMP] {ts_received:.6f} RMDx8Motor CAN {self.config.can_id} THROTTLED (too soon)"
+            )
+            return
+        self._last_message_time = ts_received
         try:
             with self.mutex_lock:
                 state = RMDX8MotorState.fromRMDX8Data(

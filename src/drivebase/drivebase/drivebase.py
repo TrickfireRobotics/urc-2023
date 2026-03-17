@@ -30,7 +30,6 @@ class Drivebase(Node):
         self._last_received: list[float] = []
 
     def appendToLastReceived(self) -> None:
-        last_receieved_index = len(self._last_received) - 1
         self._last_received.append(time.time())
 
     def moveLeftSide(self, msg: Float32) -> None:
