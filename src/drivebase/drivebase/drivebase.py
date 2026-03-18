@@ -12,7 +12,7 @@ from lib.interface.robot_interface import RobotInterface
 
 
 class Drivebase(Node):
-    SPEED = 6.28 * 0.75
+    SPEED = 6.28 * 0.25
 
     def __init__(self) -> None:
         super().__init__("drivebase")
@@ -69,7 +69,7 @@ class Drivebase(Node):
             self._last_received.append(time.time())
         last_receieved_index = len(self._last_received) - 1
         time_delta = time.time() - self._last_received[last_receieved_index]
-        if time_delta > 0.1:
+        if time_delta > 1:
 
             self.get_logger().info("STOPPING ALL MOTORS")
             self.bot_interface.stopMotor(MotorConfigs.FRONT_LEFT_DRIVE_MOTOR)
