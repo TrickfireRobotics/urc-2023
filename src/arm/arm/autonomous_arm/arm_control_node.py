@@ -24,6 +24,12 @@ class ArmControlNode(Node):
     def move_arm_to_pose(self, pose: Pose) -> None:
         # TODO Implement actual arm movement logic here
         pass
+    
+    def publish_status(self, status: str) -> None:
+        status_msg = String()
+        status_msg.data = status
+        self.status_publisher.publish(status_msg)
+        self.get_logger().info(f"Published arm typing status: {status}")
 
 
 def main(args: list[str] | None = None) -> None:

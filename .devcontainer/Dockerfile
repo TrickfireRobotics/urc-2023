@@ -31,6 +31,15 @@ RUN pip3 install moteus
 
 RUN pip3 install pyusb
 
+# Inverse kinematics dependencies
+RUN pip3 install \
+  python-can \
+  roboticstoolbox-python \
+  spatialmath \
+  spatialgeometry \
+  websockets \
+  swift-sim
+
 # Install OpenCV for python (note: you already have python3-opencv via apt)
 RUN pip3 install opencv-python
 

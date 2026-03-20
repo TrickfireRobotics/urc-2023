@@ -84,7 +84,7 @@ class KeyboardPoseNode(Node):
             return None
 
         spacebar_detector = SpacebarDetector()
-        x, y = spacebar_detector.detect_spacebar_center(
+        x, y = spacebar_detector.detect_spacebar(
             frame=self.frame, aruco_frame=self.aruco_frame
         )
         self.get_logger().info(f"Detected spacebar center at ({x}, {y}) in keyboard frame")

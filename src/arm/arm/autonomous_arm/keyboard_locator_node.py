@@ -75,7 +75,7 @@ class KeyboardLocatorNode(Node):
         """Uses the aruco detection class and key"""
         assert self.camera_frame_id is not None and self.frame is not None
         detector: ArucoDetection = ArucoDetection(
-            dict_type=cv2.aurco.DICT_6x6_250,
+            dict_type=cv2.aruco.DICT_6x6_250,
             marker_length=1.0,
             cam_id=self.camera_frame_id,
         )
