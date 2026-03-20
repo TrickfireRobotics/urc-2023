@@ -124,7 +124,10 @@ class InverseKinematics:
         self.turntableMotorSpeed = 0
         self.turntableMotorFaultCode = 0
 
-        self.updateTurntableMotorState()
+        try:
+            self.updateTurntableMotorState()
+        except Exception as e:
+            self._ros_node.get_logger().warn(f"Could not read turntable motor state: {e}")
 
     def updateTurntableMotorState(self, send_msg_before: bool = True) -> None:
         with can.Bus(interface="socketcan", channel="can0", receive_own_messages=True) as bus:

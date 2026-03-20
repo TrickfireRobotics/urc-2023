@@ -116,4 +116,14 @@
 		</visual>	
 	</link>
 
+
+    <!-- Camera mounted on forearm — placeholder offset, calibrate before use -->
+    <joint name="arm_camera_joint" type="fixed">
+      <parent link="forearm"/>
+      <child link="arm_camera_link"/>
+      <origin xyz="-0.15 0 -0.03" rpy="0 0 0"/>
+    </joint>
+
+    <link name="arm_camera_link"/>
+
 </robot>
