@@ -35,7 +35,7 @@ RUN pip3 install pyusb
 RUN pip3 install \
   python-can \
   roboticstoolbox-python \
-  spatialmath \
+  spatialmath-python \
   spatialgeometry \
   websockets \
   swift-sim
