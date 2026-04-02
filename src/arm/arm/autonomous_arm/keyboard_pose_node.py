@@ -58,7 +58,7 @@ class KeyboardPoseNode(Node):
 
     def publish_arm_pose(self) -> None:
         if self.frame is None or self.message == "":
-            pose = self.compute_pose_for_character(self.message)
+            pose = self.compute_pose_for_character()
             self.arm_pose_pub.publish(pose)
 
     # ============ Main Logic ============
@@ -71,11 +71,12 @@ class KeyboardPoseNode(Node):
         with open(path, "r") as f:
             self.distance_map = json.load(f)
 
-    def compute_pose_for_character(self, char: str) -> Optional[Pose]:
-        # TODO Use key_positions.json to map where characters are
-        # TODO Map Pose within ArucoFrame to global Pose for arm to move to
+    def compute_pose_for_character(self) -> Optional[Pose]:
         if self.frame is None:
             self.get_logger().info("No Aruco frame available for pose computation")
+            return None
+        if self.aruco_frame is None:
+            self.get_logger().info("No camera frame available for pose computation")
             return None
 
         self.load_distance_map()
@@ -84,17 +85,40 @@ class KeyboardPoseNode(Node):
             return None
 
         spacebar_detector = SpacebarDetector()
-        x, y = spacebar_detector.detect_spacebar_center(
+        xy: Optional[tuple[float, float]] = spacebar_detector.detect_spacebar(
             frame=self.frame, aruco_frame=self.aruco_frame
         )
-        self.get_logger().info(f"Detected spacebar center at ({x}, {y}) in keyboard frame")
+        if xy is None:
+            self.get_logger().info("No spacebar detected, cannot compute character positions")
+            return None
+
+        self.get_logger().info(f"Detected spacebar center at ({xy[0]}, {xy[1]}) in keyboard frame")
 
         # location of character on keyboard frame can be computed using key_positions.json and the detected spacebar center
         char_coords = (
-            self.distance_map.get(self.message, (0, 0))[0] + x,
-            self.distance_map.get(self.message, (0, 0))[1] + y,
+            self.distance_map.get(self.message, (0, 0))[0] + xy[0],
+            self.distance_map.get(self.message, (0, 0))[1] + xy[1],
         )
 
-        # Use tf to transform from keyboard frame to global frame for the arm to move to
+        # TODO: Use tf to transform from keyboard frame to global frame for the arm to move to
 
         return Pose()
+
+
+def main(args: list[str] | None = None) -> None:
+    rclpy.init(args=args)
+    keyboard_pose_node = None
+    try:
+        keyboard_pose_node = KeyboardPoseNode()
+        rclpy.spin(keyboard_pose_node)
+
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if keyboard_pose_node is not None:
+            keyboard_pose_node.destroy_node()
+        rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()

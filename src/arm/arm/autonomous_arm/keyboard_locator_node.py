@@ -15,8 +15,8 @@ class KeyboardLocatorNode(Node):
     """
     This node takes in camera intrinsics and camera_id to compute bounding box around keyboard
 
-    TODO Update camera info subscribers to use camera that will be on arm - currently using ZED cam
-    TODO Check what aruco dict to use for typing mission - currently using 6x6_250
+    TODO: Update camera info subscribers to use camera that will be on arm - currently using ZED cam
+    TODO: Check what aruco dict to use for typing mission - currently using 6x6_250
     """
 
     def __init__(self) -> None:
