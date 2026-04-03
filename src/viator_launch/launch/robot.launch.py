@@ -132,6 +132,16 @@ static_tf = Node(
     arguments=["-0.45", "-0.12", "0", "0", "0", "0", "1", "zed_camera_link", "gps"],
 )
 
+# Autonomous arm typing nodes
+keyboard_locator_node = Node(
+    package="arm", executable="keyboard_locator", name="keyboard_locator_node"
+)
+keyboard_pose_node = Node(package="arm", executable="keyboard_pose", name="keyboard_pose_node")
+typing_coordinator_node = Node(
+    package="arm", executable="typing_coordinator", name="typing_coordinator_node"
+)
+arm_control_node = Node(package="arm", executable="arm_control", name="arm_control_node")
+
 
 def generate_launch_description() -> launch.LaunchDescription:  # pylint: disable=invalid-name
     return launch.LaunchDescription(
@@ -153,5 +163,9 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             ekf_node,
             static_tf,
             global_costmap_node,
+            keyboard_locator_node,
+            keyboard_pose_node,
+            typing_coordinator_node,
+            arm_control_node,
         ]
     )
