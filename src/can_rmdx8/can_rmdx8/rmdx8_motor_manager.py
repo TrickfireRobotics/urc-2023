@@ -63,7 +63,7 @@ def main(args: list[str] | None = None) -> None:
         node = RMDx8MotorManager()
         # Each motor has a timer + subscriber callback that can run concurrently,
         # so allocate 2 threads per motor with a minimum of 2 to avoid spin_once crashes.
-        num_threads = max(node.num_motors * 2, 2)
+        num_threads = max(node.num_motors, 2)
         executor = MultiThreadedExecutor(num_threads=num_threads)
         executor.add_node(node)
         executor.spin()
