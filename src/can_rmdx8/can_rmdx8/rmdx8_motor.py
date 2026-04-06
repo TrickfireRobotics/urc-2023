@@ -152,13 +152,21 @@ class RMDx8Motor:
         """
         try:
             with self.mutex_lock:
-                state = RMDX8MotorState.fromRMDX8Data(
-                    self.config.can_id,
-                    self.motor.getMotorStatus1(),
-                    self.motor.getMotorStatus2(),
-                    self.motor.getMotorPower(),
-                    self.motor.getAcceleration(),
-                )
+                try:
+                    state = RMDX8MotorState.fromRMDX8Data(
+                        self.config.can_id,
+                        self.motor.getMotorStatus1(),
+                        self.motor.getMotorStatus2(),
+                        self.motor.getMotorPower(),
+                        self.motor.getAcceleration(),
+                    )
+                # yes i know this is a super general catch testing dropping packets
+                except Exception as e:
+                    if "Resource Unavailable" in str(e):
+                        print("failed")
+                    else:
+                        print(e)
+
             self._publisher.publish(state.toMsg())
         except myactuator_rmd_py.can.SocketException as e:
             self._ros_node.get_logger().error(
