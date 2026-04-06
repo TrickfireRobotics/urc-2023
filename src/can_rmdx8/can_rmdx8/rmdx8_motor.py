@@ -8,6 +8,7 @@ from threading import Lock
 from typing import TypeGuard
 
 import myactuator_rmd_py as rmd
+import myactuator_rmd_py.can
 import std_msgs.msg
 from myactuator_rmd_py.actuator_state import Gains
 from rclpy.callback_groups import ReentrantCallbackGroup
@@ -84,75 +85,85 @@ class RMDx8Motor:
         """
         run_settings = RMDX8RunSettings.fromJsonMsg(msg)
 
-        with self.mutex_lock:
-            # Stop if requested
-            if run_settings.set_stop:
-                self.motor.stopMotor()
-                return
+        try:
+            with self.mutex_lock:
+                # Stop if requested
+                if run_settings.set_stop:
+                    self.motor.stopMotor()
+                    return
 
-            # Else, set values
-            if (
-                run_settings.speed_pi is not None
-                and run_settings.current_pi is not None
-                and run_settings.position_pi is not None
-            ):
-                self.motor.setControllerGains(
-                    Gains(
-                        run_settings.current_pi,
-                        run_settings.speed_pi,
-                        run_settings.position_pi,
+                # Else, set values
+                if (
+                    run_settings.speed_pi is not None
+                    and run_settings.current_pi is not None
+                    and run_settings.position_pi is not None
+                ):
+                    self.motor.setControllerGains(
+                        Gains(
+                            run_settings.current_pi,
+                            run_settings.speed_pi,
+                            run_settings.position_pi,
+                        )
                     )
-                )
-            elif (
-                run_settings.speed_pi is not None
-                or run_settings.current_pi is not None
-                or run_settings.position_pi is not None
-            ):
-                raise ValueError("All 3 PiGains must all be defined or all be None")
+                elif (
+                    run_settings.speed_pi is not None
+                    or run_settings.current_pi is not None
+                    or run_settings.position_pi is not None
+                ):
+                    raise ValueError("All 3 PiGains must all be defined or all be None")
 
-            if _checkValid(run_settings.position):
-                # Position is 0.01 dps and velocity is dps
-                self.motor.sendPositionAbsoluteSetpoint(
-                    run_settings.position * DEGREE_TO_REV * 100,
-                    _validOrZero(run_settings.velocity) * DEGREE_TO_REV,
-                )
-            if _checkValid(run_settings.velocity):
-                # Velocity is 0.01 dps
-                self.motor.sendVelocitySetpoint(run_settings.velocity * DEGREE_TO_REV * 100)
+                if _checkValid(run_settings.position):
+                    # Position is 0.01 dps and velocity is dps
+                    self.motor.sendPositionAbsoluteSetpoint(
+                        run_settings.position * DEGREE_TO_REV * 100,
+                        _validOrZero(run_settings.velocity) * DEGREE_TO_REV,
+                    )
+                if _checkValid(run_settings.velocity):
+                    # Velocity is 0.01 dps
+                    self.motor.sendVelocitySetpoint(run_settings.velocity * DEGREE_TO_REV * 100)
 
-            if _checkValid(run_settings.current):
-                # Value is 0.01 A
-                self.motor.sendCurrentSetpoint(run_settings.current * 100)
+                if _checkValid(run_settings.current):
+                    # Value is 0.01 A
+                    self.motor.sendCurrentSetpoint(run_settings.current * 100)
 
-            # Acceleration and type must both be set
-            if _checkValid(run_settings.acceleration) != (
-                run_settings.acceleration_type is not None
-            ):
-                raise ValueError(
-                    "`acceleration` and `acceleration_type` must both be None or not None"
-                )
-            if (
-                _checkValid(run_settings.acceleration)
-                and run_settings.acceleration_type is not None
-            ):
-                # Acceleration is dps/s
-                self.motor.setAcceleration(
-                    run_settings.acceleration * 360, run_settings.acceleration_type
-                )
+                # Acceleration and type must both be set
+                if _checkValid(run_settings.acceleration) != (
+                    run_settings.acceleration_type is not None
+                ):
+                    raise ValueError(
+                        "`acceleration` and `acceleration_type` must both be None or not None"
+                    )
+                if (
+                    _checkValid(run_settings.acceleration)
+                    and run_settings.acceleration_type is not None
+                ):
+                    # Acceleration is dps/s
+                    self.motor.setAcceleration(
+                        run_settings.acceleration * 360, run_settings.acceleration_type
+                    )
+        except myactuator_rmd_py.can.SocketException as e:
+            self._ros_node.get_logger().error(
+                f"CAN error in dataInCallback for motor {self.config.can_id}: {e}"
+            )
 
     def publishData(self) -> None:
         """
         Publishes data from the rmdx8 controller
         """
-        with self.mutex_lock:
-            state = RMDX8MotorState.fromRMDX8Data(
-                self.config.can_id,
-                self.motor.getMotorStatus1(),
-                self.motor.getMotorStatus2(),
-                self.motor.getMotorPower(),
-                self.motor.getAcceleration(),
+        try:
+            with self.mutex_lock:
+                state = RMDX8MotorState.fromRMDX8Data(
+                    self.config.can_id,
+                    self.motor.getMotorStatus1(),
+                    self.motor.getMotorStatus2(),
+                    self.motor.getMotorPower(),
+                    self.motor.getAcceleration(),
+                )
+            self._publisher.publish(state.toMsg())
+        except myactuator_rmd_py.can.SocketException as e:
+            self._ros_node.get_logger().error(
+                f"CAN error in publishData for motor {self.config.can_id}: {e}"
             )
-        self._publisher.publish(state.toMsg())
 
     def stopMotor(self) -> None:
         """
@@ -165,5 +176,10 @@ class RMDx8Motor:
         """
         Calls my_actuator_rmd shutdownMotor
         """
-        with self.mutex_lock:
-            self.motor.shutdownMotor()
+        try:
+            with self.mutex_lock:
+                self.motor.shutdownMotor()
+        except myactuator_rmd_py.can.SocketException as e:
+            self._ros_node.get_logger().error(
+                f"CAN error during shutdown for motor {self.config.can_id}: {e}"
+            )
