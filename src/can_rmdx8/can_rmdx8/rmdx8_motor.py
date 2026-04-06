@@ -162,8 +162,8 @@ class RMDx8Motor:
                     )
                 # yes i know this is a super general catch testing dropping packets
                 except Exception as e:
-                    if "Resource Unavailable" in str(e):
-                        print(f"Packet dropped from motor {self.config.can_id}")
+                    if "Resource temporarily unavailable" in str(e):
+                        print(f"Packet might have dropped from motor {self.config.can_id}")
                     else:
                         print(e)
 
