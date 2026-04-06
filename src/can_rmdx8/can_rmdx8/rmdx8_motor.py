@@ -10,6 +10,7 @@ from typing import TypeGuard
 import myactuator_rmd_py as rmd
 import std_msgs.msg
 from myactuator_rmd_py.actuator_state import Gains
+from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from rclpy.publisher import Publisher
 from rclpy.subscription import Subscription
@@ -38,20 +39,21 @@ class RMDx8Motor:
     A wrapper class to interact with the RMDx8 actuator and the ROS nodes.
     """
 
-    mutex_lock = Lock()
-
     def __init__(self, config: RMDx8MotorConfig, driver: rmd.CanDriver, ros_node: Node) -> None:
-
         self.config = config
         self._ros_node = ros_node
         self.motor = rmd.ActuatorInterface(driver, config.can_id)
+        self.mutex_lock = Lock()
+        self._callback_group = ReentrantCallbackGroup()
         self._subscriber = self._createSubscriber()
 
         self._publisher = self._createPublisher()
 
         # Publish a message every 0.05 seconds
         timer_period = 0.05
-        self.timer = ros_node.create_timer(timer_period, self.publishData)
+        self.timer = ros_node.create_timer(
+            timer_period, self.publishData, callback_group=self._callback_group
+        )
 
     # create a subscriber
     def _createSubscriber(self) -> Subscription:
@@ -61,6 +63,7 @@ class RMDx8Motor:
             topic_name,
             self.dataInCallback,
             1,
+            callback_group=self._callback_group,
         )
         return subscriber
 
@@ -94,7 +97,11 @@ class RMDx8Motor:
                 and run_settings.position_pi is not None
             ):
                 self.motor.setControllerGains(
-                    Gains(run_settings.current_pi, run_settings.speed_pi, run_settings.position_pi)
+                    Gains(
+                        run_settings.current_pi,
+                        run_settings.speed_pi,
+                        run_settings.position_pi,
+                    )
                 )
             elif (
                 run_settings.speed_pi is not None
