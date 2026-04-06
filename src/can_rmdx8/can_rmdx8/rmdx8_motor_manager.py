@@ -20,7 +20,7 @@ class RMDx8MotorManager(Node):
         super().__init__("can_rmdx8_node")
         self.get_logger().info(colorStr("Launching can_rmdx8 node", ColorCodes.BLUE_OK))
         self._id_to_rmdx8_motor: dict[int, RMDx8Motor] = {}
-        self.driver = rmd.CanDriver("can1")
+        self.driver = rmd.CanDriver("can0")
         self.num_motors = 0
         self.createRMDx8Motors()
 
