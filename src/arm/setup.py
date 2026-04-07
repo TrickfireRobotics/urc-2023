@@ -9,7 +9,10 @@ setup(
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
-        ("share/" + package_name + "/config", ["config/kinematics.yaml", "config/joint_limits.yaml", "config/ompl_planning.yaml"]),
+        (
+            "share/" + package_name + "/config",
+            ["config/kinematics.yaml", "config/joint_limits.yaml", "config/ompl_planning.yaml"],
+        ),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
@@ -21,10 +24,6 @@ setup(
     entry_points={
         "console_scripts": [
             "arm = arm.arm:main",
-            "typing_coordinator = arm.autonomous_arm.typing_coordinator_node:main",
-            "keyboard_locator = arm.autonomous_arm.keyboard_locator_node:main",
-            "keyboard_pose = arm.autonomous_arm.keyboard_pose_node:main",
-            "arm_control = arm.autonomous_arm.arm_control_node:main",
         ],
     },
 )

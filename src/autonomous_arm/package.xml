@@ -4,7 +4,7 @@
   <name>autonomous_arm</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="alex@sing.email">trickfire</maintainer>
+  <maintainer email="alexsing@uw.edu">trickfire</maintainer>
   <license>TODO: License declaration</license>
 
   <depend>rclpy</depend>
