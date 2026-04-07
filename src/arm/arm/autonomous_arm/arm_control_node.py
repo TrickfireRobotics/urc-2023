@@ -1,25 +1,31 @@
 import rclpy
-import spatialmath as sm
 from geometry_msgs.msg import Pose
-from rclpy.executors import ExternalShutdownException
+from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 from rclpy.node import Node
 from std_msgs.msg import String
 
-from lib.interface.robot_interface import RobotInterface
-from lib.interface.robot_info import RobotInfo
-from arm.inverse_kinematics import InverseKinematics
+from pymoveit2 import MoveIt2
 
-MOVE_TIMEOUT_SEC = 3.0  # seconds to wait after commanding arm before publishing "done"
+JOINT_NAMES = ["shoulder_1", "elbow_1", "wrist_1", "wrist_2"]
+HOME_JOINT_POSITIONS = [0.0, 0.0, 0.0, 0.0]
 
 
 class ArmControlNode(Node):
     def __init__(self) -> None:
         super().__init__("arm_control_node")
 
-        self._interface = RobotInterface(self)
-        self._info = RobotInfo(self)
-        self._ik = InverseKinematics(self, self._interface, self._info)
-        self._move_timer = None
+        callback_group = ReentrantCallbackGroup()
+        self.moveit_client = MoveIt2(
+            node=self,
+            joint_names=JOINT_NAMES,
+            base_link_name="base_link",
+            end_effector_name="gripper_assembly",
+            group_name="arm",
+            callback_group=callback_group,
+        )
+        self.moveit_client.max_velocity = 0.1
+        self.moveit_client.max_acceleration = 0.1
 
         # ============ Subscribers ============
         self.pose_subscriber = self.create_subscription(Pose, "arm/pose", self.pose_callback, 1)
@@ -29,36 +35,49 @@ class ArmControlNode(Node):
 
     # ============ Callbacks ============
     def pose_callback(self, msg: Pose) -> None:
+        """Move arm to the target key pose, then return to home."""
         self.get_logger().info(f"Received new arm pose to move to: {msg}")
-        if self._move_timer is not None:
-            self._move_timer.cancel()
-            self._move_timer = None
-        self.move_arm_to_pose(msg)
-        self._move_timer = self.create_timer(MOVE_TIMEOUT_SEC, self._on_move_complete)
 
-    def _on_move_complete(self) -> None:
-        if self._move_timer is not None:
-            self._move_timer.cancel()
-            self._move_timer = None
-        self._ik.can_send = False
-        self.publish_status("done")
+        # Move to the key pose
+        self.move_arm_to_pose(msg)
+        success = self.moveit_client.wait_until_executed()
+
+        if success:
+            self.publish_status("done")
+            # Return to home position
+            self.moveit_client.move_to_configuration(joint_positions=HOME_JOINT_POSITIONS)
+            self.moveit_client.wait_until_executed()
+            self.publish_status("ready")
+        else:
+            self.get_logger().error("Failed to move arm to target pose")
+            self.publish_status("error")
 
     # ============ Main Logic ============
-    def move_arm_to_pose(self, pose: Pose) -> None:
-        target_se3 = self._pose_to_se3(pose)
-        self._ik.last_target = sm.SE3(self._ik.target)
-        self._ik.target = target_se3
-        self._ik.can_send = True
-        self._ik.runArmToTarget()
+    def move_arm_to_pose(self, pose: Pose) -> bool:
+        if pose is None:
+            self.get_logger().error("Received None pose, cannot move arm")
+            return False
 
-    @staticmethod
-    def _pose_to_se3(pose: Pose) -> sm.SE3:
-        q = pose.orientation
-        # geometry_msgs uses scalar-last (x,y,z,w); spatialmath UnitQuaternion uses scalar-first (w,x,y,z)
-        unit_quat = sm.UnitQuaternion([q.w, q.x, q.y, q.z], norm=True)
-        rotation = unit_quat.SO3()
-        translation = [pose.position.x, pose.position.y, pose.position.z]
-        return sm.SE3.Rt(rotation, translation)
+        # self.moveit_client.move_to_pose(
+        #     pose=pose,
+        #     frame_id="base_link",
+        #     tolerance_position=0.001,
+        #     tolerance_orientation=0.001,
+        #     cartesian=False,
+        # )
+
+        self.moveit_client.plan(
+            pose=pose,
+            frame_id="base_link",
+            tolerance_position=0.001,
+            tolerance_orientation=0.001,
+            cartesian=False,
+        )
+
+        self.moveit_client.execute()
+
+        self.moveit_client.wait_until_executed()
+        return True
 
     def publish_status(self, status: str) -> None:
         status_msg = String()
@@ -69,19 +88,17 @@ class ArmControlNode(Node):
 
 def main(args: list[str] | None = None) -> None:
     rclpy.init(args=args)
-    arm_control_node = None
+    arm_control_node = ArmControlNode()
+    # Multi-threaded executor is required for this node to run with the pymoveit2 action server
+    # Pymoveit2 runs rcply.spin once internally
+    executor = MultiThreadedExecutor(2)
+    executor.add_node(arm_control_node)
     try:
-        arm_control_node = ArmControlNode()
-        rclpy.spin(arm_control_node)
-
-    except KeyboardInterrupt:
+        executor.spin()
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
-    except ExternalShutdownException:
-        if arm_control_node is not None:
-            arm_control_node.get_logger().info("Shutting down arm_control_node")
     finally:
-        if arm_control_node is not None:
-            arm_control_node.destroy_node()
+        arm_control_node.destroy_node()
         rclpy.shutdown()
 
 

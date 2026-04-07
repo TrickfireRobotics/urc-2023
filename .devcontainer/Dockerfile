@@ -13,6 +13,12 @@ RUN apt-get update && apt-get install -y \
   ros-humble-nav2-simple-commander \
   # TF quaternion utilities
   ros-humble-tf-transformations \
+  # pymoveit2 dependencies
+  ros-humble-control-msgs \
+  ros-humble-moveit-msgs \
+  ros-humble-shape-msgs \
+  ros-humble-trajectory-msgs \
+  ros-humble-std-srvs \
   # Install usb utilities
   usbutils \
   can-utils \
