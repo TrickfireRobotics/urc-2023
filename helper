@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+if [ $# = 0 ]; then
+  git pull && ./build.sh && ./setup_can_network.sh && ./launch.sh
+fi
+
+for arg in "$@"; do
+  case "$arg" in
+  -b | build)
+    echo "Building env"
+    ./build.sh
+    ;;
+  -p | pull)
+    echo "Pulling"
+    git pull
+    ;;
+  -c | can)
+    echo "Setting up can"
+    ./setup_can_network.sh
+    ;;
+  -l | launch)
+    echo "Launching"
+    ./launch.sh
+    ;;
+  -h | help)
+    echo "Small run script to speed some things up"
+    echo "  -p or pull: does a quick git pull"
+    echo "  -c or can: sets up the local can network"
+    echo "  -l or launch: launches the program"
+    echo "    Running run on its own will run everything in order, make sure to just do this on your own"
+    ;;
+  *)
+    echo "Invalid tag $arg"
+    exit 1
+    ;;
+  esac
+done
