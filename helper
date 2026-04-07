@@ -10,10 +10,6 @@ for arg in "$@"; do
     echo "Building env"
     ./build.sh
     ;;
-  -p | pull)
-    echo "Pulling"
-    git pull
-    ;;
   -c | can)
     echo "Setting up can"
     ./setup_can_network.sh
@@ -24,7 +20,7 @@ for arg in "$@"; do
     ;;
   -h | help)
     echo "Small run script to speed some things up"
-    echo "  -p or pull: does a quick git pull"
+    echo "-b or build: builds the environment"
     echo "  -c or can: sets up the local can network"
     echo "  -l or launch: launches the program"
     echo "    Running run on its own will run everything in order, make sure to just do this on your own"
