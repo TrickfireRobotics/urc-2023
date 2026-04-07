@@ -5,3 +5,7 @@
 
 # Python scripts compiled as bytecode.
 __pycache__/
+
+# ZED SDK ROS2 packages
+src/zed-ros2-examples/
+src/zed-ros2-wrapper/
