@@ -76,8 +76,8 @@ class ArmControlNode(Node):
 
         self.moveit_client.execute()
 
-        self.moveit_client.wait_until_executed()
-        return True
+        return self.moveit_client.wait_until_executed()
+        # return True
 
     def publish_status(self, status: str) -> None:
         status_msg = String()
