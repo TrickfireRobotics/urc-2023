@@ -231,7 +231,9 @@ class NavigationNode(Node):
             elif self.global_costmap is not None:
                 self.get_logger().warn("Running custom A* planner...")
                 self.planPathCustom(self.global_costmap)
-                self.get_logger().info(f"Custom A* path plotted. Total indices queried: {self.index_count}")
+                self.get_logger().info(
+                    f"Custom A* path plotted. Total indices queried: {self.index_count}"
+                )
                 self.path_pub.publish(self.path)
             return
 
@@ -248,9 +250,7 @@ class NavigationNode(Node):
         Toggle self.use_nav2 = False to use the original custom A* instead.
         """
         if not self._nav2_client.wait_for_server(timeout_sec=2.0):
-            self.get_logger().warn(
-                "Nav2 planner server not available. Falling back to custom A*."
-            )
+            self.get_logger().warn("Nav2 planner server not available. Falling back to custom A*.")
             self.use_nav2 = False
             if self.global_costmap is not None:
                 self.planPathCustom(self.global_costmap)
@@ -296,9 +296,7 @@ class NavigationNode(Node):
         result = future.result().result
         self.path = result.path
         self._nav2_path_pending = False
-        self.get_logger().info(
-            f"Nav2 planner returned path with {len(self.path.poses)} poses."
-        )
+        self.get_logger().info(f"Nav2 planner returned path with {len(self.path.poses)} poses.")
         self.path_pub.publish(self.path)
 
     # ----------------------
@@ -348,9 +346,7 @@ class NavigationNode(Node):
                 self.end_goal_waypoint[1],
             )
 
-    def find_lowest_cost_node(
-        self, target_area: list[Tuple[int, int]], grid: OccupancyGrid
-    ) -> int:
+    def find_lowest_cost_node(self, target_area: list[Tuple[int, int]], grid: OccupancyGrid) -> int:
         minimum_cost = sys.float_info.max
         minimum_index = None
         if target_area == []:
@@ -364,7 +360,9 @@ class NavigationNode(Node):
                 minimum_cost = item_cost
                 minimum_index = item_index
         if minimum_index is None:
-            self.get_logger().warn("no valid nodes found in target area, defaulting to current position")
+            self.get_logger().warn(
+                "no valid nodes found in target area, defaulting to current position"
+            )
             return self.position_to_index(grid, self.current_position)
         return minimum_index
 
@@ -378,18 +376,14 @@ class NavigationNode(Node):
         self.get_logger().info(f"adding position {new_pose[0]} x {new_pose[1]}")
         self.path.poses.append(pose)
 
-    def distance_between_indicies(
-        self, grid: OccupancyGrid, ind1: int, ind2: int
-    ) -> float:
+    def distance_between_indicies(self, grid: OccupancyGrid, ind1: int, ind2: int) -> float:
         row1 = ind1 // grid.info.width
         col1 = ind1 % grid.info.width
         row2 = ind2 // grid.info.width
         col2 = ind2 % grid.info.width
         return math.sqrt((row1 - row2) ** 2 + (col1 - col2) ** 2)
 
-    def collect_adjacent(
-        self, grid: OccupancyGrid, current_index: int
-    ) -> list[Tuple[int, int]]:
+    def collect_adjacent(self, grid: OccupancyGrid, current_index: int) -> list[Tuple[int, int]]:
         adjacent_points: list[Tuple[int, int]] = []
         grid.data[current_index] = 50
         self.index_count += 4
@@ -419,9 +413,7 @@ class NavigationNode(Node):
             )
         return adjacent_points
 
-    def position_to_index(
-        self, grid: OccupancyGrid, position: Tuple[float, float]
-    ) -> int:
+    def position_to_index(self, grid: OccupancyGrid, position: Tuple[float, float]) -> int:
         x, y = position
         col = int((x - grid.info.origin.position.x) / grid.info.resolution)
         row = int((y - grid.info.origin.position.y) / grid.info.resolution)
@@ -430,9 +422,7 @@ class NavigationNode(Node):
             self.get_logger().warn(f"the position {x}, {y} is outside the occupancy grid")
         return current_index
 
-    def index_to_position(
-        self, grid: OccupancyGrid, target_index: int
-    ) -> Tuple[float, float]:
+    def index_to_position(self, grid: OccupancyGrid, target_index: int) -> Tuple[float, float]:
         x_grid = target_index % grid.info.width
         y_grid = target_index // grid.info.width
         x_position = grid.info.origin.position.x + (x_grid + 0.5) * grid.info.resolution
