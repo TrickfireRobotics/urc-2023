@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ $# = 0 ]; then
-  git pull && ./build.sh && ./setup_can_network.sh && ./launch.sh
+  ./build.sh && ./setup_can_network.sh && ./launch.sh
 fi
 
 for arg in "$@"; do
