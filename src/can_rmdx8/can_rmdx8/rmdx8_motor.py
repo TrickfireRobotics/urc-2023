@@ -54,8 +54,10 @@ class RMDx8Motor:
         self.mutex_lock = Lock()
         self._callback_group = ReentrantCallbackGroup()
         self._publisher = self._createPublisher()
+        self._poll_count = 0
+        self._last_power: float = 0.0
+        self._last_acceleration: float = 0.0
 
-        # Publish data every 0.05 seconds to each motor
         timer_period = 0.10
         self.timer = ros_node.create_timer(
             timer_period, callback=cb, callback_group=self._callback_group
@@ -145,18 +147,24 @@ class RMDx8Motor:
         """
         try:
             with self.mutex_lock:
+                self._poll_count += 1
+                # Power and acceleration change slowly — only query every 5 ticks
+                # to reduce CAN bus traffic from 4 transactions/poll to 2.
+                if self._poll_count % 5 == 0:
+                    self._last_power = self.motor.getMotorPower()
+                    self._last_acceleration = self.motor.getAcceleration()
                 state = RMDX8MotorState.fromRMDX8Data(
                     self.config.can_id,
                     self.motor.getMotorStatus1(),
                     self.motor.getMotorStatus2(),
-                    self.motor.getMotorPower(),
-                    self.motor.getAcceleration(),
+                    self._last_power,
+                    self._last_acceleration,
                 )
             self._publisher.publish(state.toMsg())
         except myactuator_rmd_py.can.SocketException as e:
-            if "Resource temorarily unavailable" in str(e):
-                self._ros_node.get_logger().log(
-                    f"Packet dropped from motor {self.config.can_id} trying again"
+            if "Resource temporarily unavailable" in str(e):
+                self._ros_node.get_logger().warning(
+                    f"Packet dropped from motor {self.config.can_id}, will retry next tick"
                 )
             else:
                 self._ros_node.get_logger().error(

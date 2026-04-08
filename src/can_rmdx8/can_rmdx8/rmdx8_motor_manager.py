@@ -28,7 +28,7 @@ class RMDx8MotorManager(Node):
         self._id_to_rmdx8_motor: dict[int, RMDx8Motor] = {}
         self.driver = rmd.CanDriver("can1")
         self.num_motors = 0
-        self._req_buffer: deque[tuple[int, String]] = deque(maxlen=100)
+        self._req_buffer: deque[tuple[int, String]] = deque(maxlen=500)
         self._buffer_lock = Lock()
         self.createRMDx8Motors()
         self.create_timer(0.01, self._handleRequests)
@@ -38,7 +38,7 @@ class RMDx8MotorManager(Node):
         return self.create_subscription(
             std_msgs.msg.String,
             config.getInterfaceTopicName(),
-            lambda msg: self._createRequest(can_id, msg),
+            lambda msg: self.createRequest(can_id, msg),
             1,
             callback_group=ReentrantCallbackGroup(),
         )
@@ -54,8 +54,15 @@ class RMDx8MotorManager(Node):
         """
         Adds new rmdx8 motor to the motor dictionary
         """
+        if config.can_id == 1:
+            self.get_logger().error("Found test config on init, skipping")
+            return
+
         motor = RMDx8Motor(
-            config, self.driver, self, lambda: self._createRequest(config.can_id, String(data="UPDATE_STATE"))
+            config,
+            self.driver,
+            self,
+            lambda: self.createRequest(config.can_id, String(data="UPDATE_STATE")),
         )
         self._id_to_rmdx8_motor[config.can_id] = motor
         self._createSubscriber(config)
@@ -71,7 +78,7 @@ class RMDx8MotorManager(Node):
                 continue
             self.addMotor(config)
 
-    def _createRequest(self, can_id: int, msg: String) -> None:
+    def createRequest(self, can_id: int, msg: String) -> None:
         """
         Add a request to the ring buffer for later dispatch
         """
@@ -85,15 +92,17 @@ class RMDx8MotorManager(Node):
         with self._buffer_lock:
             if not self._req_buffer:
                 return
-            can_id, msg = self._req_buffer.popleft()
-        motor = self._id_to_rmdx8_motor.get(can_id)
-        if motor is None:
-            self.get_logger().error(f"Received request for motor {can_id} that doesnt exist")
-            return
-        if msg.data == "UPDATE_STATE":
-            motor.publishData()
-        else:
-            motor.dataInCallback(msg)
+            batch = list(self._req_buffer)
+            self._req_buffer.clear()
+        for can_id, msg in batch:
+            motor = self._id_to_rmdx8_motor.get(can_id)
+            if motor is None:
+                self.get_logger().error(f"Received request for motor {can_id} that doesnt exist")
+                continue
+            if msg.data == "UPDATE_STATE":
+                motor.publishData()
+            else:
+                motor.dataInCallback(msg)
 
 
 # Main function
@@ -108,7 +117,7 @@ def main(args: list[str] | None = None) -> None:
         node = RMDx8MotorManager()
         # Each motor has a timer + subscriber callback that can run concurrently,
         # so allocate 2 threads per motor with a minimum of 2 to avoid spin_once crashes.
-        num_threads = max(node.num_motors, 2)
+        num_threads = max(2 * node.num_motors + 2, 4)
         executor = MultiThreadedExecutor(num_threads=num_threads)
         executor.add_node(node)
         executor.spin()
