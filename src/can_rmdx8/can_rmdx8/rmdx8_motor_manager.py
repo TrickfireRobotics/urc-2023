@@ -1,9 +1,15 @@
 import sys
+from collections import deque
+from threading import Lock
 
 import myactuator_rmd_py as rmd
 import rclpy
+import std_msgs.msg
+from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 from rclpy.node import Node
+from rclpy.subscription import Subscription
+from std_msgs.msg import String
 
 from lib.color_codes import ColorCodes, colorStr
 from lib.configs import MotorConfigs, RMDx8MotorConfig
@@ -20,9 +26,22 @@ class RMDx8MotorManager(Node):
         super().__init__("can_rmdx8_node")
         self.get_logger().info(colorStr("Launching can_rmdx8 node", ColorCodes.BLUE_OK))
         self._id_to_rmdx8_motor: dict[int, RMDx8Motor] = {}
-        self.driver = rmd.CanDriver("can0")
+        self.driver = rmd.CanDriver("can1")
         self.num_motors = 0
+        self._req_buffer: deque[tuple[int, String]] = deque(maxlen=100)
+        self._buffer_lock = Lock()
         self.createRMDx8Motors()
+        self.create_timer(0.01, self._handleRequests)
+
+    def _createSubscriber(self, config: RMDx8MotorConfig) -> Subscription:
+        can_id = config.can_id
+        return self.create_subscription(
+            std_msgs.msg.String,
+            config.getInterfaceTopicName(),
+            lambda msg: self._createRequest(can_id, msg),
+            1,
+            callback_group=ReentrantCallbackGroup(),
+        )
 
     def shutdownMotors(self) -> None:
         """
@@ -35,10 +54,12 @@ class RMDx8MotorManager(Node):
         """
         Adds new rmdx8 motor to the motor dictionary
         """
-        # Create a motor
-        motor = RMDx8Motor(config, self.driver, self)
+        motor = RMDx8Motor(
+            config, self.driver, self, lambda: self._createRequest(config.can_id, String(data="UPDATE_STATE"))
+        )
         self._id_to_rmdx8_motor[config.can_id] = motor
-        self.num_motors = self.num_motors + 1
+        self._createSubscriber(config)
+        self.num_motors += 1
 
     def createRMDx8Motors(self) -> None:
         """
@@ -49,6 +70,30 @@ class RMDx8MotorManager(Node):
             if not isinstance(config, RMDx8MotorConfig):
                 continue
             self.addMotor(config)
+
+    def _createRequest(self, can_id: int, msg: String) -> None:
+        """
+        Add a request to the ring buffer for later dispatch
+        """
+        with self._buffer_lock:
+            self._req_buffer.append((can_id, msg))
+
+    def _handleRequests(self) -> None:
+        """
+        Drain the ring buffer and dispatch each command to the correct motor
+        """
+        with self._buffer_lock:
+            if not self._req_buffer:
+                return
+            can_id, msg = self._req_buffer.popleft()
+        motor = self._id_to_rmdx8_motor.get(can_id)
+        if motor is None:
+            self.get_logger().error(f"Received request for motor {can_id} that doesnt exist")
+            return
+        if msg.data == "UPDATE_STATE":
+            motor.publishData()
+        else:
+            motor.dataInCallback(msg)
 
 
 # Main function

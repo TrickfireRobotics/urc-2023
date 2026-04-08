@@ -4,6 +4,7 @@
 
 
 import math
+from collections.abc import Callable
 from threading import Lock
 from typing import TypeGuard
 
@@ -14,7 +15,6 @@ from myactuator_rmd_py.actuator_state import Gains
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from rclpy.publisher import Publisher
-from rclpy.subscription import Subscription
 from std_msgs.msg import String
 
 from lib.configs import RMDx8MotorConfig
@@ -37,36 +37,29 @@ def _checkValid(value: float | None) -> TypeGuard[float]:
 
 class RMDx8Motor:
     """
+    A
     A wrapper class to interact with the RMDx8 actuator and the ROS nodes.
     """
 
-    def __init__(self, config: RMDx8MotorConfig, driver: rmd.CanDriver, ros_node: Node) -> None:
+    def __init__(
+        self,
+        config: RMDx8MotorConfig,
+        driver: rmd.CanDriver,
+        ros_node: Node,
+        cb: Callable[[], None],
+    ) -> None:
         self.config = config
         self._ros_node = ros_node
         self.motor = rmd.ActuatorInterface(driver, config.can_id)
         self.mutex_lock = Lock()
         self._callback_group = ReentrantCallbackGroup()
-        self._subscriber = self._createSubscriber()
-
         self._publisher = self._createPublisher()
 
-        # Publish a message every 0.05 seconds
-        timer_period = 0.05
+        # Publish data every 0.05 seconds to each motor
+        timer_period = 0.10
         self.timer = ros_node.create_timer(
-            timer_period, self.publishData, callback_group=self._callback_group
+            timer_period, callback=cb, callback_group=self._callback_group
         )
-
-    # create a subscriber
-    def _createSubscriber(self) -> Subscription:
-        topic_name = self.config.getInterfaceTopicName()
-        subscriber = self._ros_node.create_subscription(
-            std_msgs.msg.String,
-            topic_name,
-            self.dataInCallback,
-            1,
-            callback_group=self._callback_group,
-        )
-        return subscriber
 
     # create a publisher
     def _createPublisher(self) -> Publisher:
@@ -152,26 +145,23 @@ class RMDx8Motor:
         """
         try:
             with self.mutex_lock:
-                try:
-                    state = RMDX8MotorState.fromRMDX8Data(
-                        self.config.can_id,
-                        self.motor.getMotorStatus1(),
-                        self.motor.getMotorStatus2(),
-                        self.motor.getMotorPower(),
-                        self.motor.getAcceleration(),
-                    )
-                # yes i know this is a super general catch testing dropping packets
-                except Exception as e:
-                    if "Resource temporarily unavailable" in str(e):
-                        print(f"Packet might have dropped from motor {self.config.can_id}")
-                    else:
-                        print(e)
-
+                state = RMDX8MotorState.fromRMDX8Data(
+                    self.config.can_id,
+                    self.motor.getMotorStatus1(),
+                    self.motor.getMotorStatus2(),
+                    self.motor.getMotorPower(),
+                    self.motor.getAcceleration(),
+                )
             self._publisher.publish(state.toMsg())
         except myactuator_rmd_py.can.SocketException as e:
-            self._ros_node.get_logger().error(
-                f"CAN error in publishData for motor {self.config.can_id}: {e}"
-            )
+            if "Resource temorarily unavailable" in str(e):
+                self._ros_node.get_logger().log(
+                    f"Packet dropped from motor {self.config.can_id} trying again"
+                )
+            else:
+                self._ros_node.get_logger().error(
+                    f"CAN error in publishData for motor {self.config.can_id}: {e}"
+                )
 
     def stopMotor(self) -> None:
         """
