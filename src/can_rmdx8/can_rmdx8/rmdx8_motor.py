@@ -136,6 +136,10 @@ class RMDx8Motor:
                     self.motor.setAcceleration(
                         run_settings.acceleration * 360, run_settings.acceleration_type
                     )
+        except myactuator_rmd_py.can.ControllerProblemError as e:
+            self._ros_node.get_logger().error(
+                f"Controller fault on motor {self.config.can_id}: {e}"
+            )
         except myactuator_rmd_py.can.SocketException as e:
             self._ros_node.get_logger().error(
                 f"CAN error in dataInCallback for motor {self.config.can_id}: {e}"
@@ -161,6 +165,10 @@ class RMDx8Motor:
                     self._last_acceleration,
                 )
             self._publisher.publish(state.toMsg())
+        except myactuator_rmd_py.can.ControllerProblemError as e:
+            self._ros_node.get_logger().error(
+                f"Controller fault on motor {self.config.can_id}: {e}"
+            )
         except myactuator_rmd_py.can.SocketException as e:
             if "Resource temporarily unavailable" in str(e):
                 self._ros_node.get_logger().warning(
