@@ -31,7 +31,7 @@ class RMDx8MotorManager(Node):
         # Using a deque with a max length buffer to handle requests
         # The deque takes an int and a string as an entry,
         # the int corresonding to the can_id and the String is the message sent via ROS
-        self._req_buffer: deque[tuple[int, String]] = deque(maxlen=500)
+        self._req_buffer: deque[tuple[int, String]] = deque(maxlen=1000)
         self._buffer_lock = Lock()
         self.createRMDx8Motors()
         # Created a timer to handle requests in our buffer every 10 milliseconds
