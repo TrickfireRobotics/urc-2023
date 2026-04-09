@@ -28,9 +28,14 @@ class RMDx8MotorManager(Node):
         self._id_to_rmdx8_motor: dict[int, RMDx8Motor] = {}
         self.driver = rmd.CanDriver("can1")
         self.num_motors = 0
+        # Using a deque with a max length buffer to handle requests
+        # The deque takes an int and a string as an entry,
+        # the int corresonding to the can_id and the String is the message sent via ROS
         self._req_buffer: deque[tuple[int, String]] = deque(maxlen=500)
         self._buffer_lock = Lock()
         self.createRMDx8Motors()
+        # Created a timer to handle requests in our buffer every 10 milliseconds
+        # (Can be modified, but during hardware testing this was responsive enough)
         self.create_timer(0.01, self._handleRequests)
 
     def _createSubscriber(self, config: RMDx8MotorConfig) -> Subscription:
@@ -38,7 +43,10 @@ class RMDx8MotorManager(Node):
         return self.create_subscription(
             std_msgs.msg.String,
             config.getInterfaceTopicName(),
-            lambda msg: self.createRequest(can_id, msg),
+            # We pass the create_request lambda with the
+            # capture clause as the motor_id's can id
+            # so we know who is making the requests
+            lambda msg: self._createRequest(can_id, msg),
             1,
             callback_group=ReentrantCallbackGroup(),
         )
@@ -54,15 +62,14 @@ class RMDx8MotorManager(Node):
         """
         Adds new rmdx8 motor to the motor dictionary
         """
-        if config.can_id == 1:
-            self.get_logger().error("Found test config on init, skipping")
-            return
 
         motor = RMDx8Motor(
             config,
             self.driver,
             self,
-            lambda: self.createRequest(config.can_id, String(data="UPDATE_STATE")),
+            # For polling, we pass the create request with the can_id and a string
+            # To signify what request were trying to make
+            lambda: self._createRequest(config.can_id, String(data="UPDATE_STATE")),
         )
         self._id_to_rmdx8_motor[config.can_id] = motor
         self._createSubscriber(config)
@@ -78,7 +85,7 @@ class RMDx8MotorManager(Node):
                 continue
             self.addMotor(config)
 
-    def createRequest(self, can_id: int, msg: String) -> None:
+    def _createRequest(self, can_id: int, msg: String) -> None:
         """
         Add a request to the ring buffer for later dispatch
         """

@@ -46,18 +46,21 @@ class RMDx8Motor:
         config: RMDx8MotorConfig,
         driver: rmd.CanDriver,
         ros_node: Node,
+        # The callback we pass to it in the motor manager
         cb: Callable[[], None],
     ) -> None:
         self.config = config
         self._ros_node = ros_node
         self.motor = rmd.ActuatorInterface(driver, config.can_id)
         self.mutex_lock = Lock()
+        # This callback group tells the thread pool that we can run these callbacks in parallel
         self._callback_group = ReentrantCallbackGroup()
         self._publisher = self._createPublisher()
         self._poll_count = 0
         self._last_power: float = 0.0
         self._last_acceleration: float = 0.0
 
+        # Poll each motor 10 times per second
         timer_period = 0.10
         self.timer = ros_node.create_timer(
             timer_period, callback=cb, callback_group=self._callback_group
