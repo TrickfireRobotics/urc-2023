@@ -26,8 +26,8 @@ class MotorConfig:
 
     config: dict[str, float | int] | None = None
     """
-    The config of the motor. 
-    
+    The config of the motor.
+
     # Moteus
 
     See: https://github.com/mjbots/moteus/blob/main/docs/reference.md#c-configurable-values
@@ -103,10 +103,6 @@ class MotorConfigs:
     """
     A constants class that contains motor constants.
     """
-
-    TEST_RMD = RMDx8MotorConfig(
-        can_id=1,
-    )
 
     # Drivebase
     REAR_RIGHT_DRIVE_MOTOR = RMDx8MotorConfig(can_id=25)
