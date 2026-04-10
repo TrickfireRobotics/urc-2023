@@ -1,0 +1,27 @@
+navsat_transform_node:
+  ros__parameters:
+    frequency: 20.0            # Reduced to 20 Hz to match your working setup
+    use_odometry_yaw: false    # Use IMU yaw, corrected by GPS velocity
+    use_manual_datum: false
+    wait_for_datum: false
+
+    # Frame configuration
+    world_frame: "map"         # Final odometry frame
+    base_link_frame: "zed_camera_link"  # Rover’s base frame
+    frame_id: "gps"            # GPS sensor frame (matches TF and /fix)
+
+    # Topics
+    gps_topic: "/fix"          # Raw GPS data (lat, lon, alt)
+    imu_topic: "/zed/zed_node/imu/data"  # IMU for yaw
+    odom_topic: "/odometry/gps"  # Output for EKF
+
+    # Altitude and yaw settings
+    use_altitude: true         # Fuse GPS altitude
+    yaw_offset: 0.0            # Adjust if IMU/GPS frames misalign (e.g., 1.5708 for 90°)
+    magnetic_declination: 0.0  # Set if known (no magnetometer, so likely unused)
+    zero_altitude: false       # Use real altitude
+
+    # Tuning
+    transform_time_offset: 0.0
+    transform_timeout: 0.1     # Match EKF tolerance
+    broadcast_utm_transform: false  # Optional: Set true if you need UTM frame

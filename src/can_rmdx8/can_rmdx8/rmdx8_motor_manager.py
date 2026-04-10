@@ -1,0 +1,86 @@
+import sys
+
+import myactuator_rmd.myactuator_rmd_py as rmd
+import rclpy
+from rclpy.executors import ExternalShutdownException
+from rclpy.node import Node
+
+from lib.color_codes import ColorCodes, colorStr
+from lib.configs import MotorConfigs, RMDx8MotorConfig
+
+from .rmdx8_motor import RMDx8Motor
+
+
+class RMDx8MotorManager(Node):
+    """
+    Class to manage the control and storage of RMDx8 motors in the ROS system.
+    """
+
+    def __init__(self) -> None:
+        super().__init__("can_rmdx8_node")
+        self.get_logger().info(colorStr("Launching can_rmdx8 node", ColorCodes.BLUE_OK))
+        self._id_to_rmdx8_motor: dict[int, RMDx8Motor] = {}
+        self.driver = rmd.CanDriver("can0")
+        self.createRMDx8Motors()
+
+        # Publish data period
+        self.timer_period = 0.5
+        self._pub_index = 0
+        # self.timer = self.create_timer(self.timer_period, self._publishData)
+
+    def _publishData(self) -> None:
+        # Publish in a round robin style so that the CAN network isn't filled
+        self.get_logger().info("START PUB")
+        list(self._id_to_rmdx8_motor.values())[self._pub_index].publishData()
+        self.get_logger().info("FINISH PUB")
+        self._pub_index += 1
+        self._pub_index %= len(self._id_to_rmdx8_motor)
+
+    def shutdownMotors(self) -> None:
+        """
+        Shutdown all motors
+        """
+        for motor in self._id_to_rmdx8_motor.values():
+            motor.shutdownMotor()
+
+    def addMotor(self, config: RMDx8MotorConfig) -> None:
+        """
+        Adds new rmdx8 motor to the motor dictionary
+        """
+        # Create a motor
+        motor = RMDx8Motor(config, self.driver, self)
+        self._id_to_rmdx8_motor[config.can_id] = motor
+
+    def createRMDx8Motors(self) -> None:
+        """
+        Create all necessary RMDx8 motors and add them to the dictionary
+        """
+
+        for config in MotorConfigs.getAllMotors():
+            if not isinstance(config, RMDx8MotorConfig):
+                continue
+            self.addMotor(config)
+
+
+# Main function
+def main(args: list[str] | None = None) -> None:
+    """
+    The entry point for RMDx8
+    """
+
+    rclpy.init(args=args)
+    try:
+        node = RMDx8MotorManager()
+        rclpy.spin(node)  # Keep node active
+    except KeyboardInterrupt:
+        pass
+    except ExternalShutdownException:
+        pass
+    finally:
+        node.shutdownMotors()
+        rclpy.shutdown()
+
+
+# If script is run directly, then create a RMDx8MotorManager object and run the main function
+if __name__ == "__main__":
+    main(sys.argv)

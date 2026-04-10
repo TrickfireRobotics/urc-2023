@@ -1,0 +1,26 @@
+zed:
+  ros__parameters:
+    general:
+      camera_model: "zed2i"
+      serial_number: 0 # 0=auto-detect
+
+    video:
+      brightness: 4
+      contrast: 4
+      hue: 0
+      saturation: 4
+      sharpness: 4
+      gamma: 8
+      auto_exposure_gain: true
+      exposure: 40
+      gain: 100
+      auto_whitebalance: true
+
+    depth:
+      min_depth: 0.2
+      max_depth: 20.0
+
+    # IMPORTANT: resolution
+    resolution: 1     # 0=HD2K, 1=HD1080, 2=HD720, 3=VGA
+    fps: 30
+

@@ -12,9 +12,12 @@ find_package(ament_cmake REQUIRED)
 # find_package(<dependency> REQUIRED)
 
 find_package(rosidl_default_generators REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ArmMode.srv"
+  "msg/Aruco.msg"
+  DEPENDENCIES geometry_msgs
  )
 
 if(BUILD_TESTING)
@@ -29,4 +32,9 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+# Export generated typesupport so other packages can use the messages 
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+ament_export_targets(${cpp_typesupport_target})
+ament_export_dependencies(rosidl_default_runtime)
 ament_package()
+
