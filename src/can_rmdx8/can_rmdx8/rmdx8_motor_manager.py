@@ -36,7 +36,7 @@ class RMDx8MotorManager(Node):
         self.createRMDx8Motors()
         # Created a timer to handle requests in our buffer every 10 milliseconds
         # (Can be modified, but during hardware testing this was responsive enough)
-        self.create_timer(0.01, self._handleRequests)
+        self.create_timer(0.005, self._handleRequests)
 
     def _createSubscriber(self, config: RMDx8MotorConfig) -> Subscription:
         can_id = config.can_id
@@ -99,13 +99,11 @@ class RMDx8MotorManager(Node):
         with self._buffer_lock:
             if not self._req_buffer:
                 return
-            batch = list(self._req_buffer)
-            self._req_buffer.clear()
-        for can_id, msg in batch:
+            can_id, msg = self._req_buffer.popleft()
             motor = self._id_to_rmdx8_motor.get(can_id)
             if motor is None:
                 self.get_logger().error(f"Received request for motor {can_id} that doesnt exist")
-                continue
+                return
             if msg.data == "UPDATE_STATE":
                 motor.publishData()
             else:

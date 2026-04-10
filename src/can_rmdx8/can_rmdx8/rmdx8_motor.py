@@ -60,7 +60,7 @@ class RMDx8Motor:
         self._last_power: float = 0.0
         self._last_acceleration: float = 0.0
 
-        # Poll each motor 10 times per second
+        # Poll each motor 10 times per second for right now keep it as that
         timer_period = 0.10
         self.timer = ros_node.create_timer(
             timer_period, callback=cb, callback_group=self._callback_group
