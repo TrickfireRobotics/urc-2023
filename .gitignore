@@ -5,3 +5,5 @@
 
 # Python scripts compiled as bytecode.
 __pycache__/
+
+src/yolo_vision_trainer/
