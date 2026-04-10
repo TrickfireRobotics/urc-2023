@@ -183,7 +183,6 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             camera_node,
             decision_making_node,
             gps_anchor_node,
-            navigation_node,
             sensor_processing_node,
             cmd_vel_to_wheel_vel_node,
             launch_include,
