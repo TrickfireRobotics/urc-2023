@@ -95,14 +95,14 @@ class RMDx8MotorManager(Node):
             if not self._req_buffer:
                 return
             can_id, msg = self._req_buffer.popleft()
-            motor = self._id_to_rmdx8_motor.get(can_id)
-            if motor is None:
-                self.get_logger().error(f"Received request for motor {can_id} that doesnt exist")
-                return
-            if msg.data == self._UPDATE_STATE:
-                motor.publishData()
-            else:
-                motor.dataInCallback(msg)
+        motor = self._id_to_rmdx8_motor.get(can_id)
+        if motor is None:
+            self.get_logger().error(f"Received request for motor {can_id} that doesnt exist")
+            return
+        if msg.data == self._UPDATE_STATE:
+            motor.publishData()
+        else:
+            motor.dataInCallback(msg)
 
     def motorCount(self) -> int:
         """
