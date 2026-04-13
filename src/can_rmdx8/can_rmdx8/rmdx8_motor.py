@@ -37,7 +37,6 @@ def _checkValid(value: float | None) -> TypeGuard[float]:
 
 class RMDx8Motor:
     """
-    A
     A wrapper class to interact with the RMDx8 actuator and the ROS nodes.
     """
 
@@ -59,8 +58,7 @@ class RMDx8Motor:
         self._poll_count = 0
         self._last_power: float = 0.0
         self._last_acceleration: float = 0.0
-
-        # Poll each motor 10 times per second for right now keep it as that
+        # Hardware testing shows that this rate of polling is handled comfortably
         timer_period = 0.10
         self.timer = ros_node.create_timer(
             timer_period, callback=cb, callback_group=self._callback_group

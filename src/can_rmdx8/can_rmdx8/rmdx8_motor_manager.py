@@ -22,20 +22,18 @@ class RMDx8MotorManager(Node):
     Class to manage the control and storage of RMDx8 motors in the ROS system.
     """
 
+    # String identifier for updating motor state
+    _UPDATE_STATE = "UPDATE_STATE"
+
     def __init__(self) -> None:
         super().__init__("can_rmdx8_node")
         self.get_logger().info(colorStr("Launching can_rmdx8 node", ColorCodes.BLUE_OK))
         self._id_to_rmdx8_motor: dict[int, RMDx8Motor] = {}
         self.driver = rmd.CanDriver("can1")
-        self.num_motors = 0
-        # Using a deque with a max length buffer to handle requests
-        # The deque takes an int and a string as an entry,
-        # the int corresonding to the can_id and the String is the message sent via ROS
         self._req_buffer: deque[tuple[int, String]] = deque(maxlen=1000)
         self._buffer_lock = Lock()
         self.createRMDx8Motors()
-        # Created a timer to handle requests in our buffer every 10 milliseconds
-        # (Can be modified, but during hardware testing this was responsive enough)
+        # Hardware testing
         self.create_timer(0.005, self._handleRequests)
 
     def _createSubscriber(self, config: RMDx8MotorConfig) -> Subscription:
@@ -67,13 +65,10 @@ class RMDx8MotorManager(Node):
             config,
             self.driver,
             self,
-            # For polling, we pass the create request with the can_id and a string
-            # To signify what request were trying to make
-            lambda: self._createRequest(config.can_id, String(data="UPDATE_STATE")),
+            lambda: self._createRequest(config.can_id, String(data=self._UPDATE_STATE)),
         )
         self._id_to_rmdx8_motor[config.can_id] = motor
         self._createSubscriber(config)
-        self.num_motors += 1
 
     def createRMDx8Motors(self) -> None:
         """
@@ -104,10 +99,16 @@ class RMDx8MotorManager(Node):
             if motor is None:
                 self.get_logger().error(f"Received request for motor {can_id} that doesnt exist")
                 return
-            if msg.data == "UPDATE_STATE":
+            if msg.data == self._UPDATE_STATE:
                 motor.publishData()
             else:
                 motor.dataInCallback(msg)
+
+    def motorCount(self) -> int:
+        """
+        Returns the number of motors
+        """
+        return len(self._id_to_rmdx8_motor)
 
 
 # Main function
@@ -122,7 +123,7 @@ def main(args: list[str] | None = None) -> None:
         node = RMDx8MotorManager()
         # Each motor has a timer + subscriber callback that can run concurrently,
         # so allocate 2 threads per motor with a minimum of 2 to avoid spin_once crashes.
-        num_threads = max(2 * node.num_motors + 2, 4)
+        num_threads = max(2 * node.motorCount() + 2, 4)
         executor = MultiThreadedExecutor(num_threads=num_threads)
         executor.add_node(node)
         executor.spin()
