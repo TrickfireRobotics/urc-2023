@@ -3,7 +3,6 @@ This module just contains the RobotInfo class. It provides utility functions to 
 motor on the robot.
 """
 
-from collections import defaultdict
 from typing import Callable
 
 from rclpy.node import Node
@@ -24,7 +23,7 @@ class RobotInfo:  # pylint: disable=too-few-public-methods
     def __init__(self, ros_node: Node):
         self._ros_node = ros_node
         self.sub_list: list[Subscription] = []  # empty array
-        self.can_id_to_json: defaultdict[str, dict[int, CANMotorState]] = defaultdict(dict)
+        self.can_id_to_json: dict[int, CANMotorState] = {}
 
         for motor_config in MotorConfigs.getAllMotors():
             if motor_config.can_id is None or motor_config.motor_type == MotorTypes.NONE:
@@ -35,9 +34,7 @@ class RobotInfo:  # pylint: disable=too-few-public-methods
                 self._createSubCallback(motor_config.motor_type),
                 10,
             )
-            self.can_id_to_json[motor_config.motor_type.value][
-                motor_config.can_id
-            ] = CANMotorState()
+            self.can_id_to_json[motor_config.can_id] = CANMotorState()
 
     def _createSubCallback(self, motor_type: MotorTypes) -> Callable[[String], None]:
         # this is bad code design, but it's so small scale who cares
@@ -53,7 +50,7 @@ class RobotInfo:  # pylint: disable=too-few-public-methods
             state = state_cls.fromJsonMsg(msg)
             if state.can_id is None:
                 return
-            self.can_id_to_json[motor_type.value][state.can_id] = state
+            self.can_id_to_json[state.can_id] = state
 
         return _subCallback
 
@@ -66,4 +63,9 @@ class RobotInfo:  # pylint: disable=too-few-public-methods
         can_id: int
             The can id of the motor to get the state of.
         """
-        return self.can_id_to_json[motor.motor_type.value][motor.can_id]
+        if motor.can_id is None:
+            self._ros_node.get_logger().error(
+                "Invalid motor, motor config passed has can id of type None"
+            )
+            return CANMotorState()
+        return self.can_id_to_json[motor.can_id]
