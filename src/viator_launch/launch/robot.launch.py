@@ -11,6 +11,7 @@ can_moteus_node = Node(package="can_moteus", executable="can_moteus", name="can_
 
 drivebase_node = Node(package="drivebase", executable="drivebase", name="drivebase_node")
 
+can_rmdx8_node = Node(package="can_rmdx8", executable="can_rmdx8", name="can_rmdx8_node")
 
 mission_control_updater_node = Node(
     package="mission_control_updater",
@@ -43,6 +44,7 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
         [
             can_moteus_node,
             drivebase_node,
+            can_rmdx8_node,
             mission_control_updater_node,
             arm_node,
             heartbeat_node,
