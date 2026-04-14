@@ -28,8 +28,8 @@ class RobotInterface:
         for motor_config in MotorConfigs.getAllMotors():
             if motor_config.can_id is None:
                 continue
-            self._publishers[motor_config.can_id] = (
-                self._ros_node.create_publisher(String, motor_config.getInterfaceTopicName(), 10)
+            self._publishers[motor_config.can_id] = self._ros_node.create_publisher(
+                String, motor_config.getInterfaceTopicName(), 10
             )
 
     def runMotor(self, motor: MotorConfig, run_settings: CanMotorRunSettings) -> None:
