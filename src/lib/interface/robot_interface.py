@@ -26,6 +26,8 @@ class RobotInterface:
         self._publishers: dict[int, Publisher] = {}
 
         for motor_config in MotorConfigs.getAllMotors():
+            if motor_config.can_id is None:
+                continue
             self._publishers[motor_config.can_id] = (
                 self._ros_node.create_publisher(String, motor_config.getInterfaceTopicName(), 10)
             )
@@ -41,6 +43,8 @@ class RobotInterface:
         run_settings : CanMotorRunSettings
             The settings to run the motor with.
         """
+        if motor.can_id is None:
+            return
         self._publishers[motor.can_id].publish(run_settings.toMsg())
 
     def runMotorSpeed(self, motor: MotorConfig, target_radians_per_second: float) -> None:

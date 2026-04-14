@@ -27,6 +27,8 @@ class RobotInfo:  # pylint: disable=too-few-public-methods
         self.can_id_to_json: defaultdict[str, dict[int, CANMotorState]] = defaultdict(dict)
 
         for motor_config in MotorConfigs.getAllMotors():
+            if motor_config.can_id is None or motor_config.motor_type == MotorTypes.NONE:
+                continue
             self._ros_node.create_subscription(
                 String,
                 motor_config.getCanTopicName(),
@@ -44,9 +46,13 @@ class RobotInfo:  # pylint: disable=too-few-public-methods
             state_cls = MoteusMotorState
         elif motor_type == MotorTypes.RMDX8MOTOR:
             state_cls = RMDX8MotorState
+        else:
+            return lambda _: None
 
         def _subCallback(msg: String) -> None:
             state = state_cls.fromJsonMsg(msg)
+            if state.can_id is None:
+                return
             self.can_id_to_json[motor_type.value][state.can_id] = state
 
         return _subCallback

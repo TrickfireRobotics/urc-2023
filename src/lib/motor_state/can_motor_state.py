@@ -1,5 +1,5 @@
 """
-This module contains objects representing a can motor state and settings for setting position 
+This module contains objects representing a can motor state and settings for setting position
 setpoint.
 """
 
@@ -17,14 +17,14 @@ class CANMotorState(JsonMsg[T]):
     A dataclass representing the state of the motor.
     """
 
-    can_id: int = -1
+    can_id: int | None = None
     position: float | None = None
     """
     Current position of the motor in revolutions.
     """
     velocity: float | None = None
     """
-    Current velocity of the motor in revolutions per second. 
+    Current velocity of the motor in revolutions per second.
     """
     current: float | None = None
     """
