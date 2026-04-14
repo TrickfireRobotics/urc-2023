@@ -4,7 +4,6 @@ motors on the robot.
 """
 
 import math
-from collections import defaultdict
 
 from rclpy.node import Node
 from rclpy.publisher import Publisher
@@ -24,10 +23,10 @@ class RobotInterface:
 
     def __init__(self, ros_node: Node) -> None:
         self._ros_node = ros_node
-        self._publishers: defaultdict[str, dict[int, Publisher]] = defaultdict(dict)
+        self._publishers: dict[int, Publisher] = {}
 
         for motor_config in MotorConfigs.getAllMotors():
-            self._publishers[motor_config.motor_type][motor_config.can_id] = (
+            self._publishers[motor_config.can_id] = (
                 self._ros_node.create_publisher(String, motor_config.getInterfaceTopicName(), 10)
             )
 
@@ -42,7 +41,7 @@ class RobotInterface:
         run_settings : CanMotorRunSettings
             The settings to run the motor with.
         """
-        self._publishers[motor.motor_type][motor.can_id].publish(run_settings.toMsg())
+        self._publishers[motor.can_id].publish(run_settings.toMsg())
 
     def runMotorSpeed(self, motor: MotorConfig, target_radians_per_second: float) -> None:
         """
