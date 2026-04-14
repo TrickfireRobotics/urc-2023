@@ -10,7 +10,7 @@ from rclpy.node import Node
 from rclpy.subscription import Subscription
 from std_msgs.msg import String
 
-from lib.configs import MotorConfig, MotorConfigs
+from lib.configs import MotorConfig, MotorConfigs, MotorTypes
 from lib.motor_state.can_motor_state import CANMotorState
 from lib.motor_state.moteus_motor_state import MoteusMotorState
 from lib.motor_state.rmd_motor_state import RMDX8MotorState
@@ -33,19 +33,21 @@ class RobotInfo:  # pylint: disable=too-few-public-methods
                 self._createSubCallback(motor_config.motor_type),
                 10,
             )
-            self.can_id_to_json[motor_config.motor_type][motor_config.can_id] = CANMotorState()
+            self.can_id_to_json[motor_config.motor_type.value][
+                motor_config.can_id
+            ] = CANMotorState()
 
-    def _createSubCallback(self, motor_type: str) -> Callable[[String], None]:
+    def _createSubCallback(self, motor_type: MotorTypes) -> Callable[[String], None]:
         # this is bad code design, but it's so small scale who cares
         state_cls: type
-        if motor_type == "moteus":
+        if motor_type == MotorTypes.MOTEUSMOTOR:
             state_cls = MoteusMotorState
-        elif motor_type == "rmdx8":
+        elif motor_type == MotorTypes.RMDX8MOTOR:
             state_cls = RMDX8MotorState
 
         def _subCallback(msg: String) -> None:
             state = state_cls.fromJsonMsg(msg)
-            self.can_id_to_json[motor_type][state.can_id] = state
+            self.can_id_to_json[motor_type.value][state.can_id] = state
 
         return _subCallback
 
@@ -58,4 +60,4 @@ class RobotInfo:  # pylint: disable=too-few-public-methods
         can_id: int
             The can id of the motor to get the state of.
         """
-        return self.can_id_to_json[motor.motor_type][motor.can_id]
+        return self.can_id_to_json[motor.motor_type.value][motor.can_id]

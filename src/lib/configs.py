@@ -5,7 +5,18 @@ configs.
 
 import math
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any
+
+
+class MotorTypes(Enum):
+    """
+    A class signifying motor types
+    """
+
+    RMDX8MOTOR = "rmdx8"
+    MOTEUSMOTOR = "moteus"
+    NONE = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -19,7 +30,8 @@ class MotorConfig:
     The can id of the motor.
     """
 
-    motor_type: str = field(default="oh no", init=False)
+    motor_type: MotorTypes = MotorTypes.NONE
+
     """
     The type of the motor.
     """
@@ -65,7 +77,7 @@ class MoteusMotorConfig(MotorConfig):
     # Set the value of motor_type
     def __post_init__(self) -> None:
         # Can't use simple assignment since class is frozen
-        object.__setattr__(self, "motor_type", "moteus")
+        object.__setattr__(self, "motor_type", MotorTypes.MOTEUSMOTOR)
 
     def getCanTopicName(self) -> str:
         return f"moteusmotor_{self.can_id}_from_can"
@@ -82,7 +94,7 @@ class RMDx8MotorConfig(MotorConfig):
 
     # Set the value of motor_type
     def __post_init__(self) -> None:
-        object.__setattr__(self, "motor_type", "rmdx8")
+        object.__setattr__(self, "motor_type", MotorTypes.RMDX8MOTOR)
 
     def getCanTopicName(self) -> str:
         """
