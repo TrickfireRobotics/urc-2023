@@ -104,6 +104,7 @@ class MotorConfigs:
     A constants class that contains motor constants.
     """
 
+    # Arm can_id
     TEST_RMD = RMDx8MotorConfig(
         can_id=1,
     )
