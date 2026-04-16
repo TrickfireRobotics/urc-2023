@@ -1,5 +1,7 @@
 controller_server:
   ros__parameters:
+    #front right, rear right, rear left, front left 
+    footprint: "[[0.28, -0.37], [-1, -0.37], [-1, 0.28], [0.28, 0.28]]"
     # controller server parameters (see Controller Server for more info)
     controller_frequency: 20.0
     min_x_velocity_threshold: 0.001
@@ -73,6 +75,8 @@ controller_server:
 local_costmap:
   local_costmap:
     ros__parameters:
+      #front right, rear right, rear left, front left 
+      footprint: "[[0.28, -0.37], [-1, -0.37], [-1, 0.28], [0.28, 0.28]]"
       update_frequency: 5.0
       publish_frequency: 2.0
       global_frame: odom
@@ -104,6 +108,8 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
+      #front right, rear right, rear left, front left 
+      footprint: "[[0.28, -0.37], [-1, -0.37], [-1, 0.28], [0.28, 0.28]]"
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
