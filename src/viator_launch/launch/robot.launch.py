@@ -166,12 +166,12 @@ static_zed_gps_tf = Node(
 )
 
 
-# TODO: add in drvebase node to launch description
 def generate_launch_description() -> launch.LaunchDescription:  # pylint: disable=invalid-name
     return launch.LaunchDescription(
         [
             can_moteus_node,
             can_rmdx8_node,
+            drivebase_node,
             mission_control_updater_node,
             arm_node,
             navsat_transform,
