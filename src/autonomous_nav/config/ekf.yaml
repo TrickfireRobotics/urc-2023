@@ -7,14 +7,12 @@ ekf_filter_node:
     base_link_frame: zed_camera_link
     world_frame: map
 
-    # GPS odometry topic (from navsat_transform_node)
-    odom0: "/odometry/gps"
-    odom0_config: [true,  true,  true,   # x, y, z (altitude enabled)
-                   false, false, false,  # roll, pitch, yaw (from IMU, not GPS)
-                   true,  true,  false,  # x_vel, y_vel, z_vel
-                   false, false, false]  # roll_vel, pitch_vel, yaw_vel
-    odom0_queue_size: 10
-    odom0_differential: false  # Absolute measurements from GPS
+    odom0: "/zed/zed_node/odom"
+    odom0_config: [true,  true,  false,   # x, y (position from VIO, ignore z)
+               false, false, true,    # yaw from VIO
+               true,  true,  false,   # x_vel, y_vel
+               false, false, false]
+    odom0_differential: false
 
     # IMU topic (ZED 2i)
     imu0: "/zed/zed_node/imu/data"
