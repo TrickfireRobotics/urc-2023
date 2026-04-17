@@ -29,8 +29,8 @@ controller_server:
       debug_trajectory_details: True
       min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.02
-      max_vel_y: 0.04
+      max_vel_x: 0.08
+      max_vel_y: 0.00
       max_vel_theta: 1.0
       min_speed_xy: 0.0
       max_speed_xy: 0.02
@@ -70,7 +70,7 @@ controller_server:
       GoalAlign.forward_point_distance: 0.1
       PathDist.scale: 32.0
       GoalDist.scale: 24.0
-      RotateToGoal.scale: 32.0
+      #RotateToGoal.scale: 32.0
       RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
 
