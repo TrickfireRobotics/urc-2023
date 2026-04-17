@@ -123,6 +123,14 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
+      update_frequency: 1.0
+      publish_frequency: 1.0
+      global_frame: map
+      robot_base_frame: base_link
+      rolling_window: true        # ← ADD THIS - makes it follow the robot
+      width: 50                    # ← ADD THIS - total width in meters
+      height: 50                   # ← ADD THIS - total height in meters
+      resolution: 0.05             # ← ADD THIS - cell size
       #front right, rear right, rear left, front left 
       footprint: "[[0.28, -0.37], [-1, -0.37], [-1, 0.28], [0.28, 0.28]]"
       plugins: ["obstacle_layer", "inflation_layer"]
