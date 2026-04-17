@@ -115,7 +115,7 @@ class DecisionMakingNode(Node):
         self.create_subscription(OccupancyGrid, "/projected_map", self.occupancy_grid_callback, 10)
 
         # Waypoint path
-        self.create_subscription(Path, "/path", self.path_callback, 10)
+        self.create_subscription(Path, "/plan", self.path_callback, 10)
 
         # Navigation status
         self.create_subscription(String, "/navigation_status", self.nav_status_callback, 10)
