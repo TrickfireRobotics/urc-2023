@@ -46,9 +46,7 @@ decision_making_node = Node(
 gps_anchor_node = Node(
     package="autonomous_nav", executable="gps_anchor_node", name="gps_anchor_node"
 )
-navigation_node = Node(
-    package="autonomous_nav", executable="navigation_node", name="navigation_node"
-)
+
 sensor_processing_node = Node(
     package="autonomous_nav", executable="sensor_processing_node", name="sensor_processing_node"
 )
@@ -72,7 +70,22 @@ global_costmap_node = Node(
     parameters=[nav2_params],
 )
 
-# Nav2 lifecycle manager - manages controller_server lifecycle states
+local_costmap_node = Node(
+    package="nav2_costmap_2d",
+    executable="nav2_costmap_2d",
+    name="local_costmap",
+    parameters=[nav2_params],
+)
+
+planner_server_node = Node(
+    package="nav2_planner",
+    executable="planner_server",
+    name="planner_server",
+    output="screen",
+    parameters=[nav2_params],
+)
+
+# Nav2 lifecycle manager - manages planner_server and controller_server lifecycle states
 lifecycle_manager_node = Node(
     package="nav2_lifecycle_manager",
     executable="lifecycle_manager",
@@ -81,7 +94,7 @@ lifecycle_manager_node = Node(
     parameters=[
         {
             "autostart": True,
-            "node_names": ["controller_server"],
+            "node_names": ["planner_server", "controller_server"],
         }
     ],
 )
@@ -179,6 +192,7 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             static_zed_gps_tf,
             static_zed_base_tf,
             global_costmap_node,
+            local_costmap_node,
             heartbeat_node,
             camera_node,
             decision_making_node,
@@ -190,7 +204,7 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             zed_launch,
             # Start lifecycle manager first with minimal delay
             TimerAction(period=1.0, actions=[lifecycle_manager_node]),
-            # Then start controller_server after delay to allow tf frames to be published
-            TimerAction(period=5.0, actions=[controller_server_node]),
+            # Then start planner_server and controller_server after delay to allow tf frames to be published
+            TimerAction(period=5.0, actions=[planner_server_node, controller_server_node]),
         ]
     )
