@@ -1,6 +1,8 @@
 controller_server:
   ros__parameters:
     # controller server parameters (see Controller Server for more info)
+    # Path is received from planner_server on /plan topic via FollowPath action
+    planned_path_topic: "/plan"
     #front right, rear right, rear left, front left 
     footprint: "[[0.28, -0.37], [-1, -0.37], [-1, 0.28], [0.28, 0.28]]"
     controller_frequency: 20.0
