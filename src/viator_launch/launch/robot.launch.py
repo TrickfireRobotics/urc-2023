@@ -39,6 +39,10 @@ launch_include = IncludeLaunchDescription(
     launch_arguments=[("use_compression", "true")],
 )
 
+wheel_odometry_node = Node(
+    package="can_rmdx8", executable="wheel_odometry", name="wheel_odometry_node"
+)
+
 # Autonomous navigation nodes
 decision_making_node = Node(
     package="autonomous_nav", executable="decision_making_node", name="decision_making_node"
@@ -185,6 +189,7 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             can_moteus_node,
             drivebase_node,
             can_rmdx8_node,
+            wheel_odometry_node,
             mission_control_updater_node,
             arm_node,
             navsat_transform,
