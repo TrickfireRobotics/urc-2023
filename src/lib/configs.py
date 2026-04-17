@@ -105,9 +105,9 @@ class MotorConfigs:
     """
 
     # Arm can_id
-    TEST_RMD = RMDx8MotorConfig(
-        can_id=1,
-    )
+    # TEST_RMD = RMDx8MotorConfig(
+    #    can_id=1,
+    # )
 
     # Drivebase
     REAR_RIGHT_DRIVE_MOTOR = RMDx8MotorConfig(can_id=25)
