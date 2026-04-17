@@ -104,9 +104,10 @@ class MotorConfigs:
     A constants class that contains motor constants.
     """
 
-    TEST_RMD = RMDx8MotorConfig(
+    # Motor that is not needed for the autonomous mission
+    """TEST_RMD = RMDx8MotorConfig(
         can_id=1,
-    )
+    )"""
 
     # Drivebase
     REAR_RIGHT_DRIVE_MOTOR = RMDx8MotorConfig(can_id=25)
