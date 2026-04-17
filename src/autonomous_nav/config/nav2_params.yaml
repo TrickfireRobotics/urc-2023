@@ -125,13 +125,7 @@ global_costmap:
     ros__parameters:
       #front right, rear right, rear left, front left 
       footprint: "[[0.28, -0.37], [-1, -0.37], [-1, 0.28], [0.28, 0.28]]"
-      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        map_subscribe_transient_local: True
-        enabled: true
-        subscribe_to_updates: true
-        transform_tolerance: 0.1
+      plugins: ["obstacle_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
