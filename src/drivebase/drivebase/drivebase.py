@@ -11,7 +11,7 @@ from lib.interface.robot_interface import RobotInterface
 
 
 class Drivebase(Node):
-    SPEED = 6.28 * 1.5
+    SPEED = 6.28 * 0.75
 
     def __init__(self) -> None:
         super().__init__("drivebase")

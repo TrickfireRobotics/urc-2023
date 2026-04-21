@@ -115,8 +115,7 @@ class RMDx8Motor:
                         _validOrZero(run_settings.velocity) * DEGREE_TO_REV,
                     )
                 if _checkValid(run_settings.velocity):
-                    # Velocity is 0.01 dps
-                    self.motor.sendVelocitySetpoint(run_settings.velocity * DEGREE_TO_REV * 100)
+                    self.motor.sendVelocitySetpoint(run_settings.velocity * DEGREE_TO_REV)
 
                 if _checkValid(run_settings.current):
                     # Value is 0.01 A
