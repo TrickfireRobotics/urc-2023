@@ -109,17 +109,15 @@ class RMDx8Motor:
                     raise ValueError("All 3 PiGains must all be defined or all be None")
 
                 if _checkValid(run_settings.position):
-                    # Position is 0.01 dps and velocity is dps
                     self.motor.sendPositionAbsoluteSetpoint(
-                        run_settings.position * DEGREE_TO_REV * 100,
+                        run_settings.position * DEGREE_TO_REV,
                         _validOrZero(run_settings.velocity) * DEGREE_TO_REV,
                     )
                 if _checkValid(run_settings.velocity):
                     self.motor.sendVelocitySetpoint(run_settings.velocity * DEGREE_TO_REV)
 
                 if _checkValid(run_settings.current):
-                    # Value is 0.01 A
-                    self.motor.sendCurrentSetpoint(run_settings.current * 100)
+                    self.motor.sendCurrentSetpoint(run_settings.current)
 
                 # Acceleration and type must both be set
                 if _checkValid(run_settings.acceleration) != (
