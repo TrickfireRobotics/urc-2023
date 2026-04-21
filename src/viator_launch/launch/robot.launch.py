@@ -85,9 +85,9 @@ lifecycle_manager_node = Node(
         }
     ],
 )
-vision_processing_node = Node(
-    package="autonomous_nav", executable="vision_processing_node", name="vision_processing_node"
-)
+#vision_processing_node = Node(
+#    package="autonomous_nav", executable="vision_processing_node", name="vision_processing_node"
+#)
 
 # Include the ZED camera launch file from zed_wrapper
 zed_launch = IncludeLaunchDescription(
@@ -191,7 +191,6 @@ def generate_launch_description() -> launch.LaunchDescription:  # pylint: disabl
             launch_include,
             gps_node,
             zed_launch,
-            vision_processing_node,
             # Start lifecycle manager first with minimal delay
             TimerAction(period=1.0, actions=[lifecycle_manager_node]),
             # Then start controller_server after delay to allow tf frames to be published

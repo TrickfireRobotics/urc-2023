@@ -3,11 +3,13 @@
 import struct
 import sys
 from typing import Optional
+import os
 
 import cv2  # pylint: disable=no-member
 import numpy as np
 import rclpy
-#import torch  # for switching to cpu
+
+import torch  # for switching to cpu
 from cv2 import aruco
 from cv_bridge import CvBridge
 
@@ -30,6 +32,7 @@ from ultralytics import YOLO
 # defined in src\custom_interfaces\msg\Aruco.msg
 from custom_interfaces.msg import Aruco
 from lib.color_codes import ColorCodes, colorStr
+
 
 # from visualization_msgs.msg import MarkerArray
 
@@ -59,22 +62,39 @@ class VisionProcessingNode(Node):
         self.timer = self.create_timer(0.1, self._tick)  # 10 Hz timer
         self.spin_search_interval = 30  # every 30 ticks = every 3 seconds
 
+        #check gpu before loading models
+        self.get_logger().info(colorStr("Torch Version:" + str(torch.__version__), ColorCodes.BLUE_OK))
+        self.get_logger().info(
+            colorStr("Torch Version Cuda:" + str(torch.version.cuxda), ColorCodes.BLUE_OK)
+        )
+        self.get_logger().info(
+            colorStr("CUDA Available:" + str(torch.cuda.is_available()), ColorCodes.BLUE_OK)
+        )
+
         # Load YOLO World model
         self.model = None
         model_paths = [
-            "src/yoloe-26x-seg.pt",
-            "src/yolov8l-world.pt",
+            "models/yoloe-26x-seg.pt",
+            "models/yolov8l-world.pt",
         ]
 
+        cwd = os.getcwd()
+        self.get_logger().info(colorStr(f"Current working directory: {cwd}", ColorCodes.BLUE_OK))
 
-        self.get_logger().info(
-            colorStr("Trying to load a model...", ColorCodes.BLUE_OK)
-        )
+        self.get_logger().info(colorStr("Trying to load a model...", ColorCodes.BLUE_OK))
         for model_path in model_paths:
             try:
+                abs_path = os.path.abspath(model_path)
+                exists = os.path.exists(abs_path)
                 self.get_logger().info(
-                    colorStr(f"Try load {model_path}", ColorCodes.BLUE_OK)
+                    colorStr(
+                        f"Checking model path: {model_path}\n"
+                        f" → Absolute path: {abs_path}\n"
+                        f" → Exists: {exists}",
+                        ColorCodes.BLUE_OK
+                    )
                 )
+                self.get_logger().info(colorStr(f"Try load {model_path}", ColorCodes.BLUE_OK))
                 self.model = YOLO(model_path)
                 self.model.set_classes(["mallet", "rockhammer", "hammer", "bottle"])
                 self.get_logger().info(
@@ -90,9 +110,7 @@ class VisionProcessingNode(Node):
                         ColorCodes.WARNING_YELLOW,
                     )
                 )
-        self.get_logger().info(
-                    colorStr(f"Falling back on default model", ColorCodes.BLUE_OK)
-        )
+        self.get_logger().info(colorStr(f"Falling back on default model", ColorCodes.BLUE_OK))
 
         # Fall back to auto-downloading if local models fail
         if self.model is None:

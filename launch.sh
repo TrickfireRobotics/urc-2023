@@ -19,4 +19,15 @@ ros2 run octomap_server octomap_server_node --ros-args \
 # Add to the python import pathes
 export PYTHONPATH="$SCRIPT_DIR/src/:$PYTHONPATH"
 
-ros2 launch viator_launch robot.launch.py
+# Kill all child processes when Ctrl-C is pressed
+trap "echo 'Stopping...'; kill 0" SIGINT
+
+ros2 launch viator_launch robot.launch.py &
+
+#activate vision packages
+source vision_packages2/bin/activate
+
+#apperantly this will still launch vision processing as a fully working node
+python3 ~/autonomous-nav-vision/urc-2023/src/autonomous_nav/autonomous_nav/vision_processing_node.py
+
+wait
