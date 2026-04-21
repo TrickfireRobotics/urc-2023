@@ -35,7 +35,7 @@ class SensorProcessingNode(Node):
         self.bridge = CvBridge()
         self.camera_matrix: Optional[np.ndarray] = None
         self.dist_coeffs: Optional[np.ndarray] = None
-
+        
         self.cloud_frame_count = 0  # Counter for point cloud frames
 
         self.max_range = 10.0  # Maximum range for point cloud processing
@@ -155,60 +155,23 @@ class SensorProcessingNode(Node):
     def extract_all_points(self, cloud_msg: PointCloud2) -> np.ndarray:
         """Extract all points from PointCloud2 message"""
         try:
-            x_offset = y_offset = z_offset = 0
-            for field in cloud_msg.fields:
-                if field.name == "x":
-                    x_offset = field.offset
-                elif field.name == "y":
-                    y_offset = field.offset
-                elif field.name == "z":
-                    z_offset = field.offset
-            if x_offset is None or y_offset is None or z_offset is None:
-                self.get_logger().warning("PointCloud2 does not contain x, y, z fields")
-                return np.array([])
-
-            data = cloud_msg.data
-            total_points = cloud_msg.width * cloud_msg.height
-            points = np.full((total_points, 3), np.nan, dtype=np.float32)
-
-            # self.get_logger().info(f"Extracting {total_points} points from PointCloud2")
-            # self.get_logger().info(f"Extracting {total_points} points from PointCloud2")
+            x_offset = next(f.offset for f in cloud_msg.fields if f.name == 'x')
+            y_offset = next(f.offset for f in cloud_msg.fields if f.name == 'y')
+            z_offset = next(f.offset for f in cloud_msg.fields if f.name == 'z')
 
             point_step = cloud_msg.point_step
-            row_step = cloud_msg.row_step
+            total_points = cloud_msg.width * cloud_msg.height
+            data = np.frombuffer(cloud_msg.data, dtype=np.uint8)
 
-            valid_count = 0
-            for i in range(cloud_msg.height):
-                for j in range(cloud_msg.width):
-                    try:
-                        point_index = i * cloud_msg.width + j
-                        base_offset = i * row_step + j * point_step
+            x = np.frombuffer(data[x_offset::point_step][:total_points * 4], dtype=np.float32)
+            y = np.frombuffer(data[y_offset::point_step][:total_points * 4], dtype=np.float32)
+            z = np.frombuffer(data[z_offset::point_step][:total_points * 4], dtype=np.float32)
 
-                        # extract x, y, z
-                        x_index = base_offset + x_offset
-                        y_index = base_offset + y_offset
-                        z_index = base_offset + z_offset
-
-                        if (
-                            x_index + 4 <= len(data)
-                            and y_index + 4 <= len(data)
-                            and z_index + 4 <= len(data)
-                        ):
-                            x = struct.unpack_from("f", data, x_index)[0]
-                            y = struct.unpack_from("f", data, y_index)[0]
-                            z = struct.unpack_from("f", data, z_index)[0]
-
-                            points[point_index] = [x, y, z]
-                            valid_count += 1
-                    except struct.error as e:
-                        self.get_logger().error(f"Struct error at point index {point_index}: {e}")
-                        continue
-            # self.get_logger().info(f"Extracted {valid_count} valid points out of {total_points}")
-            # self.get_logger().info(f"Extracted {valid_count} valid points out of {total_points}")
-            return points
+            return np.column_stack((x, y, z))
         except Exception as e:
             self.get_logger().error(f"Error extracting points: {e}")
             return np.empty((0, 3), dtype=np.float32)
+        
 
     def publish_filtered_cloud(self, points: np.ndarray, original_header: Header) -> None:
         """Publish filtered point cloud"""
