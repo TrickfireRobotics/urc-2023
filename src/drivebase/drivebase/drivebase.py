@@ -1,5 +1,6 @@
 import math
 import sys
+import threading
 import time
 from collections import deque
 
@@ -19,7 +20,8 @@ REVS_TO_RADS = math.pi * 2
 
 class Drivebase(Node):
     SPEED = 6.28 * 0.75
-    ACCEL_TICK = SPEED / 10
+    ACCEL_TICK = SPEED / 100
+    TICK_RATE = 0.01
 
     def __init__(self) -> None:
         super().__init__("drivebase")
@@ -62,53 +64,78 @@ class Drivebase(Node):
                     10,
                 )
             )
-        self._last_received: float = time.time()
-        self._vel_timer = self.create_timer(1.0 / 20.0, self._veloTick)
-        self.create_timer(0.05, self._stopMotorsIfStale)
 
-    def _veloTick(self) -> None:
-        def modifier(curr_speed: float, target_speed: float) -> float:
-            if curr_speed < target_speed:
-                return min(curr_speed + self.ACCEL_TICK, target_speed)
-            else:
-                return max(curr_speed - self.ACCEL_TICK, target_speed)
+        self._velo_lock = threading.Lock()
+        self._target_lock = threading.Lock()
+        self._can_lock = threading.Lock()
+        self._running = True
 
-        for motor in self._left_motors:
-            if motor.can_id is None:
-                self.get_logger().error("Invalid motor")
-                continue
-            if not self._last_velocities[motor.can_id]:
-                continue
-            state = RMDX8MotorState.fromJsonMsg(self._last_velocities[motor.can_id][-1])
-            motor_speed = (state.velocity or 0.0) * REVS_TO_RADS
-            self.bot_interface.runMotorSpeed(motor, modifier(motor_speed, self._left_target_velo))
+        self._left_thread = threading.Thread(
+            target=self._leftMotorLoop, daemon=True, name="left_motor"
+        )
+        self._right_thread = threading.Thread(
+            target=self._rightMotorLoop, daemon=True, name="right_motor"
+        )
+        self._left_thread.start()
+        self._right_thread.start()
 
-        for motor in self._right_motors:
-            if motor.can_id is None:
-                self.get_logger().error("Invalid motor")
-                continue
-            if not self._last_velocities[motor.can_id]:
-                continue
-            state = RMDX8MotorState.fromJsonMsg(self._last_velocities[motor.can_id][-1])
-            motor_speed = (state.velocity or 0.0) * REVS_TO_RADS
-            self.bot_interface.runMotorSpeed(motor, modifier(motor_speed, self._right_target_velo))
+    def _modifier(self, curr_speed: float, target_speed: float) -> float:
+        if curr_speed < target_speed:
+            return min(curr_speed + self.ACCEL_TICK, target_speed)
+        else:
+            return max(curr_speed - self.ACCEL_TICK, target_speed)
+
+    def _leftMotorLoop(self) -> None:
+        while self._running:
+            with self._target_lock:
+                target = self._left_target_velo
+            for motor in self._left_motors:
+                if motor.can_id is None:
+                    continue
+                with self._velo_lock:
+                    if not self._last_velocities[motor.can_id]:
+                        continue
+                    last_msg = self._last_velocities[motor.can_id][-1]
+                state = RMDX8MotorState.fromJsonMsg(last_msg)
+                motor_speed = (state.velocity or 0.0) * REVS_TO_RADS
+                run_speed = self._modifier(motor_speed, target)
+                while run_speed != target:
+                    with self._can_lock:
+                        self.bot_interface.runMotorSpeed(motor, run_speed)
+                    run_speed = self._modifier(run_speed, target)
+            time.sleep(self.TICK_RATE)
+
+    def _rightMotorLoop(self) -> None:
+        while self._running:
+            with self._target_lock:
+                target = self._right_target_velo
+            for motor in self._right_motors:
+                if motor.can_id is None:
+                    continue
+                with self._velo_lock:
+                    if not self._last_velocities[motor.can_id]:
+                        continue
+                    last_msg = self._last_velocities[motor.can_id][-1]
+                state = RMDX8MotorState.fromJsonMsg(last_msg)
+                motor_speed = (state.velocity or 0.0) * REVS_TO_RADS
+                run_speed = self._modifier(motor_speed, target)
+                while run_speed != target:
+                    with self._can_lock:
+                        self.bot_interface.runMotorSpeed(motor, run_speed)
+                    run_speed = self._modifier(run_speed, target)
+            time.sleep(self.TICK_RATE)
 
     def _veloCallback(self, can_id: int, msg: String) -> None:
-        self._last_velocities[can_id].append(msg)
-
-    def _stopMotorsIfStale(self) -> None:
-        if time.time() - self._last_received > 0.25:
-            self.get_logger().info("STOPPING ALL MOTORS")
-            for motor in self._left_motors + self._right_motors:
-                self.bot_interface.stopMotor(motor)
+        with self._velo_lock:
+            self._last_velocities[can_id].append(msg)
 
     def moveLeftSide(self, msg: Float32) -> None:
-        self._last_received = time.time()
-        self._left_target_velo = msg.data * self.SPEED * -1
+        with self._target_lock:
+            self._left_target_velo = msg.data * self.SPEED * -1
 
     def moveRightSide(self, msg: Float32) -> None:
-        self._last_received = time.time()
-        self._right_target_velo = msg.data * self.SPEED
+        with self._target_lock:
+            self._right_target_velo = msg.data * self.SPEED
 
     def turnLeft(self, msg: Float32) -> None:
         self.moveLeftSide(msg)
@@ -117,6 +144,12 @@ class Drivebase(Node):
     def turnRight(self, msg: Float32) -> None:
         self.moveLeftSide(-msg)
         self.moveRightSide(msg)
+
+    def destroy_node(self) -> None:
+        self._running = False
+        self._left_thread.join(timeout=1.0)
+        self._right_thread.join(timeout=1.0)
+        super().destroy_node()
 
 
 def main(args: list[str] | None = None) -> None:
