@@ -36,12 +36,8 @@ class RMDx8MotorManager(Node):
         # Hardware testing
         self.create_timer(0.005, self._handleRequests)
 
-    def _createSubscriber(self, config: RMDx8MotorConfig) -> Subscription | None:
+    def _createSubscriber(self, config: RMDx8MotorConfig) -> Subscription:
         can_id = config.can_id
-        if can_id is None:
-            self.get_logger().error("Invalid motor tried to create a subscriber")
-            return None
-
         return self.create_subscription(
             std_msgs.msg.String,
             config.getInterfaceTopicName(),
@@ -64,9 +60,6 @@ class RMDx8MotorManager(Node):
         """
         Adds new rmdx8 motor to the motor dictionary
         """
-        if config.can_id is None:
-            self.get_logger().error("Invalid motor added in 'addMotor'")
-            return
 
         motor = RMDx8Motor(
             config,

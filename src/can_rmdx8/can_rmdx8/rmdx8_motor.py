@@ -4,7 +4,6 @@
 
 
 import math
-from collections import deque
 from collections.abc import Callable
 from threading import Lock
 from typing import TypeGuard
@@ -64,7 +63,6 @@ class RMDx8Motor:
         self.timer = ros_node.create_timer(
             timer_period, callback=cb, callback_group=self._callback_group
         )
-        self._last_velo_commands: deque[float] = deque(maxlen=10)
 
     # create a publisher
     def _createPublisher(self) -> Publisher:
@@ -157,9 +155,6 @@ class RMDx8Motor:
                 if self._poll_count % 5 == 0:
                     self._last_power = self.motor.getMotorPower()
                     self._last_acceleration = self.motor.getAcceleration()
-                if self.config.can_id is None:
-                    self._ros_node.get_logger().error("Attempted to publish data to invalid can_id")
-                    return
                 state = RMDX8MotorState.fromRMDX8Data(
                     self.config.can_id,
                     self.motor.getMotorStatus1(),
