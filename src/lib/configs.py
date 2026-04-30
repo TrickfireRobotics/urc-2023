@@ -126,13 +126,8 @@ class MotorConfigs:
     FRONT_LEFT_DRIVE_MOTOR = RMDx8MotorConfig(can_id=22)
 
     # Arm
-    ARM_SHOULDER_MOTOR = MoteusMotorConfig(
+    ARM_SHOULDER_MOTOR = RMDx8MotorConfig(
         can_id=1,
-        config={
-            "servo.max_voltage": 56.0,
-            "servopos.position_min": math.nan,
-            "servopos.position_max": math.nan,
-        },
     )
     ARM_ELBOW_MOTOR = MoteusMotorConfig(
         can_id=2,
