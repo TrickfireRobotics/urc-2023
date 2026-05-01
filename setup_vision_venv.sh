@@ -20,4 +20,4 @@ pip install --no-cache torchvision \
 pip install ultralytics==8.2.0
 
 
-touch vision_packages\COLCON_IGNORE
+touch vision_packages/COLCON_IGNORE
