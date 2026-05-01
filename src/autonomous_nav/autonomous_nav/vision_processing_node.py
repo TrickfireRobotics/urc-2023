@@ -84,12 +84,12 @@ class VisionProcessingNode(Node):
 
         torch.serialization.add_safe_globals([
             WorldModel,
-            YOLOESegModel,
             DetectionModel,
             SegmentationModel,
             PoseModel,
             ClassificationModel,
         ])
+        #YOLOESegModel,
 
         # Load YOLO World model
         self.model = None
