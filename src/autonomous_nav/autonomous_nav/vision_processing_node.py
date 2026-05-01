@@ -34,12 +34,12 @@ from custom_interfaces.msg import Aruco
 from lib.color_codes import ColorCodes, colorStr
 from ultralytics.nn.tasks import (
             WorldModel,
-            YOLOESegModel,
             DetectionModel,
             SegmentationModel,
             PoseModel,
             ClassificationModel,
         )
+#YOLOESegModel,
 # from visualization_msgs.msg import MarkerArray
 
 

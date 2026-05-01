@@ -25,7 +25,7 @@ trap "echo 'Stopping...'; kill 0" SIGINT
 ros2 launch viator_launch robot.launch.py &
 
 #activate vision packages
-source vision_packages2/bin/activate
+source vision_packages/bin/activate
 
 #apperantly this will still launch vision processing as a fully working node
 python3 ~/autonomous-nav-vision/urc-2023/src/autonomous_nav/autonomous_nav/vision_processing_node.py
