@@ -18,3 +18,6 @@ pip install --no-cache torchvision \
 
 # install YOLO
 pip install ultralytics==8.2.0
+
+
+touch vision_packages\COLCON_IGNORE
