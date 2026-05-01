@@ -32,7 +32,7 @@ from ultralytics import YOLO
 # defined in src\custom_interfaces\msg\Aruco.msg
 from custom_interfaces.msg import Aruco
 from lib.color_codes import ColorCodes, colorStr
-
+from ultralytics.nn.tasks import WorldModel
 
 # from visualization_msgs.msg import MarkerArray
 
@@ -70,6 +70,12 @@ class VisionProcessingNode(Node):
         self.get_logger().info(
             colorStr("CUDA Available:" + str(torch.cuda.is_available()), ColorCodes.BLUE_OK)
         )
+
+        #Add yolo model to safe globals
+        self.get_logger().info(
+            colorStr("Adding YOLO model to safe globals...", ColorCodes.BLUE_OK)
+        )
+        torch.serialization.add_safe_globals([WorldModel])
 
         # Load YOLO World model
         self.model = None
