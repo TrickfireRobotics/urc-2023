@@ -65,7 +65,7 @@ class VisionProcessingNode(Node):
         #check gpu before loading models
         self.get_logger().info(colorStr("Torch Version:" + str(torch.__version__), ColorCodes.BLUE_OK))
         self.get_logger().info(
-            colorStr("Torch Version Cuda:" + str(torch.version.cuxda), ColorCodes.BLUE_OK)
+            colorStr("Torch Version Cuda:" + str(torch.version.cuda), ColorCodes.BLUE_OK)
         )
         self.get_logger().info(
             colorStr("CUDA Available:" + str(torch.cuda.is_available()), ColorCodes.BLUE_OK)
