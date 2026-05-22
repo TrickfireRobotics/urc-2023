@@ -40,14 +40,11 @@ class SpacebarDetector:
         """Find the spacebar contour: the widest, high-aspect-ratio rectangle."""
         gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        thresh = cv2.adaptiveThreshold(
+        _, thresh = cv2.threshold(
             blurred,
-            255,
-            cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-            cv2.THRESH_BINARY,
-            11,
-            -2,
-        )
+            0,
+            255, 
+            cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         if not contours:
@@ -75,7 +72,7 @@ class SpacebarDetector:
         self, frame: np.ndarray, aruco_frame: ArucoFrame
     ) -> Optional[tuple[float, float]]:
         """
-        Detect the spacebar in the given frame and return its center
+        Detect the spacebar in the given frame and return its top-left corner
         in keyboard-frame coordinates. Returns None if not found.
         """
         warped = self._warp_keyboard_region(frame, aruco_frame)
@@ -83,12 +80,7 @@ class SpacebarDetector:
         if contour is None:
             return None
 
-        M = cv2.moments(contour)
-        if M["m00"] == 0:
-            return None
-
-        px = M["m10"] / M["m00"]
-        py = M["m01"] / M["m00"]
+        px, py, _, _ = cv2.boundingRect(contour)
 
         x = (px / self.WARP_WIDTH) * aruco_frame.width
         y = (py / self.WARP_HEIGHT) * aruco_frame.height
