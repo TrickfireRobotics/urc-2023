@@ -190,7 +190,7 @@ class VisionProcessingNode(Node):
         if msg is None:
             self.get_logger().error("Received None message in combinedCallback")
             return
-        if self.enable_spin:
+        if True:#self.enable_spin
             self.get_logger().info(
             colorStr("Searching Camera image", ColorCodes.BLUE_OK)
             )
