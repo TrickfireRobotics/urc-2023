@@ -77,8 +77,8 @@ class VisionProcessingNode(Node):
         # Load YOLO World model
         self.model = None
         model_paths = [
-            "models/yoloe-26x-seg.pt",
             "models/yolov8l-world.pt",
+            "models/yoloe-26x-seg.pt"
         ]
 
         cwd = os.getcwd()
@@ -113,56 +113,7 @@ class VisionProcessingNode(Node):
                         ColorCodes.WARNING_YELLOW,
                     )
                 )
-        self.get_logger().info(colorStr(f"Falling back on default model", ColorCodes.BLUE_OK))
 
-        # Fall back to auto-downloading if local models fail
-        if self.model is None:
-            try:
-                self.get_logger().info(
-                    colorStr(
-                        "Loading YOLO World model from ultralytics (auto-download)...",
-                        ColorCodes.WARNING_YELLOW,
-                    )
-                )
-                self.model = YOLO("yolov8l-world.pt")
-                self.model.set_classes(["mallet", "rockhammer", "hammer", "bottle"])
-                self.get_logger().info(
-                    colorStr("Default YOLO World model loaded successfully.", ColorCodes.BLUE_OK)
-                )
-            except Exception as e:
-                self.get_logger().error(
-                    colorStr(
-                        f"Failed to load any YOLO model: {str(e)}. Vision processing will be unavailable.",
-                        ColorCodes.WARNING_YELLOW,
-                    )
-                )
-                self.model = None
-
-        # use cpu or gpu
-        """
-        self.get_logger().info(colorStr("Torch Version:" + torch.__version__, ColorCodes.BLUE_OK))
-        self.get_logger().info(
-            colorStr("Torch Version Cuda:" + torch.version.cuda, ColorCodes.BLUE_OK)
-        )
-        self.get_logger().info(
-            colorStr("CUDA Available:" + str(torch.cuda.is_available()), ColorCodes.BLUE_OK)
-        )
-        # Get GPU details
-        # disable gpu for current tests
-        self.get_logger().info(
-            colorStr("GPU Unavailable, switching to cpu", ColorCodes.WARNING_YELLOW)
-        )
-        self.model.to("cpu")
-        self.get_logger().info(colorStr("Running on cpu", ColorCodes.BLUE_OK))
-        
-        if torch.cuda.is_available():
-            self.get_logger().info(colorStr("GPU Name:"+str(torch.cuda.get_device_name(0)), ColorCodes.GREEN_OK))
-            self.model.to("cuda")
-        else:
-            self.get_logger().info(colorStr("GPU Unavailable, switching to cpu", ColorCodes.WARNING_YELLOW))
-            self.model.to("cpu")
-            self.get_logger().info(colorStr("Running on cpu", ColorCodes.BLUE_OK))
-        """
         self.camera_frame_id = "zed_camera_frame"
         self.map_frame_id = "map"
 
@@ -410,7 +361,7 @@ class VisionProcessingNode(Node):
             if self.found_object and self.found_aruco:
                 self.get_logger().info(
                     colorStr(
-                        f"Object and ArUco marker detected! Stopping spin search.",
+                        f"Object and Aruco marker detected! Stopping spin search.",
                         ColorCodes.GREEN_OK,
                     )
                 )
