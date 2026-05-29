@@ -226,7 +226,7 @@ class VisionProcessingNode(Node):
         frame = msg
 
         # Predict with YOLO World
-        results = self.model(frame, conf=0.3)[0]  # Adjust confidence threshold if needed
+        results = self.model(frame, conf=0.3, device='cpu')[0]  # Adjust confidence threshold if needed
 
         # Get frame dimensions
         frame_h, frame_w = frame.shape[:2]
