@@ -191,6 +191,9 @@ class VisionProcessingNode(Node):
             self.get_logger().error("Received None message in combinedCallback")
             return
         if self.enable_spin:
+            self.get_logger().info(
+            colorStr("Searching Camera image", ColorCodes.BLUE_OK)
+            )
             try:
                 frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
             except Exception as e:
@@ -204,6 +207,10 @@ class VisionProcessingNode(Node):
             self.yoloDetectionCallback(resized)
             # every 3 seconds run spin search to look for objects, this is a placeholder and can be replaced with more sophisticated search patterns
             # time.sleep(3)
+        else:
+            self.get_logger().info(
+            colorStr("spin disabled", ColorCodes.BLUE_OK)
+        )
 
     # --------------------------------------------------------------------------
     #   YOLO World Object Detection
