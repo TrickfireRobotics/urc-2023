@@ -52,3 +52,5 @@ RUN git clone --depth 1 https://github.com/2b-t/myactuator_rmd.git /tmp/myactuat
 RUN useradd trickfire --shell /bin/bash --create-home --no-log-init -G video
 
 COPY .devcontainer/trickfire.bashrc /home/trickfire/.bashrc
+
+USER trickfire
