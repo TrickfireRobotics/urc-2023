@@ -28,6 +28,11 @@ RUN pip3 install --no-cache-dir \
 
 # ---- dev tooling ----
 
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y nodejs
+
 RUN pip3 install --no-cache-dir ruff mypy pre-commit \
     && curl -sSL "https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_$(dpkg --print-architecture)" \
     -o /usr/local/bin/shfmt \
