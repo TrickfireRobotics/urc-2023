@@ -44,6 +44,7 @@ RUN git clone --depth 1 https://github.com/2b-t/myactuator_rmd.git /tmp/myactuat
     && cmake -S /tmp/myactuator_rmd -B /tmp/myactuator_rmd/build -D PYTHON_BINDINGS=on \
     && cmake --build /tmp/myactuator_rmd/build -j "$(nproc)" \
     && cmake --install /tmp/myactuator_rmd/build \
+    && ldconfig \
     && pip3 install /tmp/myactuator_rmd \
     && pybind11-stubgen myactuator_rmd_py -o /usr/local/lib/python3.10/dist-packages \
     && rm -rf /tmp/myactuator_rmd
