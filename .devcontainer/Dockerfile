@@ -55,6 +55,14 @@ RUN useradd trickfire --shell /bin/bash --create-home --no-log-init -G video,sud
     && touch /home/trickfire/.sudo_as_admin_successful \
     && chown trickfire:trickfire /home/trickfire/.sudo_as_admin_successful
 
+# trickfire is non-root, but SocketCAN raw sockets (candump/cansend and the RMD-X8
+# node's CanDriver) need CAP_NET_RAW/CAP_NET_ADMIN, which a non-root exec doesn't get
+# just from the container's `cap_add`/`privileged` settings. Grant NOPASSWD sudo for
+# only the specific CAN tooling and the built can_rmdx8 node so this works without an
+# interactive password, without handing trickfire unrestricted root.
+COPY .devcontainer/trickfire-can-sudoers /etc/sudoers.d/trickfire-can
+RUN chmod 0440 /etc/sudoers.d/trickfire-can && visudo -cf /etc/sudoers.d/trickfire-can
+
 COPY .devcontainer/trickfire.bashrc /home/trickfire/.bashrc
 
 USER trickfire
