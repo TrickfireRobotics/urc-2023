@@ -1,4 +1,4 @@
-# /bin/bash
+#!/usr/bin/env bash
 
 # A script file `./container_launch.sh` that handles connecting to the `trickfirerobot` Docker container.
 
@@ -19,80 +19,77 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-b_flag='' # Force build docker container "-b"
+b_flag=''        # Force build docker container "-b"
 no_cache_flag='' # Build docker container without cache "-n"
-c_flag='' # Force create container "-c"
-master_flag='' #Use the master image and container
+c_flag=''        # Force create container "-c"
+master_flag=''   #Use the master image and container
 
 # Read the flags, if any were passed
 while getopts 'bncm' flag; do
-  case "${flag}" in
+    case "${flag}" in
     b) b_flag='true' ;;
     n) no_cache_flag='true' ;;
     c) c_flag='true' ;;
     m) master_flag='true' ;;
     *) break ;;
-  esac
+    esac
 done
 
 if [ "$master_flag" = true ]; then
-  echo -e "${BLUE}$(tput bold)[${text_helper}] Using master image and container${NC}"
-  trickire_container="master_trickfirerobot"
-  trickfire_image="master_trickfireimage"
+    echo -e "${BLUE}$(tput bold)[${text_helper}] Using master image and container${NC}"
+    trickire_container="master_trickfirerobot"
+    trickfire_image="master_trickfireimage"
 fi
-
-
 
 # --- Shutdown both "master_trickfirerobot" and/or "trickfirerobot" if they are running
 
 # --- Shutdown the current "master_trickfirerobot" container if it is running
-if [ "$( docker container inspect -f '{{.State.Running}}' master_trickfirerobot )" = "true" ]; then
-  echo -e "${BLUE}$(tput bold)[${text_helper}] Shutting down current \"master_trickfirerobot\" container${NC}"
-  
-  # --- Feed stdin and stderr into the same variable
-  result=$(docker container kill master_trickfirerobot 2>&1)
+if [ "$(docker container inspect -f '{{.State.Running}}' master_trickfirerobot)" = "true" ]; then
+    echo -e "${BLUE}$(tput bold)[${text_helper}] Shutting down current \"master_trickfirerobot\" container${NC}"
 
-  if [ "$result" = "master_trickfirerobot" ]; then
-    echo -e "${GREEN}$(tput bold)[${text_helper}] SHUTDOWN OF 'master_trickfirerobot' SUCCESS${NC}"
-  else
-    echo -e "${RED}$(tput bold)[${text_helper}] ERROR: ${result}${NC}"
-    echo -e "${RED}$(tput bold)[${text_helper}] EXITING${NC}"
-    exit 1
-  fi
+    # --- Feed stdin and stderr into the same variable
+    result=$(docker container kill master_trickfirerobot 2>&1)
+
+    if [ "$result" = "master_trickfirerobot" ]; then
+        echo -e "${GREEN}$(tput bold)[${text_helper}] SHUTDOWN OF 'master_trickfirerobot' SUCCESS${NC}"
+    else
+        echo -e "${RED}$(tput bold)[${text_helper}] ERROR: ${result}${NC}"
+        echo -e "${RED}$(tput bold)[${text_helper}] EXITING${NC}"
+        exit 1
+    fi
 fi
 
 # --- Shutdown the current "trickfirerobot" container if it is running
-if [ "$( docker container inspect -f '{{.State.Running}}' trickfirerobot )" = "true" ]; then
-  echo -e "${BLUE}$(tput bold)[${text_helper}] Shutting down current \"trickfirerobot\" container${NC}"
+if [ "$(docker container inspect -f '{{.State.Running}}' trickfirerobot)" = "true" ]; then
+    echo -e "${BLUE}$(tput bold)[${text_helper}] Shutting down current \"trickfirerobot\" container${NC}"
 
-  # --- Feed stdin and stderr into the same variable
-  result=$(docker container kill trickfirerobot 2>&1)
+    # --- Feed stdin and stderr into the same variable
+    result=$(docker container kill trickfirerobot 2>&1)
 
-  if [ "$result" = "trickfirerobot" ]; then
-    echo -e "${GREEN}$(tput bold)[${text_helper}] SHUTDOWN of 'trickfirerobot' SUCCESS${NC}"
-  else
-    echo -e "${RED}$(tput bold)[${text_helper}] ERROR: ${result}${NC}"
-    echo -e "${RED}$(tput bold)[${text_helper}] EXITING${NC}"
-    exit 1
-  fi
+    if [ "$result" = "trickfirerobot" ]; then
+        echo -e "${GREEN}$(tput bold)[${text_helper}] SHUTDOWN of 'trickfirerobot' SUCCESS${NC}"
+    else
+        echo -e "${RED}$(tput bold)[${text_helper}] ERROR: ${result}${NC}"
+        echo -e "${RED}$(tput bold)[${text_helper}] EXITING${NC}"
+        exit 1
+    fi
 fi
 
 # --- Handle the Docker image ---
 
 # If the image does NOT exist OR we force the image to be built
-if [ -z "$(docker images -q ${trickfire_image}:latest 2> /dev/null)" ] || [ "$b_flag" = true ]; then
-  # Should we build without cache?
-  if [ "$no_cache_flag" = true ]; then
-    echo -e "${BLUE}$(tput bold)[${text_helper}] Building \"${trickfire_image}\" without cache${NC}"
-    docker build --no-cache -t ${trickfire_image} -f .devcontainer/Dockerfile . 
-  else
-    echo -e "${BLUE}$(tput bold)[${text_helper}] Building \"${trickfire_image}\" with cache${NC}"
-    docker build -t ${trickfire_image} -f .devcontainer/Dockerfile . 
-  fi
+if [ -z "$(docker images -q ${trickfire_image}:latest 2>/dev/null)" ] || [ "$b_flag" = true ]; then
+    # Should we build without cache?
+    if [ "$no_cache_flag" = true ]; then
+        echo -e "${BLUE}$(tput bold)[${text_helper}] Building \"${trickfire_image}\" without cache${NC}"
+        docker build --no-cache -t ${trickfire_image} -f .devcontainer/Dockerfile .
+    else
+        echo -e "${BLUE}$(tput bold)[${text_helper}] Building \"${trickfire_image}\" with cache${NC}"
+        docker build -t ${trickfire_image} -f .devcontainer/Dockerfile .
+    fi
 else
     echo -e "${BLUE}$(tput bold)[${text_helper}] Image \"${trickfire_image}\" exists. Skipping building process${NC}"
 fi
-
 
 # Handle the Docker image
 
@@ -118,11 +115,11 @@ restartResult=$(docker container restart ${trickire_container} 2>&1)
 
 # Check to make sure the container launched correctly
 if [ "$restartResult" = "$trickire_container" ]; then
-  echo -e "${GREEN}$(tput bold)[${text_helper}] LAUNCH of '${trickire_container}' SUCCESS${NC}"
+    echo -e "${GREEN}$(tput bold)[${text_helper}] LAUNCH of '${trickire_container}' SUCCESS${NC}"
 else
-  echo -e "${RED}$(tput bold)[${text_helper}] ERROR: ${restartResult}${NC}"
-  echo -e "${RED}$(tput bold)[${text_helper}] EXITING${NC}"
-  exit 1
+    echo -e "${RED}$(tput bold)[${text_helper}] ERROR: ${restartResult}${NC}"
+    echo -e "${RED}$(tput bold)[${text_helper}] EXITING${NC}"
+    exit 1
 fi
 
 # Have the container take over the shell that executed this script

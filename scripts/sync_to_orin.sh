@@ -15,7 +15,7 @@ fi
 
 REMOTE_IP="$1"
 REMOTE_PATH="$2"
-LOCAL_PATH="$(cd "$(dirname "$0")" && pwd)/"
+LOCAL_PATH="$(cd "$(dirname "$0")/.." && git rev-parse --show-toplevel)/"
 
 echo "Syncing to trickfire@${REMOTE_IP}:${REMOTE_PATH} ..."
 
