@@ -13,7 +13,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     can-utils \
     iproute2 \
     kmod \
-    libcap2-bin \
     # cv_bridge
     python3-numpy \
     libboost-python-dev \
@@ -55,14 +54,13 @@ RUN useradd trickfire --shell /bin/bash --create-home --no-log-init -G video,sud
     && touch /home/trickfire/.sudo_as_admin_successful \
     && chown trickfire:trickfire /home/trickfire/.sudo_as_admin_successful
 
-# `trickfire` is a non-root user, so raw CAN sockets (used by candump/cansend and by
-# myactuator_rmd_py's CanDriver) fail even though the container has CAP_NET_RAW/NET_ADMIN
-# in its bounding set: Docker's `cap_add` doesn't get inherited by a non-root exec.
-# Grant the capability directly on the binaries that need it via file capabilities.
-RUN setcap cap_net_raw,cap_net_admin+eip "$(readlink -f "$(command -v candump)")" \
-    && setcap cap_net_raw,cap_net_admin+eip "$(readlink -f "$(command -v cansend)")" \
-    && setcap cap_net_raw,cap_net_admin+eip "$(readlink -f "$(command -v cangen)")" \
-    && setcap cap_net_raw,cap_net_admin+eip "$(readlink -f "$(command -v python3)")"
+# trickfire is non-root, but SocketCAN raw sockets (candump/cansend and the RMD-X8
+# node's CanDriver) need CAP_NET_RAW/CAP_NET_ADMIN, which a non-root exec doesn't get
+# just from the container's `cap_add`/`privileged` settings. Grant NOPASSWD sudo for
+# only the specific CAN tooling and the built can_rmdx8 node so this works without an
+# interactive password, without handing trickfire unrestricted root.
+COPY .devcontainer/trickfire-can-sudoers /etc/sudoers.d/trickfire-can
+RUN chmod 0440 /etc/sudoers.d/trickfire-can && visudo -cf /etc/sudoers.d/trickfire-can
 
 COPY .devcontainer/trickfire.bashrc /home/trickfire/.bashrc
 

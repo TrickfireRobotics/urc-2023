@@ -11,7 +11,14 @@ can_moteus_node = Node(package="can_moteus", executable="can_moteus", name="can_
 
 drivebase_node = Node(package="drivebase", executable="drivebase", name="drivebase_node")
 
-can_rmdx8_node = Node(package="can_rmdx8", executable="can_rmdx8", name="can_rmdx8_node")
+# Runs as root via sudo: opening the raw CAN socket for can1 needs CAP_NET_RAW/NET_ADMIN,
+# which the non-root trickfire user doesn't have (see .devcontainer/trickfire-can-sudoers).
+can_rmdx8_node = Node(
+    package="can_rmdx8",
+    executable="can_rmdx8",
+    name="can_rmdx8_node",
+    prefix=["sudo", "-n", "--"],
+)
 
 mission_control_updater_node = Node(
     package="mission_control_updater",
