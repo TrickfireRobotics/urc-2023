@@ -7,7 +7,7 @@ launch:
 	./scripts/launch.sh
 
 container:
-	./scripts/container_launch.sh $(ARGS)
+	./scripts/container_launch.sh $(filter-out $@,$(MAKECMDGOALS))
 
 connect:
 	./scripts/connect_to_container.sh

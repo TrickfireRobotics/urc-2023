@@ -18,11 +18,11 @@ services:
               bind:
                   create_host_path: true
 
-
         working_dir: /home/trickfire/urc-2023
 
         network_mode: host
 
+        privileged: true
         cap_add:
             - SYS_PTRACE
             - NET_ADMIN
