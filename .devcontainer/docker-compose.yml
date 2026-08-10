@@ -1,0 +1,23 @@
+services:
+    viator:
+        build:
+            context: ..
+            dockerfile: .devcontainer/Dockerfile
+            target: viator
+        image: urc-2023:latest
+        container_name: viator
+        user: trickfire
+
+        volumes:
+            - ..:/home/trickfire/urc-2023
+            # - /dev/video0:/dev/video0
+
+        working_dir: /home/trickfire/urc-2023
+
+        cap_add:
+            - SYS_PTRACE
+        security_opt:
+            - seccomp:unconfined
+
+        stdin_open: true
+        tty: true
