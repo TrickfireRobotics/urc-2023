@@ -1,9 +1,11 @@
 import sys
+import time
 
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import Float32
+from usb.core import Device
 from usb.core import find as finddev
 
 from lib.color_codes import ColorCodes, colorStr
@@ -22,30 +24,65 @@ class RosMotuesBridge(Node):
     The CANFD-USB is reset every time the code is execute from the ./launch.sh
     """
 
+    # USB identifiers for the CANFD-USB (fdcanusb) adapter used by the moteus motors.
+    # Run "lsusb" with the CANFD-USB connected to find the idVendor/idProduct.
+    _CANFD_USB_VENDOR_ID = 0x0483
+    _CANFD_USB_PRODUCT_ID = 0x5740
+
+    # The adapter is reset on every launch, which briefly drops it off the USB bus,
+    # and it can be slow to (re)enumerate. Retry the lookup instead of giving up on
+    # the first miss (e.g. a relaunch racing the previous run's reset).
+    _FIND_ATTEMPTS = 20
+    _FIND_RETRY_DELAY_SEC = 0.5
+
     def __init__(self) -> None:
         super().__init__("can_moteus_node")
         self.get_logger().info(colorStr("Launching can_moteus node", ColorCodes.BLUE_OK))
 
-        # Reset the CANFD-USB
-        # run "lsusb" in cmd with the CANFD-USB connected
-        # to find the idVendor and the idProduct
-        dev = finddev(idVendor=0x0483, idProduct=0x5740)
+        self.thread_manager: moteus_thread_manager.MoteusThreadManager | None = None
 
-        if dev is not None:
-            dev.reset()
-            self.thread_manager: moteus_thread_manager.MoteusThreadManager | None = None
-
-            self.reconnect_to_moteus_sub = self.create_subscription(
-                Float32, "reconnectMoteusControllers", self.reconnect, 1
-            )
-
-            self.createMoteusMotors()
-        else:
-            self.get_logger().info(
+        # Find the CANFD-USB. Retry because a just-launched (or just-reset) adapter
+        # can take a moment to appear on the bus.
+        dev = self._findCanFdUsb()
+        if dev is None:
+            self.get_logger().error(
                 colorStr(
                     "Failed to find CANFD-USB usb device. Is it plugged in?", ColorCodes.FAIL_RED
                 )
             )
+            return
+
+        # Reset the CANFD-USB so it starts from a clean state, then wait for it to
+        # re-enumerate before the moteus library tries to open it. Without this wait
+        # the moteus transport can grab the device mid-reset and fail to find it.
+        dev.reset()
+        if self._findCanFdUsb() is None:
+            self.get_logger().error(
+                colorStr("CANFD-USB did not re-appear after reset.", ColorCodes.FAIL_RED)
+            )
+            return
+
+        self.reconnect_to_moteus_sub = self.create_subscription(
+            Float32, "reconnectMoteusControllers", self.reconnect, 1
+        )
+
+        self.createMoteusMotors()
+
+    def _findCanFdUsb(self) -> Device | None:
+        """
+        Look for the CANFD-USB adapter on the USB bus, retrying for a short while so
+        a transient absence (e.g. it was just reset by a previous launch) doesn't
+        cause us to give up.
+        """
+        for attempt in range(self._FIND_ATTEMPTS):
+            dev = finddev(
+                idVendor=self._CANFD_USB_VENDOR_ID, idProduct=self._CANFD_USB_PRODUCT_ID
+            )
+            if dev is not None:
+                return dev
+            if attempt < self._FIND_ATTEMPTS - 1:
+                time.sleep(self._FIND_RETRY_DELAY_SEC)
+        return None
 
     def reconnect(self, _: Float32) -> None:
         """
