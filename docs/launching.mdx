@@ -1,0 +1,70 @@
+---
+title: Launching the Rover
+description: Build, bring up CAN, and launch the full node graph.
+slug: launching
+---
+
+Everything below is exposed as a `make` target from the repo root — see the
+[Makefile](https://github.com/TrickfireRobotics/urc-2023/blob/main/Makefile) for the exact
+commands each one runs.
+
+## 1. Build
+
+```bash title="Terminal"
+make build
+```
+
+Runs `colcon build --symlink-install` against `src/`. Re-run this after pulling changes or
+editing a package's `package.xml`/`setup.py`.
+
+## 2. Bring up the CAN bus
+
+The RMD-X8 motors talk over CAN. Before launching, load the CAN kernel modules and configure
+the interface:
+
+```bash title="Terminal"
+make can-setup
+```
+
+This loads `can`/`can_raw`/`mttcan`, brings up `can1` at 1 Mbit/s, and sends the clear/start/
+speed-mode commands to each configured motor CAN ID. Only needed on hardware that actually has
+the CAN bus wired up (e.g. the rover itself or a bench setup) — skip it if you're just working
+on unrelated nodes in the dev container.
+
+## 3. Launch
+
+```bash title="Terminal"
+make launch
+```
+
+Equivalent to `ros2 launch viator_launch robot.launch.py` — starts every node described in
+[Architecture](architecture) (drivebase, arm, both motor drivers, camera, heartbeat, mission
+control updater) as one process tree.
+
+## Running via a standalone Docker container
+
+If you're not using the VS Code dev container (e.g. running directly on the rover's onboard
+computer), `make container` / `make connect` manage a plain `trickfirerobot` Docker container
+instead:
+
+```bash title="Terminal"
+make container   # build the image if needed, (re)create + start the container
+make connect     # exec into an already-running container
+```
+
+`make container` accepts the same flags as `scripts/container_launch.sh` via `ARGS`, e.g.:
+
+```bash title="Terminal"
+make container ARGS="-b"   # force-rebuild the image, even if it already exists
+make container ARGS="-n"   # force-rebuild without Docker's build cache
+make container ARGS="-m"   # use the "master" image/container instead of the dev one
+```
+
+## Deploying to the onboard Orin
+
+To push a local working copy to the rover's onboard Jetson Orin over `rsync` (excluding build
+artifacts and `.git`):
+
+```bash title="Terminal"
+make sync-orin IP=192.168.0.148 REMOTE_PATH=/home/trickfire/urc-2023
+```
