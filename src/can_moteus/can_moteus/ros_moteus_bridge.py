@@ -47,9 +47,12 @@ class RosMotuesBridge(Node):
         if dev is None:
             self.get_logger().error(
                 colorStr(
-                    "Failed to find CANFD-USB usb device. Is it plugged in?", ColorCodes.FAIL_RED
+                    "Failed to find CANFD-USB usb device. Is it plugged in, or is another "
+                    "process (e.g. ModemManager/brltty on the host) claiming it?",
+                    ColorCodes.FAIL_RED,
                 )
             )
+            self._logVisibleUsbDevices()
             return
 
         # Reset the CANFD-USB so it starts from a clean state, then wait for it to
@@ -75,14 +78,35 @@ class RosMotuesBridge(Node):
         cause us to give up.
         """
         for attempt in range(self._FIND_ATTEMPTS):
-            dev = finddev(
-                idVendor=self._CANFD_USB_VENDOR_ID, idProduct=self._CANFD_USB_PRODUCT_ID
-            )
+            dev = finddev(idVendor=self._CANFD_USB_VENDOR_ID, idProduct=self._CANFD_USB_PRODUCT_ID)
             if dev is not None:
                 return dev
             if attempt < self._FIND_ATTEMPTS - 1:
                 time.sleep(self._FIND_RETRY_DELAY_SEC)
         return None
+
+    def _logVisibleUsbDevices(self) -> None:
+        """
+        Logs every USB device currently visible to the container. Helps distinguish
+        "not forwarded to the container" (list is empty/short) from "present under a
+        different id, or intermittently grabbed by something else" (device is/isn't
+        in the list depending on when this runs).
+        """
+        devices = list(finddev(find_all=True))
+        if not devices:
+            self.get_logger().warn(
+                colorStr(
+                    "No USB devices are visible at all. The container may not have USB "
+                    "forwarded (check --privileged / device passthrough).",
+                    ColorCodes.WARNING_YELLOW,
+                )
+            )
+            return
+
+        device_list = ", ".join(f"{d.idVendor:04x}:{d.idProduct:04x}" for d in devices)
+        self.get_logger().warn(
+            colorStr(f"USB devices visible now: {device_list}", ColorCodes.WARNING_YELLOW)
+        )
 
     def reconnect(self, _: Float32) -> None:
         """
