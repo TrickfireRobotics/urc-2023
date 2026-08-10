@@ -17,7 +17,7 @@ can_rmdx8_node = Node(
     package="can_rmdx8",
     executable="can_rmdx8",
     name="can_rmdx8_node",
-    prefix=["sudo", "-n", "--"],
+    prefix="sudo -n --",
 )
 
 mission_control_updater_node = Node(
