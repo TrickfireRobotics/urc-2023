@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Usage: ./container_launch.sh [-b] [-n] [-c]
-#   -b  Rebuild the Docker image, even if it already exists
+# Usage: ./container_launch.sh [-n] [-c]
 #   -n  Rebuild the Docker image without using the build cache
 #   -c  Force recreate the container, even if it already exists
 
@@ -22,17 +21,15 @@ compose() { docker compose -f "$COMPOSE_FILE" "$@"; }
 
 # --- Parse flags ---
 
-force_build=false
 no_cache=false
 force_recreate=false
 
-while getopts 'bnc' flag; do
+while getopts 'nc' flag; do
     case "$flag" in
-    b) force_build=true ;;
     n) no_cache=true ;;
     c) force_recreate=true ;;
     *)
-        echo "Usage: $0 [-b] [-n] [-c]" >&2
+        echo "Usage: $0 [-n] [-c]" >&2
         exit 1
         ;;
     esac
@@ -40,13 +37,11 @@ done
 
 # --- Build the image ---
 
-if [ "$force_build" = true ] || [ "$no_cache" = true ]; then
-    log_info "Building \"${SERVICE}\" image"
-    if [ "$no_cache" = true ]; then
-        compose build --no-cache "$SERVICE"
-    else
-        compose build "$SERVICE"
-    fi
+log_info "Building \"${SERVICE}\" image"
+if [ "$no_cache" = true ]; then
+    compose build --no-cache "$SERVICE"
+else
+    compose build "$SERVICE"
 fi
 
 # --- Start  ---
