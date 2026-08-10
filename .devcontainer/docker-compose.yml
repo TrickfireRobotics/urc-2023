@@ -11,11 +11,21 @@ services:
         volumes:
             - ..:/home/trickfire/urc-2023
             # - /dev/video0:/dev/video0
+            - type: bind
+              source: ${HOME}/.ssh
+              target: /home/trickfire/.ssh
+              read_only: true
+              bind:
+                  create_host_path: true
+
 
         working_dir: /home/trickfire/urc-2023
 
+        network_mode: host
+
         cap_add:
             - SYS_PTRACE
+            - NET_ADMIN
         security_opt:
             - seccomp:unconfined
 
