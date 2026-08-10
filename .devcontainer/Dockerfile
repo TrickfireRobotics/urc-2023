@@ -49,7 +49,10 @@ RUN git clone --depth 1 https://github.com/2b-t/myactuator_rmd.git /tmp/myactuat
     && rm -rf /tmp/myactuator_rmd
 
 # ---- user ----
-RUN useradd trickfire --shell /bin/bash --create-home --no-log-init -G video
+RUN useradd trickfire --shell /bin/bash --create-home --no-log-init -G video,sudo \
+    && echo "trickfire:trickfire" | chpasswd \
+    && touch /home/trickfire/.sudo_as_admin_successful \
+    && chown trickfire:trickfire /home/trickfire/.sudo_as_admin_successful
 
 COPY .devcontainer/trickfire.bashrc /home/trickfire/.bashrc
 
