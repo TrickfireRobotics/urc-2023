@@ -42,7 +42,12 @@ launch_include = IncludeLaunchDescription(
             get_package_share_directory("rosbridge_server"), "launch/rosbridge_websocket_launch.xml"
         ),
     ),
-    launch_arguments=[("use_compression", "true")],
+    launch_arguments=[
+        ("use_compression", "true"),
+        ("call_services_in_new_thread", "true"),
+        ("send_action_goals_in_new_thread", "true"),
+        ("default_call_service_timeout", "5.0"),
+    ],
 )
 
 

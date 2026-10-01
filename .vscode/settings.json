@@ -22,7 +22,7 @@
         "editor.defaultFormatter": "mkhl.shfmt",
         "editor.formatOnSave": true
     },
-    "[markdown]": {
+    "[mdx]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true
     },

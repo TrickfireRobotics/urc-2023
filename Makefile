@@ -22,7 +22,7 @@ format:
 	ruff format src
 	ruff check --fix src
 	shfmt -i 4 -s -w scripts/ .devcontainer/
-	npx prettier --write "**/*.{md,json}"
+	npx -y prettier@latest --write "**/*.{md,json}"
 
 hooks:
 	pre-commit install
