@@ -53,12 +53,13 @@ cd ~/urc-2023
 Open a second terminal on the rover (SSH in again) and start watching the bus before you bring it up, so you can see traffic appear as soon as it's live:
 
 ```bash title="Terminal 2"
-candump can1
+candump any
 ```
 
 <Callout type="info">
-    `candump` will complain that `can1` doesn't exist yet - that's expected. Leave it running; it'll
-    pick up traffic as soon as the interface comes up in the next step.
+    Using `any` instead of a specific interface name means this keeps working no matter which CAN
+    line (`can0`, `can1`, ...) ends up carrying traffic. Leave it running; it'll pick up traffic as
+    soon as the interface comes up in the next step.
 </Callout>
 
 Back in the first terminal, bring the CAN interface up:
@@ -107,8 +108,8 @@ This loads the `can`/`can_raw`/`mttcan` kernel modules, brings `can1` up at a 1 
 </Callout>
 
 <Accordions>
-    <Accordion title="candump: can1: No such device">
-        `can1` hasn't been brought up yet - run `make can-setup` first.
+    <Accordion title="candump shows no traffic">
+        The CAN interface hasn't been brought up yet - run `make can-setup` first.
     </Accordion>
     <Accordion title="Mission control's websocket indicator stays red">
         Double check the websocket address in mission control's settings matches the rover's current

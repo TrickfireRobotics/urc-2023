@@ -23,9 +23,6 @@ services:
         network_mode: host
 
         privileged: true
-        cap_add:
-            - SYS_PTRACE
-            - NET_ADMIN
         security_opt:
             - seccomp:unconfined
 
