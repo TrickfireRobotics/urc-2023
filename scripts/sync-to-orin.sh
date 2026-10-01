@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Syncs the local urc-2023 repo to a remote orin over rsync.
-# Usage: ./sync_to_orin.sh <ip> <remote_path>
+# Usage: ./sync-to-orin.sh <ip> <remote_path>
 #
 #   ip           - IP address of the remote host (e.g. 192.168.0.148)
 #   remote_path  - Absolute path on the remote (e.g. /home/trickfire/urc-2023)

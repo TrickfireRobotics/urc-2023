@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: ./container_launch.sh [-n] [-c]
+# Usage: ./container-launch.sh [-n] [-c]
 #   -n  Rebuild the Docker image without using the build cache
 #   -c  Force recreate the container, even if it already exists
 

@@ -7,16 +7,16 @@ launch:
 	./scripts/launch.sh
 
 container:
-	./scripts/container_launch.sh $(filter-out $@,$(MAKECMDGOALS))
+	./scripts/container-launch.sh $(filter-out $@,$(MAKECMDGOALS))
 
 connect:
-	./scripts/connect_to_container.sh
+	./scripts/connect-to-container.sh
 
 can-setup:
-	./scripts/setup_can_network.sh
+	./scripts/setup-can-network.sh
 
 sync-orin:
-	./scripts/sync_to_orin.sh $(IP) $(REMOTE_PATH)
+	./scripts/sync-to-orin.sh $(IP) $(REMOTE_PATH)
 
 format:
 	ruff format src
